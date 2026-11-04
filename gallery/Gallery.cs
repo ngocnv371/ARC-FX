@@ -302,7 +302,7 @@ public partial class Gallery : Node3D
                 shot.Release();
                 return false;
             }
-            var grow = look == FxShotLook.Tornado ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp(Mathf.Min(age / 0.3f, (life - age) / 0.4f), 0f, 1f)) : 1f;
+            var grow = Fx.IsTornado(look) ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp(Mathf.Min(age / 0.3f, (life - age) / 0.4f), 0f, 1f)) : 1f;
             shot.Place(from + velocity * age, velocity, 1f, grow);
             shot.Strength(1f - age / life);
             return true;
@@ -383,6 +383,9 @@ public partial class Gallery : Node3D
             new("Shot", "Steel wave", "Fx.Shot(FxShotLook.SteelWave)", 1.8f, 0.6f, g => g.Fly(FxShotLook.SteelWave, 12f)),
             new("Shot", "Thrown axe", "Fx.Shot(FxShotLook.Axe)", 1.8f, 0.55f, g => g.Fly(FxShotLook.Axe, 16f)),
             new("Shot", "Tornado", "Fx.Shot(FxShotLook.Tornado)", 3.5f, 1.5f, g => g.Fly(FxShotLook.Tornado, 5f)),
+            new("Shot", "Storm tornado", "Fx.Shot(FxShotLook.StormTornado)  // calls down its own bolts", 3.5f, 1.5f, g => g.Fly(FxShotLook.StormTornado, 5f)),
+            new("Shot", "Fire tornado", "Fx.Shot(FxShotLook.FireTornado)", 3.5f, 1.5f, g => g.Fly(FxShotLook.FireTornado, 5f)),
+            new("Shot", "Ice tornado", "Fx.Shot(FxShotLook.IceTornado)", 3.5f, 1.5f, g => g.Fly(FxShotLook.IceTornado, 5f)),
 
             new("Death", "Puff", "puffs.Burst(feet, size: 1.2f, body, accent);  // an FxPuffs node", 1.5f, 0.35f,
                 g => g._puffs.Burst(Vector3.Zero, 1.2f, new Color(0.55f, 0.35f, 0.75f), new Color(0.4f, 0.9f, 0.8f))),

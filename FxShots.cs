@@ -3,12 +3,12 @@ using Godot;
 namespace Arc.Fx;
 
 /// <summary>What a projectile looks like: an arrow (plain or elemental), a thrown axe, or a spell.</summary>
-public enum FxShotLook { Arrow, FireBolt, Fireball, IceSpear, Spark, Axe, LightningArrow, PoisonArrow, PhantomArrow, FireArrow, IceArrow, ColdWave, Frostbolt, Tornado, SteelWave }
+public enum FxShotLook { Arrow, FireBolt, Fireball, IceSpear, Spark, Axe, LightningArrow, PoisonArrow, PhantomArrow, FireArrow, IceArrow, ColdWave, Frostbolt, Tornado, SteelWave, StormTornado, FireTornado, IceTornado }
 
 /// <summary>
 /// A projectile's look, placed by the game every frame along its flight. ARC FX turns it to face
 /// its velocity (an axe spins flat instead, a tornado stands upright with its debris whirling),
-/// lights the ground under a spell, and shows the parts it has for being stuck in the ground.
+/// lights the ground under a spell (a storm tornado also calls down bolts that strike it), and shows the parts it has for being stuck in the ground.
 /// Release it when the flight is over; the handle goes inert once released.
 /// </summary>
 public readonly struct FxShot
@@ -59,7 +59,8 @@ public readonly struct FxShot
 /// head, or the arrow itself as phantasmal light); the axe is a spectral great axe
 /// (<see cref="FxModels.Axe"/>, fx_spectral); spells are fire bolts and fireballs, sparks
 /// (fx_spark), ice spears (fx_shard), frostbolts (fx_orb), cold and steel waves (fx_wave,
-/// fx_steel_wave) and tornados (fx_tornado with whirling debris).
+/// fx_steel_wave) and tornados (fx_tornado with whirling debris: dust, a storm struck by
+/// lightning again and again, fire or ice).
 /// </summary>
 internal sealed class FxShots(FxKit kit)
 {
@@ -97,6 +98,11 @@ internal sealed class FxShots(FxKit kit)
     private const string FadingPart = "Fading";
     /// <summary>The name of a tornado's rings of debris, spun as it flies.</summary>
     private const string SpinPart = "Spin";
+    /// <summary>The names of a tornado's funnel layers, which a storm tornado's strikes light up (uFlash).</summary>
+    private const string FunnelPart = "Funnel";
+    /// <summary>How long between bolts striking a storm tornado, shortest and longest, and how fast its flash dies (per second).</summary>
+    private const float StrikeMin = 0.25f, StrikeMax = 0.7f, FlashFade = 6f;
+    private static readonly Color StormGlow = new(0.6f, 0.72f, 1f);
 
     internal sealed class Shot : FxItem
     {
@@ -104,7 +110,10 @@ internal sealed class FxShots(FxKit kit)
         public required FxShotLook Look;
         public GeometryInstance3D? Fading;
         public Node3D? Spin;
+        public GeometryInstance3D[] Funnels = [];
         public Vector3 Position;
+        public float NextStrike;
+        public float Flash;
         public float Size = 1f;
         public bool Lit;
 
@@ -128,6 +137,8 @@ internal sealed class FxShots(FxKit kit)
         var shot = _pool.Find(s => !s.Active && s.Look == look) ?? Make(look);
         shot.Begin(float.MaxValue);
         shot.Lit = false;
+        shot.NextStrike = 0.15f;
+        shot.Flash = 0f;
         shot.Node.Visible = true;
         ShowStuck(shot, false);
         return new FxShot(new FxHandle(shot));
@@ -140,9 +151,39 @@ internal sealed class FxShots(FxKit kit)
             if (!shot.Active)
                 continue;
             shot.Age += dt;
+            if (shot.Look == FxShotLook.StormTornado && shot.Node.Visible)
+                Storm(shot, dt);
             if (shot.Lit && shot.Node.Visible)
                 Shine(shot);
         }
+    }
+
+    public static bool IsTornado(FxShotLook look) =>
+        look is FxShotLook.Tornado or FxShotLook.StormTornado or FxShotLook.FireTornado or FxShotLook.IceTornado;
+
+    /// <summary>
+    /// A storm tornado: every so often a bolt comes down from the sky into the top of its funnel
+    /// and on down through its core to the ground, and the funnel flashes as it does.
+    /// </summary>
+    private static void Storm(Shot shot, float dt)
+    {
+        shot.Flash = Mathf.Max(shot.Flash - dt * FlashFade, 0f);
+        if (shot.Age >= shot.NextStrike)
+        {
+            shot.NextStrike = shot.Age + (float)GD.RandRange(StrikeMin, StrikeMax);
+            shot.Flash = 1f;
+            var scale = shot.Node.Scale.Y;
+            var foot = shot.Node.Position + Vector3.Down * Height * scale;
+            Vector3 Off(float reach) => Vector3.Forward.Rotated(Vector3.Up, GD.Randf() * Mathf.Tau) * reach * GD.Randf();
+            var top = foot + Vector3.Up * FunnelHeight * 0.85f * scale + Off(FunnelTop * 0.5f * scale);
+            var mid = foot + Vector3.Up * FunnelHeight * 0.45f * scale + Off(FunnelFoot * scale);
+            var sky = top + Vector3.Up * 9f + Off(1.5f);
+            // Lines are drawn LineLift above their ends: this keeps the bolt where it is meant to be.
+            var lift = Vector3.Up * Fx.LineLift;
+            Fx.Lightning([(sky - lift, top - lift), (top - lift, mid - lift), (mid - lift, foot + Vector3.Up * 0.1f - lift)], 0.12f, 1);
+        }
+        foreach (var funnel in shot.Funnels)
+            funnel.SetInstanceShaderParameter("uFlash", shot.Flash);
     }
 
     /// <summary>Frees the prototypes: they are never in the tree, so the tree will not free them.</summary>
@@ -162,7 +203,7 @@ internal sealed class FxShots(FxKit kit)
         // A thrown axe spins flat, whichever way it flies.
         if (shot.Look == FxShotLook.Axe)
             shot.Node.Rotation = new Vector3(0f, -shot.Age * AxeSpin, 0f);
-        else if (shot.Look == FxShotLook.Tornado)
+        else if (IsTornado(shot.Look))
         {
             shot.Node.Rotation = Vector3.Zero;
             if (shot.Spin != null)
@@ -185,6 +226,9 @@ internal sealed class FxShots(FxKit kit)
             FxShotLook.IceSpear or FxShotLook.IceArrow or FxShotLook.Frostbolt or FxShotLook.ColdWave => (new Color(0.5f, 0.8f, 1f), 3f, 0.2f),
             FxShotLook.PoisonArrow => (new Color(0.5f, 1f, 0.3f), 2.5f, 0.3f),
             FxShotLook.PhantomArrow => (new Color(0.6f, 0.75f, 1f), 2.5f, 0.3f),
+            FxShotLook.FireTornado => (new Color(1f, 0.5f, 0.15f), 5f, 0.9f),
+            FxShotLook.IceTornado => (new Color(0.5f, 0.8f, 1f), 3.5f, 0.25f),
+            FxShotLook.StormTornado => (StormGlow, 5f, 0.15f + shot.Flash * 1.6f),
             _ => (Colors.Black, 0f, 0f),
         };
         if (strength > 0f)
@@ -214,6 +258,7 @@ internal sealed class FxShots(FxKit kit)
         var shot = new Shot
         {
             Node = node, Look = look, Fading = node.GetNodeOrNull<GeometryInstance3D>(FadingPart), Spin = node.GetNodeOrNull<Node3D>(SpinPart),
+            Funnels = node.FindChildren(FunnelPart + "*", nameof(MeshInstance3D), recursive: false, owned: false).Cast<GeometryInstance3D>().ToArray(),
         };
         _pool.Add(shot);
         return shot;
@@ -397,8 +442,8 @@ internal sealed class FxShots(FxKit kit)
                 });
                 holder.AddChild(Missile(style: 1, new Color(0.55f, 0.85f, 1f), length: 2.2f, width: 0.8f, head: 0.1f, gap: 0.35f));
                 break;
-            case FxShotLook.Tornado:
-                BuildTornado(holder);
+            case FxShotLook.Tornado or FxShotLook.StormTornado or FxShotLook.FireTornado or FxShotLook.IceTornado:
+                BuildTornado(holder, look);
                 break;
             case FxShotLook.Fireball:
                 holder.AddChild(Missile(style: 0, FireColor, length: 3f, width: 1.8f, head: 0.15f, radius: 0.32f));
@@ -421,17 +466,35 @@ internal sealed class FxShots(FxKit kit)
     /// <summary>
     /// A tornado standing on the ground under the node: a funnel of dust and wind (fx_tornado.gdshader)
     /// round a denser, darker core, over a swirl of dust on the ground, with rings of debris
-    /// (clods, stones and splinters) whirling round it, the low ones fastest.
+    /// (clods, stones and splinters) whirling round it, the low ones fastest. A storm tornado is
+    /// slate cloud with lightning in its core and dark stones; a fire tornado flame round a
+    /// white-hot core, whirling embers; an ice tornado frost and snow, whirling chunks of ice.
     /// </summary>
-    private static void BuildTornado(Node3D holder)
+    private static void BuildTornado(Node3D holder, FxShotLook look)
     {
         var shader = FxShaders.Get("tornado");
+        // fx_tornado's style, its dust and dirt (outer funnel and core), what glows, and the debris.
+        var (style, dust, dirt, glow, colors) = look switch
+        {
+            FxShotLook.StormTornado => (1, new Color(0.4f, 0.44f, 0.54f), new Color(0.13f, 0.14f, 0.2f), StormGlow,
+                new[] { new Color(0.3f, 0.3f, 0.34f), new Color(0.45f, 0.46f, 0.5f), new Color(0.22f, 0.22f, 0.26f), new Color(0.38f, 0.36f, 0.34f) }),
+            FxShotLook.FireTornado => (2, new Color(0.3f, 0.16f, 0.09f), new Color(0.12f, 0.07f, 0.05f), FireColor,
+                new[] { new Color(1f, 0.55f, 0.15f), new Color(1f, 0.8f, 0.35f), new Color(0.9f, 0.3f, 0.05f), new Color(0.2f, 0.1f, 0.06f) }),
+            FxShotLook.IceTornado => (3, new Color(0.8f, 0.9f, 0.98f), new Color(0.32f, 0.52f, 0.78f), new Color(0.5f, 0.8f, 1f),
+                new[] { new Color(0.75f, 0.9f, 1f), new Color(0.55f, 0.78f, 0.98f), new Color(0.92f, 0.97f, 1f), new Color(0.45f, 0.68f, 0.92f) }),
+            _ => (0, new Color(0.72f, 0.64f, 0.52f), new Color(0.34f, 0.27f, 0.19f), Colors.White,
+                new[] { new Color(0.42f, 0.31f, 0.2f), new Color(0.58f, 0.55f, 0.5f), new Color(0.62f, 0.45f, 0.26f), new Color(0.35f, 0.42f, 0.2f) }),
+        };
         ShaderMaterial Layer(int layer)
         {
             // The ground swirl first, then the core, then the outer funnel over both.
             var material = new ShaderMaterial { Shader = shader, RenderPriority = layer == 2 ? -1 : layer == 1 ? 0 : 1 };
             material.SetShaderParameter("uLayer", layer);
             material.SetShaderParameter("uHeight", FunnelHeight);
+            material.SetShaderParameter("uStyle", style);
+            material.SetShaderParameter("uDust", FxKit.Rgb(dust));
+            material.SetShaderParameter("uDirt", FxKit.Rgb(dirt));
+            material.SetShaderParameter("uGlow", FxKit.Rgb(glow));
             return material;
         }
         const float foot = -Height;
@@ -446,6 +509,7 @@ internal sealed class FxShots(FxKit kit)
         foreach (var (layer, widen) in new[] { (1, 0.55f), (0, 1f) })
             holder.AddChild(new MeshInstance3D
             {
+                Name = FunnelPart + layer,
                 Mesh = new CylinderMesh
                 {
                     TopRadius = FunnelTop * widen, BottomRadius = FunnelFoot * widen, Height = FunnelHeight,
@@ -460,7 +524,6 @@ internal sealed class FxShots(FxKit kit)
 
         var spin = new Node3D { Name = SpinPart };
         holder.AddChild(spin);
-        var colors = new[] { new Color(0.42f, 0.31f, 0.2f), new Color(0.58f, 0.55f, 0.5f), new Color(0.62f, 0.45f, 0.26f), new Color(0.35f, 0.42f, 0.2f) };
         var rng = new RandomNumberGenerator { Seed = 7 };
         for (var r = 0; r < 3; r++)
         {

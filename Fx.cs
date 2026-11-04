@@ -166,6 +166,9 @@ public static class Fx
     /// <summary>How wide a cold or steel wave is drawn (and so should hit) with <paramref name="left"/> of its flight to go, 1 to 0.</summary>
     public static float WaveHalfWidth(FxShotLook look, float left) => FxShots.WaveHalfWidth(look, left);
 
+    /// <summary>Whether this look is a tornado (it stands upright on the ground and whirls, whatever way it flies).</summary>
+    public static bool IsTornado(FxShotLook look) => FxShots.IsTornado(look);
+
     internal static void Light(Vector3 at, float reach, Color color, float strength) =>
         Lighting?.Light(at, reach, color, strength);
 }

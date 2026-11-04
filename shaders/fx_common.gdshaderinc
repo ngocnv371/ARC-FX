@@ -13,6 +13,11 @@ vec3 fx_out(vec3 c)
 	return mix(lo, hi, step(vec3(0.04045), c));
 }
 
+vec3 fx_world_normal(vec3 view_normal, mat4 inv_view)
+{
+	return normalize((inv_view * vec4(view_normal, 0.0)).xyz);
+}
+
 float fx_fresnel(vec3 view_normal, vec3 view_dir, float power)
 {
 	return pow(1.0 - clamp(dot(normalize(view_normal), view_dir), 0.0, 1.0), power);

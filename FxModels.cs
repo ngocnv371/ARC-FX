@@ -31,6 +31,6 @@ public static class FxModels
         RockSpike?.Invoke() ?? FxKit.Wrap(new MeshInstance3D
         {
             Mesh = new CylinderMesh { TopRadius = 0f, BottomRadius = 0.3f, Height = 1f, RadialSegments = 5, Rings = 1 },
-            MaterialOverride = new StandardMaterial3D { AlbedoColor = new Color(0.5f, 0.45f, 0.4f) },
+            MaterialOverride = new StandardMaterial3D { AlbedoColor = new Color(0.5f, 0.45f, 0.4f), ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded },
         });
 }

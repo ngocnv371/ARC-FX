@@ -317,7 +317,17 @@ internal sealed class FxShots(FxKit kit)
         var holder = new Node3D { Name = "Arrow" };
         if (FxModels.Arrow?.Invoke() is not { } model)
         {
-            holder.AddChild(new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(0.05f, 0.05f, 0.9f) } });
+            // A pale shaft with a dark head, enough to read from the game camera.
+            var wood = new StandardMaterial3D { AlbedoColor = new Color(0.85f, 0.75f, 0.55f), ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded };
+            var iron = new StandardMaterial3D { AlbedoColor = new Color(0.3f, 0.32f, 0.36f), ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded };
+            holder.AddChild(new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(0.05f, 0.05f, 0.75f) }, MaterialOverride = wood, Position = Vector3.Back * 0.05f });
+            holder.AddChild(new MeshInstance3D
+            {
+                Mesh = new CylinderMesh { TopRadius = 0f, BottomRadius = 0.06f, Height = 0.15f, RadialSegments = 4, Rings = 1 },
+                MaterialOverride = iron,
+                Rotation = new Vector3(-Mathf.Pi / 2f, 0f, 0f),
+                Position = Vector3.Forward * 0.37f,
+            });
             return holder;
         }
 

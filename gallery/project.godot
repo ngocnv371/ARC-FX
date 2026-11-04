@@ -1,0 +1,36 @@
+; Engine configuration file.
+; ARC FX Gallery: every effect in the library, one at a time, on a plain floor under a game
+; camera, with the line of code that makes it. It sees the library through addons/arc_fx, a
+; junction to ../ that run.cmd makes, so it always shows the effects as they are on disk.
+
+config_version=5
+
+[application]
+
+config/name="ARC FX Gallery"
+config/description="Browse the ARC effects library."
+run/main_scene="res://gallery.tscn"
+config/features=PackedStringArray("4.7", "C#", "Mobile")
+boot_splash/bg_color=Color(0.02, 0.015, 0.04, 1)
+boot_splash/show_image=false
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/vsync/vsync_mode=1
+
+[dotnet]
+
+project/assembly_name="ArcFxGallery"
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=2
+environment/defaults/default_clear_color=Color(0.02, 0.015, 0.04, 1)

@@ -1,0 +1,22 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14</LangVersion>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Arc.Fx.Gallery</RootNamespace>
+    <AssemblyName>ArcFxGallery</AssemblyName>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The library is this folder's parent. Godot must find its scripts inside this project,
+         so run.cmd makes addons/arc_fx a junction to it and each file is compiled from there
+         (its res:// path is then res://addons/arc_fx/...). MSBuild wildcards don't walk through
+         junctions, so the files are found in .. and named through the junction one by one. -->
+    <Compile Remove="addons/**" />
+    <ArcFxSource Include="../*.cs" />
+    <Compile Include="@(ArcFxSource->'addons/arc_fx/%(Filename)%(Extension)')" />
+  </ItemGroup>
+</Project>

@@ -18,17 +18,16 @@ public readonly struct FxOrb
 }
 
 /// <summary>
-/// The crackling things: a storm orb (a tangle of lightning threads round a white core over a
-/// glow marking its reach, spitting little arcs), a frost bomb (a crystal cluster rising out of
+/// The crackling things: a storm orb (a big crackling clump of lightning, drawn as a spark's is
+/// by fx_spark, over a glow marking its reach), a frost bomb (a crystal cluster rising out of
 /// hoarfrost, spinning faster and glowing brighter until it bursts) and a nova (two rings racing
 /// out over a globe of lightning, jagged bolts arcing round the rim as they land).
 /// </summary>
 internal sealed class FxStorms(FxKit kit, FxWorld world)
 {
     private const float OrbHeight = 2f;
-    private const float OrbSize = 0.7f;
-    private const int OrbThreads = 12;
-    private const int OrbKinks = 5;
+    /// <summary>The side of the orb's camera-facing quad; its tendrils reach 0.3 to 0.5 of it from the heart.</summary>
+    private const float OrbSize = 2.6f;
     public static readonly Color OrbColor = new(0.45f, 0.65f, 1f);
 
     /// <summary>How big a bomb's crystal cluster is drawn (the mesh is about a quarter metre tall).</summary>
@@ -43,14 +42,10 @@ internal sealed class FxStorms(FxKit kit, FxWorld world)
     internal sealed class Orb : FxItem
     {
         public required Node3D Node;
-        public required MeshInstance3D Core;
-        public required MeshInstance3D Halo;
+        public required MeshInstance3D Clump;
         public required OmniLight3D Light;
-        public required MeshInstance3D[] Threads;
         public Vector3 Centre;
         public Vector3 Heart;
-        public float NextCrackle;
-        public float NextTangle;
     }
 
     private sealed class Bomb : FxItem
@@ -85,7 +80,6 @@ internal sealed class FxStorms(FxKit kit, FxWorld world)
     private readonly List<Orb> _orbs = [];
     private readonly List<Bomb> _bombs = [];
     private readonly List<Ring> _novas = [];
-    private readonly StandardMaterial3D _haloMaterial = FxKit.Glow(new Color(0.15f, 0.35f, 1f, 0.22f));
     private readonly StandardMaterial3D _bombHaloMaterial = FxKit.Glow(new Color(0.3f, 0.65f, 1f, 0.2f));
     private readonly ArrayMesh _bombMesh = FxCrystalMesh.Cluster();
 
@@ -94,8 +88,9 @@ internal sealed class FxStorms(FxKit kit, FxWorld world)
         var orb = _orbs.Find(o => !o.Active) ?? MakeOrb();
         orb.Begin(life);
         orb.Centre = centre with { Y = 0f };
-        orb.NextCrackle = orb.NextTangle = 0f;
         orb.Node.Visible = true;
+        // fx_spark takes its pattern from the way the node faces, so each orb crackles its own way.
+        orb.Node.Rotation = new Vector3(0f, GD.Randf() * Mathf.Tau, 0f);
         world.Patch(orb.Centre, radius, life, OrbColor);
         Tick(orb, 0f);
         return new FxOrb(new FxHandle(orb));
@@ -166,44 +161,10 @@ internal sealed class FxStorms(FxKit kit, FxWorld world)
         var height = OrbHeight + 0.12f * Mathf.Sin(orb.Age * 3f);
         orb.Heart = orb.Centre + Vector3.Up * height;
         orb.Node.Position = orb.Heart;
-        orb.Core.Scale = Vector3.One * size * (float)GD.RandRange(0.22, 0.32);
-        orb.Halo.Scale = Vector3.One * size * (float)GD.RandRange(1.2, 1.45);
+        // A slight throb, so it reads as live rather than a still picture.
+        orb.Clump.Scale = Vector3.One * size * (float)GD.RandRange(0.93, 1.05);
         orb.Light.LightEnergy = (float)GD.RandRange(1.6, 2.4) * size / OrbSize;
         FxKit.Pool(orb.Light, 0.35f);
-        if (orb.Age >= orb.NextTangle)
-        {
-            orb.NextTangle += 0.05f;
-            Tangle(orb, size);
-        }
-        if (orb.Age >= orb.NextCrackle)
-        {
-            orb.NextCrackle += (float)GD.RandRange(0.06, 0.16);
-            // Lines are drawn Lift above their ends, so this puts the arc's start in the orb.
-            var heart = orb.Heart - Vector3.Up * FxLines.Lift;
-            var arc = Vector3.Forward.Rotated(Vector3.Right, (float)GD.RandRange(-1.2, 1.2)).Rotated(Vector3.Up, GD.Randf() * Mathf.Tau);
-            world.Lightning([(heart, heart + arc * (float)GD.RandRange(0.5, 1.1))], 0.07f);
-        }
-    }
-
-    /// <summary>
-    /// Knots the orb's threads afresh: each runs over the ball from one random point on its
-    /// surface to another, bulging in and out as it goes; a third start from the core instead,
-    /// so the bundle looks fed from its heart.
-    /// </summary>
-    private static void Tangle(Orb orb, float size)
-    {
-        for (var t = 0; t < OrbThreads; t++)
-        {
-            var (from, to) = (FxKit.RandomDirection(), FxKit.RandomDirection());
-            var previous = t % 3 == 0 ? from * size * 0.1f : from * size;
-            for (var k = 1; k <= OrbKinks; k++)
-            {
-                var reach = k == OrbKinks ? 1f : (float)GD.RandRange(0.55, 1.15);
-                var point = from.Slerp(to, (float)k / OrbKinks) * size * reach;
-                FxKit.Lay(orb.Threads[t * OrbKinks + k - 1], previous, point, (float)GD.RandRange(0.015, 0.03));
-                previous = point;
-            }
-        }
     }
 
     private void Tick(Bomb bomb, float dt)
@@ -272,20 +233,18 @@ internal sealed class FxStorms(FxKit kit, FxWorld world)
     private Orb MakeOrb()
     {
         var node = new Node3D();
-        var core = FxKit.Mesh(kit.Orb, kit.Bolt);
-        var halo = FxKit.Mesh(kit.Orb, _haloMaterial);
-        var light = new OmniLight3D { LightColor = OrbColor, OmniRange = 6f, ShadowEnabled = false };
-        node.AddChild(halo);
-        node.AddChild(core);
-        node.AddChild(light);
-        var threads = new MeshInstance3D[OrbThreads * OrbKinks];
-        for (var i = 0; i < threads.Length; i++)
+        // fx_spark turns its quad to the camera and draws the clump on it, as for a spark in flight.
+        var clump = new MeshInstance3D
         {
-            threads[i] = kit.BoltPiece();
-            node.AddChild(threads[i]);
-        }
+            Mesh = new QuadMesh { Size = Vector2.One },
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+            MaterialOverride = FxKit.Shader("spark"),
+        };
+        var light = new OmniLight3D { LightColor = OrbColor, OmniRange = 6f, ShadowEnabled = false };
+        node.AddChild(clump);
+        node.AddChild(light);
         kit.Parent.AddChild(node);
-        var orb = new Orb { Node = node, Core = core, Halo = halo, Light = light, Threads = threads };
+        var orb = new Orb { Node = node, Clump = clump, Light = light };
         _orbs.Add(orb);
         return orb;
     }

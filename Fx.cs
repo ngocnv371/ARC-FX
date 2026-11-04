@@ -51,7 +51,10 @@ public static class Fx
     public static FxPatch Aura(Node3D follow, float radius, float keep, FxElement element) =>
         World?.Aura(follow, radius, keep, FxTheme.Of(element), FxPatches.GroundOf(element)) ?? default;
 
-    /// <summary>An aura in any colour and look; <see cref="FxGround.Inferno"/> raises a bubble of fire over it.</summary>
+    /// <summary>
+    /// An aura in any colour and look; <see cref="FxGround.Inferno"/> raises a bubble of fire over it,
+    /// <see cref="FxGround.Miasma"/> a dome of poison vapour.
+    /// </summary>
     public static FxPatch Aura(Node3D follow, float radius, float keep, Color color, FxGround look = FxGround.Glow) =>
         World?.Aura(follow, radius, keep, color, look) ?? default;
 

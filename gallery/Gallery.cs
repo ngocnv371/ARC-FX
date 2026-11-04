@@ -321,6 +321,8 @@ public partial class Gallery : Node3D
 
             new("Ground", "Burning", "Fx.Patch(at, 3f, life: 3f, FxElement.Fire);", 3.5f, 1f, _ => Fx.Patch(Vector3.Zero, 3f, 3f, FxElement.Fire)),
             new("Ground", "Poison pool", "Fx.Patch(at, 3f, life: 3f, FxElement.Poison);", 3.5f, 1f, _ => Fx.Patch(Vector3.Zero, 3f, 3f, FxElement.Poison)),
+            new("Ground", "Poison cloud", "Fx.Patch(at, 3f, life: 4f, poison, FxGround.Miasma);", 4.5f, 1.5f,
+                _ => Fx.Patch(Vector3.Zero, 3f, 4f, FxTheme.Of(FxElement.Poison), FxGround.Miasma)),
             new("Ground", "Hoarfrost", "Fx.Patch(at, 3f, life: 3f, FxElement.Frost);", 3.5f, 1f, _ => Fx.Patch(Vector3.Zero, 3f, 3f, FxElement.Frost)),
             new("Ground", "Glow", "Fx.Patch(at, 3f, life: 3f, FxElement.Holy);", 3.5f, 1f, _ => Fx.Patch(Vector3.Zero, 3f, 3f, FxElement.Holy)),
             new("Ground", "Warning", "Fx.Patch(at, 2.5f, life: 1.2f, red, FxGround.Warning);", 2f, 0.9f,

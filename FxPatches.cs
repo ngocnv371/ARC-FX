@@ -17,6 +17,8 @@ public enum FxGround
     Warning = 8,
     /// <summary>A ring of flame under a slowly turning bubble of fire.</summary>
     Inferno = 9,
+    /// <summary>A poison cloud: a bubbling pool under a low dome of drifting green vapour.</summary>
+    Miasma = 10,
 }
 
 /// <summary>
@@ -73,7 +75,8 @@ public readonly struct FxPatch
 
 /// <summary>
 /// Pooled patches of ground (fx_ground): burning ground, poison pools, hoarfrost, glows and warnings,
-/// which may ride on a node (an aura). An Inferno patch also raises a bubble of fire (fx_inferno).
+/// which may ride on a node (an aura). An Inferno patch also raises a bubble of fire (fx_inferno),
+/// a Miasma patch a low dome of poison vapour (fx_miasma) over a poison pool.
 /// Each lights what is around it while it shows.
 /// </summary>
 internal sealed class FxPatches(Node3D parent)
@@ -82,6 +85,9 @@ internal sealed class FxPatches(Node3D parent)
     /// <summary>An Inferno bubble's height as a share of its radius, and how long it takes to swell in or die away.</summary>
     private const float BubbleHeight = 0.6f;
     private const float BubbleFade = 0.35f;
+    /// <summary>A Miasma dome sits lower and rolls in and thins away more slowly.</summary>
+    private const float MiasmaHeight = 0.45f;
+    private const float MiasmaFade = 0.6f;
 
     internal sealed class Patch
     {
@@ -119,7 +125,7 @@ internal sealed class FxPatches(Node3D parent)
     public FxPatch Aura(Node3D follow, float radius, float keep, Color color, FxGround look)
     {
         var patch = _pool.Find(p => p.Active && p.Follow == follow && p.Look == look) ?? Take(follow.Position, radius, keep, color, look);
-        if (look == FxGround.Inferno)
+        if (HasBubble(look))
             ShowBubble(patch, color);
         patch.Follow = follow;
         patch.Position = follow.Position with { Y = 0f };
@@ -141,10 +147,11 @@ internal sealed class FxPatches(Node3D parent)
         patch.Life = life;
         patch.Look = look;
         patch.Color = color;
-        patch.GroundMaterial.SetShaderParameter("uStyle", (int)look);
+        // A Miasma's ground is the poison pool; the vapour is its dome.
+        patch.GroundMaterial.SetShaderParameter("uStyle", (int)(look == FxGround.Miasma ? FxGround.Poison : look));
         patch.GroundMaterial.SetShaderParameter("uColor", FxWorld.Rgb(color));
         patch.Ground.Visible = true;
-        if (look == FxGround.Inferno)
+        if (HasBubble(look))
             ShowBubble(patch, color);
         else if (patch.Bubble != null)
             patch.Bubble.Visible = false;
@@ -198,11 +205,13 @@ internal sealed class FxPatches(Node3D parent)
         return patch;
     }
 
+    private static bool HasBubble(FxGround look) => look is FxGround.Inferno or FxGround.Miasma;
+
     private void ShowBubble(Patch patch, Color color)
     {
         if (patch.Bubble == null)
         {
-            patch.BubbleMaterial = new ShaderMaterial { Shader = FxShaders.Get("inferno") };
+            patch.BubbleMaterial = new ShaderMaterial();
             patch.Bubble = new MeshInstance3D
             {
                 Mesh = _globeMesh,
@@ -211,7 +220,9 @@ internal sealed class FxPatches(Node3D parent)
             };
             parent.AddChild(patch.Bubble);
         }
-        patch.BubbleMaterial!.SetShaderParameter("uColor", FxWorld.Rgb(color));
+        // A pooled patch can be fire one time and poison the next.
+        patch.BubbleMaterial!.Shader = FxShaders.Get(patch.Look == FxGround.Miasma ? "miasma" : "inferno");
+        patch.BubbleMaterial.SetShaderParameter("uColor", FxWorld.Rgb(color));
         patch.Bubble.Visible = true;
     }
 
@@ -228,9 +239,10 @@ internal sealed class FxPatches(Node3D parent)
         if (patch.Bubble is { Visible: true } bubble)
         {
             // Centred on the ground, so only its upper half shows: a dome over the hero.
+            var (height, fade) = patch.Look == FxGround.Miasma ? (MiasmaHeight, MiasmaFade) : (BubbleHeight, BubbleFade);
             bubble.Position = patch.Position;
-            bubble.Scale = new Vector3(patch.Radius, patch.Radius * BubbleHeight, patch.Radius);
-            patch.BubbleMaterial!.SetShaderParameter("uBurn", Mathf.Clamp(Mathf.Min(patch.Age, patch.Life - patch.Age) / BubbleFade, 0f, 1f));
+            bubble.Scale = new Vector3(patch.Radius, patch.Radius * height, patch.Radius);
+            patch.BubbleMaterial!.SetShaderParameter("uBurn", Mathf.Clamp(Mathf.Min(patch.Age, patch.Life - patch.Age) / fade, 0f, 1f));
         }
     }
 
@@ -245,6 +257,7 @@ internal sealed class FxPatches(Node3D parent)
             FxGround.Warning => (1.2f, 0.3f),
             // Pale light on pale ground (snow) clips to white, so cold and poison stay faint.
             FxGround.Poison or FxGround.Frost => (1.3f, 0.15f),
+            FxGround.Miasma => (1.4f, 0.2f),
             _ => (1.4f, 0.35f),
         };
         if (patch.Look is FxGround.Fire or FxGround.Inferno)

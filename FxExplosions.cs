@@ -7,9 +7,9 @@ public enum FxBurst
 {
     /// <summary>A churning dome that burns away over a shockwave and its afterglow.</summary>
     Dome,
-    /// <summary>A globe of flame that pops into a ring of fire rolling out, leaving a scorch.</summary>
+    /// <summary>A globe of flame swelling over a ring of fire that rolls out with it, leaving a scorch.</summary>
     Fire,
-    /// <summary>A crystal globe that shatters into a ring of ice, leaving hoarfrost.</summary>
+    /// <summary>A crystal globe swelling over a ring of ice that rolls out with it, then shattering, leaving hoarfrost.</summary>
     Frost,
     /// <summary>A globe of crackling lightning that pops as a small nova's rings land.</summary>
     Lightning,

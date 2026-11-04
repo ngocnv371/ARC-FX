@@ -22,18 +22,15 @@ const int INFERNO = 9;
 // A fire or frost blast's plane reaches this far past its damage radius, room for flame
 // tongues and crystals (Blasts.BurstPad).
 const float BLAST_PAD = 1.3;
-// When the blast's globe pops (Blasts.GlobeTime * GlobePop) and how big it is then
-// (Blasts.GlobeSize): the ring rolls out from under it.
+// When the blast's globe pops (Blasts.GlobeTime * GlobePop): the ring reaches the radius then.
 const float BLAST_POP = 0.27;
-const float BLAST_GLOBE = 0.7;
 
-// How far a fire or frost blast's front has got, in radii: it grows with the globe, waits
-// under it, bursts out when it pops and eases to a stop at the radius.
+// How far a fire or frost blast's front has got, in radii: it races out with the globe from
+// the first frame, on the same ease (Blasts.PlaceGlobe's swell), and lands as the globe pops,
+// the way a lightning blast's nova does.
 float blast_front(float age)
 {
-	float wave = max(age - BLAST_POP, 0.0);
-	return BLAST_GLOBE * min(age / BLAST_POP, 1.0)
-		+ (1.0 - BLAST_GLOBE) * (1.0 - pow(1.0 - min(wave / 0.2, 1.0), 3.0));
+	return 1.0 - pow(1.0 - min(age / BLAST_POP, 1.0), 3.0);
 }
 
 uniform int uStyle = 0;
@@ -167,8 +164,8 @@ void fragment()
 		vec2 dir = local / max(d, 1e-4);
 		float age = uAge;
 
-		// The front waits under the globe, bursts out when it pops, eases out and stops at the
-		// radius; its edge is ragged with tongues of flame.
+		// The front rolls out with the globe and stops at the radius as it pops; its edge is
+		// ragged with tongues of flame.
 		float wave = max(age - BLAST_POP, 0.0);
 		float front = blast_front(age);
 		float twist = d * 4.0 - age * 3.0;
@@ -179,8 +176,7 @@ void fragment()
 		float inside = (edge - d) / width;
 		float band = smoothstep(-0.05, 0.1, inside) * smoothstep(1.4, 0.25, inside);
 		// The ring burns out in ragged holes once it has arrived.
-		float burnout = smoothstep(0.25, 0.9, wave);
-		band *= 0.3 + 0.7 * smoothstep(BLAST_POP - 0.08, BLAST_POP, age);
+		float burnout = smoothstep(0.05, 0.7, wave);
 		band *= smoothstep(burnout - 0.1, burnout + 0.15, churn * (1.0 - burnout * 0.3));
 
 		// Streaks: thin ridges stretched round the ring and curled by the churn, brightest near the edge.
@@ -215,9 +211,9 @@ void fragment()
 	}
 	else if (uStyle == FROST_BLAST)
 	{
-		// A frost blast seen from above: when the crystal globe shatters, a band of ice rolls
-		// out to the damage radius, jagged with crystals at its front, a cold flash bursts at
-		// the centre, and it leaves hoarfrost with glinting veins that melts away.
+		// A frost blast seen from above: a band of ice rolls out with the crystal globe to the
+		// damage radius, jagged with crystals at its front, a cold flash bursts at
+		// the centre as the globe shatters, and it leaves hoarfrost with glinting veins that melts away.
 		float d = r * BLAST_PAD;
 		vec2 local = (UV - 0.5) * 2.0 * uExtent / (uExtent.y / BLAST_PAD);
 		vec2 dir = local / max(d, 1e-4);
@@ -232,12 +228,11 @@ void fragment()
 		float edge = front + spike - 0.04;
 		float inside = (edge - d) / (0.08 + 0.16 * front);
 		float band = smoothstep(-0.02, 0.03, inside) * smoothstep(1.2, 0.1, inside);
-		band *= 0.3 + 0.7 * smoothstep(BLAST_POP - 0.08, BLAST_POP, age);
 		// The band is chunks of ice, each facet its own shade with bright seams; once it has
 		// arrived the chunks break away one by one.
 		vec3 chunks = fx_cells(local * 4.0 + 1.7);
 		float seam = 1.0 - smoothstep(0.0, 0.05, chunks.y);
-		band *= step(smoothstep(0.2, 0.75, wave) * 1.05, chunks.z * 0.95 + 0.02);
+		band *= step(smoothstep(0.0, 0.55, wave) * 1.05, chunks.z * 0.95 + 0.02);
 		float ice = band * (0.45 + 0.35 * chunks.z + seam * 0.6);
 
 		// A cold flash where the globe burst.

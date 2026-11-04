@@ -63,7 +63,8 @@ internal sealed class FxExplosions(Node3D parent)
 
     private readonly List<Blast> _pool = [];
     private readonly PlaneMesh _groundMesh = new() { Size = new Vector2(2f, 2f) };
-    private readonly SphereMesh _domeMesh = new() { Radius = 1f, Height = 1f, RadialSegments = 24, Rings = 8 };
+    // Fine enough for fx_blast's billows to bend its outline.
+    private readonly SphereMesh _domeMesh = new() { Radius = 1f, Height = 1f, RadialSegments = 48, Rings = 24 };
     private readonly SphereMesh _globeMesh = new() { Radius = 1f, Height = 2f, RadialSegments = 32, Rings = 16 };
     // Few faces, so the shader's flat shading makes it read as cut crystal.
     private readonly SphereMesh _crystalMesh = new() { Radius = 1f, Height = 2f, RadialSegments = 12, Rings = 6 };

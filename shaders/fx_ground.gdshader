@@ -132,11 +132,24 @@ void fragment()
 	}
 	else if (uStyle == SHOCK)
 	{
-		// A blast's ring racing outward, then a churning afterglow that cools and fades.
+		// A blast's ring racing outward, then a churning afterglow that cools and fades. The
+		// ring is no clean circle: its front bulges and lags round the way, it is thick and
+		// bright in places and thin or gone in others, and a ragged wake trails behind it.
 		float front = 1.0 - pow(1.0 - min(uAge / 0.3, 1.0), 2.0);
 		float n = fx_fbm(vWorld * 1.8 + TIME * 0.5);
-		float ring = smoothstep(0.14, 0.0, abs(r - front * 0.88)) * (1.0 - u);
-		float after = (1.0 - smoothstep(0.0, 1.0, u)) * smoothstep(1.0, 0.3, r + (n - 0.5) * 0.5) * n;
+		vec2 dir = normalize((UV - 0.5) * 2.0 + vec2(1e-4));
+		vec2 seed = NODE_POSITION_WORLD.xz * 0.37;
+		float bulge = fx_fbm(dir * 1.6 + seed) - 0.5;
+		float jag = fx_fbm(dir * 7.0 + seed + vec2(uAge * 2.0, 0.0)) - 0.5;
+		float at = front * (0.88 + bulge * 0.28) + jag * 0.05 * front;
+		float width = 0.1 + 0.12 * fx_fbm(dir * 3.5 + seed + 4.7);
+		float d = r - at;
+		// A hard leading edge, a softer, longer wake.
+		float ring = (d > 0.0 ? smoothstep(width * 0.45, 0.0, d) : smoothstep(width * 1.6, 0.0, -d)) * (1.0 - u);
+		// Uneven along the way; faded in as it grows, so it doesn't pinch to spokes at the centre.
+		float patchy = 0.35 + 0.9 * smoothstep(0.3, 0.7, fx_fbm(dir * 5.0 + seed - vec2(0.0, r * 3.0)));
+		ring *= mix(1.0, patchy, smoothstep(0.15, 0.45, front));
+		float after = (1.0 - smoothstep(0.0, 1.0, u)) * smoothstep(1.0, 0.3, r + (n - 0.5) * 0.5 + bulge * 0.3) * n;
 		float t = clamp(ring * 1.2 + after * 0.9, 0.0, 1.0);
 		glow = fx_ramp(uColor, t) * t * 1.4;
 		cover = after * 0.3;

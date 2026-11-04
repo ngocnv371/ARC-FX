@@ -20,6 +20,7 @@ public partial class FxWorld : Node3D
     private FxIres? _ires;
     private FxSlams? _slams;
     private FxRams? _rams;
+    private FxShots? _shots;
 
     /// <summary>Advance in <c>_Process</c>; false: the game calls <see cref="Tick"/>.</summary>
     public bool AutoTick { get; set; } = true;
@@ -34,6 +35,7 @@ public partial class FxWorld : Node3D
     private FxIres Ires => _ires ??= new FxIres(Kit);
     private FxSlams Slams => _slams ??= new FxSlams(Kit, this);
     private FxRams Rams => _rams ??= new FxRams(Kit, this);
+    private FxShots Shots => _shots ??= new FxShots(Kit);
 
     public override void _EnterTree() => Fx.World = this;
 
@@ -41,6 +43,7 @@ public partial class FxWorld : Node3D
     {
         if (Fx.World == this)
             Fx.World = null;
+        _shots?.Release();
     }
 
     public override void _Process(double delta)
@@ -54,6 +57,7 @@ public partial class FxWorld : Node3D
     {
         // Things that spawn others (a storm's crackles, a smite's blast, a bomb's burst, a ram's
         // dust) go first, so what they spawn starts this frame.
+        _shots?.Tick(dt);
         _storms?.Tick(dt);
         _ires?.Tick(dt);
         _slams?.Tick(dt);
@@ -126,6 +130,9 @@ public partial class FxWorld : Node3D
     /// <inheritdoc cref="Fx.Ram"/>
     public FxHandle Ram(FxRam look, Func<Vector3?> at, Vector3 direction, float life, float size = 1f) =>
         Rams.Spawn(look, at, direction, life, size);
+
+    /// <inheritdoc cref="Fx.Shot"/>
+    public FxShot Shot(FxShotLook look) => Shots.Spawn(look);
 
     // The fx shaders take display colours and decode them themselves.
     internal static Vector3 Rgb(Color c) => new(c.R, c.G, c.B);

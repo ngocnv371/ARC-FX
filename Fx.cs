@@ -154,6 +154,18 @@ public static class Fx
     public static FxHandle Ram(FxRam look, Func<Vector3?> at, Vector3 direction, float life, float size = 1f) =>
         World?.Ram(look, at, direction, life, size) ?? default;
 
+    /// <summary>
+    /// A projectile's look, shown until released: the game flies it and calls
+    /// <see cref="FxShot.Place"/> every frame. Shots fly <see cref="ShotHeight"/> above the ground.
+    /// </summary>
+    public static FxShot Shot(FxShotLook look) => World?.Shot(look) ?? default;
+
+    /// <summary>How high above the ground shots are meant to fly: waves and tornados reach down this far to the ground.</summary>
+    public const float ShotHeight = FxShots.Height;
+
+    /// <summary>How wide a cold or steel wave is drawn (and so should hit) with <paramref name="left"/> of its flight to go, 1 to 0.</summary>
+    public static float WaveHalfWidth(FxShotLook look, float left) => FxShots.WaveHalfWidth(look, left);
+
     internal static void Light(Vector3 at, float reach, Color color, float strength) =>
         Lighting?.Light(at, reach, color, strength);
 }

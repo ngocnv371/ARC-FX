@@ -18,6 +18,12 @@ public static class FxModels
     /// <summary>A large hammer, for the spectral hammer that smites. Fallback: a haft and a head.</summary>
     public static Func<Node3D?>? Hammer { get; set; }
 
+    /// <summary>An arrow, any length (it is laid along its longest side, head at its +Z end, and scaled to 0.9 m). Fallback: a stick.</summary>
+    public static Func<Node3D?>? Arrow { get; set; }
+
+    /// <summary>A great axe, for the spectral thrown axe (scaled to 1.75 m along its haft). Fallback: a bar.</summary>
+    public static Func<Node3D?>? Axe { get; set; }
+
     internal static Node3D ShieldOrFallback() =>
         Shield?.Invoke() ?? FxKit.Wrap(new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(1f, 1.4f, 0.12f) } });
 

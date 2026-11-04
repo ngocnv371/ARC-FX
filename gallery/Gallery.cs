@@ -6,9 +6,10 @@ namespace Arc.Fx.Gallery;
 /// ARC FX Gallery: every effect in the library on a plain floor, under the camera the ARC games
 /// use, replaying every few seconds, with the call that makes it written underneath. Up and
 /// Down (or the list) pick one, Space plays it again, V switches between the game camera and a
-/// close look, F the floor, Esc quits. Options: <c>--effect=name</c> starts on one;
-/// <c>--view=close</c>; <c>--shot=dir</c> plays each in turn and saves dir/name.png as it peaks,
-/// then quits (<c>--only=a,b</c> limits that to a few).
+/// close look, F the floor, - and + slow it down or speed it back up, P pauses, Esc quits.
+/// Options: <c>--effect=name</c> starts on one; <c>--view=close</c>; <c>--speed=0.25</c>;
+/// <c>--shot=dir</c> plays each in turn and saves dir/name.png as it peaks, then quits
+/// (<c>--only=a,b</c> limits that to a few).
 /// </summary>
 public partial class Gallery : Node3D
 {
@@ -22,6 +23,11 @@ public partial class Gallery : Node3D
     ];
     private static readonly (string Name, Color Color)[] Floors =
         [("Meadow", new Color(0.32f, 0.42f, 0.3f)), ("Scorched", new Color(0.12f, 0.08f, 0.06f)), ("Snow", new Color(0.78f, 0.82f, 0.86f))];
+
+    // Slow motion for fast things (arrows cross the stage in a fraction of a second). It sets
+    // Engine.TimeScale, which scales process delta and shader TIME alike, so the effects, the
+    // replay clock and their flicker all slow together.
+    private static readonly float[] Speeds = [1f, 0.5f, 0.25f, 0.1f, 0.05f];
 
     private readonly Camera3D _camera = new() { Fov = 34f, Near = 0.1f, Far = 300f };
     private readonly MeshInstance3D _floor = new()
@@ -41,6 +47,8 @@ public partial class Gallery : Node3D
     private int _selected;
     private int _view;
     private int _floorIndex;
+    private int _speed;
+    private bool _paused;
     private float _clock;
     private Dictionary<string, string> _options = [];
 
@@ -65,6 +73,16 @@ public partial class Gallery : Node3D
         _view = _options.GetValueOrDefault("view") == "close" ? 1 : 0;
         ApplyView();
         ApplyFloor();
+        if (_options.TryGetValue("speed", out var speed) && float.TryParse(speed, System.Globalization.CultureInfo.InvariantCulture, out var wanted))
+        {
+            // The nearest step at or below what was asked for.
+            _speed = Array.FindIndex(Speeds, s => s <= wanted + 0.001f);
+            if (_speed < 0)
+                _speed = Speeds.Length - 1;
+        }
+        // A bake times its pictures by the effects' own clock, so it always runs at full speed.
+        if (!_options.ContainsKey("shot"))
+            ApplySpeed();
         if (_options.TryGetValue("effect", out var start))
             _selected = Math.Max(0, _entries.FindIndex(e => NameOf(e).Equals(start, StringComparison.OrdinalIgnoreCase)));
         if (_options.TryGetValue("shot", out var dir))
@@ -114,6 +132,18 @@ public partial class Gallery : Node3D
             case Key.F:
                 _floorIndex = (_floorIndex + 1) % Floors.Length;
                 ApplyFloor();
+                break;
+            case Key.Minus or Key.KpSubtract or Key.Bracketleft:
+                _speed = Math.Min(_speed + 1, Speeds.Length - 1);
+                ApplySpeed();
+                break;
+            case Key.Equal or Key.Plus or Key.KpAdd or Key.Bracketright:
+                _speed = Math.Max(_speed - 1, 0);
+                ApplySpeed();
+                break;
+            case Key.P:
+                _paused = !_paused;
+                ApplySpeed();
                 break;
         }
     }
@@ -168,8 +198,15 @@ public partial class Gallery : Node3D
         UpdateHint();
     }
 
+    private void ApplySpeed()
+    {
+        Engine.TimeScale = _paused ? 0.0 : Speeds[_speed];
+        UpdateHint();
+    }
+
     private void UpdateHint() =>
-        _hint.Text = $"↑↓ effect   Space replay   V view: {Views[_view].Name}   F floor: {Floors[_floorIndex].Name}   Esc quit";
+        _hint.Text = $"↑↓ effect   Space replay   V view: {Views[_view].Name}   F floor: {Floors[_floorIndex].Name}   " +
+            $"−/+ speed: {Speeds[_speed]:0.##}×{(_paused ? " (paused)" : "")}   P pause   Esc quit";
 
     private void BuildUi()
     {
@@ -252,8 +289,9 @@ public partial class Gallery : Node3D
     private void Fly(FxShotLook look, float speed = 14f, float range = 16f)
     {
         var shot = Fx.Shot(look);
-        var from = new Vector3(-range * 0.5f, Fx.ShotHeight, 1.5f);
-        var velocity = Vector3.Right * speed;
+        // Right to left across the stage.
+        var from = new Vector3(range * 0.5f, Fx.ShotHeight, 1.5f);
+        var velocity = Vector3.Left * speed;
         var age = 0f;
         var life = range / speed;
         Run(dt =>

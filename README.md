@@ -54,7 +54,8 @@ places itself.
 
 `gallery/run.cmd` opens ARC FX Gallery: every effect on a plain floor under the game camera,
 replaying every few seconds, with its call written underneath. Up and Down pick one, Space replays
-it, V switches to a close look, F changes the floor. `run.cmd --shot=dir` saves a picture of each
+it, V switches to a close look, F changes the floor, - and + step the speed down to 0.05× and
+back (P pauses) to follow fast things like arrows. `run.cmd --shot=dir` saves a picture of each
 effect as it peaks and quits (`--only=explosion_fire,storm_nova` for a few), in a window that never
 takes focus. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
 

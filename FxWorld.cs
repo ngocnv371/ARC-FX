@@ -87,9 +87,9 @@ public partial class FxWorld : Node3D
     public FxPatch Aura(Node3D follow, float radius, float keep, Color color, FxGround look = FxGround.Glow) =>
         Patches.Aura(follow, radius, keep, color, look);
 
-    /// <inheritdoc cref="Fx.Sigil(Node3D, FxSigil, float, float, Color)"/>
-    public FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep, Color color) =>
-        Sigils.Spawn(follow, sigil, radius, keep, color);
+    /// <inheritdoc cref="Fx.Sigil(Node3D, FxSigil, float, float, Color, FxSigilLook)"/>
+    public FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep, Color color, FxSigilLook look = FxSigilLook.Disc) =>
+        Sigils.Spawn(follow, sigil, radius, keep, color, look);
 
     /// <inheritdoc cref="Fx.Lightning"/>
     public FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0) =>

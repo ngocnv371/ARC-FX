@@ -63,13 +63,19 @@ public static class Fx
     /// a disc of light <paramref name="radius"/> round, its rings and runes slowly turning round
     /// the emblem of what the aura does, in <see cref="FxTheme.Of(FxSigil)"/>'s colour. Calling
     /// again for the same node and sigil renews that one; once nothing does, it fades.
+    /// <para>
+    /// For a character who may wear several auras at once, use <see cref="FxSigilLook.Ring"/>:
+    /// all of them then share one ring of runes <paramref name="radius"/> round (the widest asked
+    /// for) with nothing in the middle, and each aura adds a small badge with its emblem just
+    /// outside it, at that sigil's own angle, so they sit side by side and never overlap.
+    /// </para>
     /// </summary>
-    public static FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep) =>
-        World?.Sigil(follow, sigil, radius, keep, FxTheme.Of(sigil)) ?? default;
+    public static FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep, FxSigilLook look = FxSigilLook.Disc) =>
+        World?.Sigil(follow, sigil, radius, keep, FxTheme.Of(sigil), look) ?? default;
 
     /// <summary>An aura's sigil in any colour.</summary>
-    public static FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep, Color color) =>
-        World?.Sigil(follow, sigil, radius, keep, color) ?? default;
+    public static FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep, Color color, FxSigilLook look = FxSigilLook.Disc) =>
+        World?.Sigil(follow, sigil, radius, keep, color, look) ?? default;
 
     /// <summary>
     /// Lightning along each segment for <paramref name="life"/> seconds: jagged strands that

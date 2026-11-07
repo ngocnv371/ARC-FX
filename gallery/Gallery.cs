@@ -335,6 +335,14 @@ public partial class Gallery : Node3D
             .. Enum.GetValues<FxSigil>().Select(sigil => new Entry("Sigil", sigil.ToString(),
                 $"Fx.Sigil(caster, FxSigil.{sigil}, 1.6f, keep: 1f);  // renewed as the aura ticks", 4f, 1.5f,
                 g => g.Run(new Sigil(g._caster, sigil).Step))),
+            new("Sigil ring", "One", "Fx.Sigil(caster, FxSigil.Might, 1.4f, keep: 1f, FxSigilLook.Ring);", 4.5f, 1.5f,
+                g => g.Run(new Stack(g._caster, [FxSigil.Might]).Step)),
+            new("Sigil ring", "Two", "Fx.Sigil(caster, FxSigil.Fire, 1.4f, keep: 1f, FxSigilLook.Ring);  Fx.Sigil(caster, FxSigil.Life, ...);", 4.5f, 1.5f,
+                g => g.Run(new Stack(g._caster, [FxSigil.Fire, FxSigil.Life]).Step)),
+            new("Sigil ring", "Three", "// lightning, guard and haste, arriving one after another: they share one ring", 4.5f, 1.8f,
+                g => g.Run(new Stack(g._caster, [FxSigil.Lightning, FxSigil.Guard, FxSigil.Haste]).Step)),
+            new("Sigil ring", "All ten", "// every sigil at once, each at its own angle round the one ring", 5f, 2.4f,
+                g => g.Run(new Stack(g._caster, Enum.GetValues<FxSigil>()).Step)),
 
             new("Line", "Lightning strike", "Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f, tendrils: 2);", 1f, 0.05f,
                 _ => Fx.Lightning([(Vector3.Up * 12f, Vector3.Zero)], 0.2f, 2)),
@@ -443,6 +451,32 @@ public partial class Gallery : Node3D
                 Fx.Sigil(caster, sigil, 1.6f, 1f);
             }
             return _age < 3f;
+        }
+    }
+
+    /// <summary>
+    /// Several ring sigils on one caster, each arriving a fifth of a second after the last and
+    /// renewed every half second; the first leaves early, so one can be seen going while others stay.
+    /// </summary>
+    private sealed class Stack(Node3D caster, FxSigil[] sigils)
+    {
+        private float _next;
+        private float _age;
+
+        public bool Step(float dt)
+        {
+            _age += dt;
+            if ((_next -= dt) <= 0f)
+            {
+                _next = 0.1f;
+                for (var i = 0; i < sigils.Length; i++)
+                {
+                    var until = i == 0 && sigils.Length > 1 ? 3f : 3.8f;
+                    if (_age >= i * 0.2f && _age < until)
+                        Fx.Sigil(caster, sigils[i], 1.4f, 0.5f, FxSigilLook.Ring);
+                }
+            }
+            return _age < 3.8f;
         }
     }
 

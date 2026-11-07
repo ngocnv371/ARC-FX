@@ -5,6 +5,11 @@
 // cross, crossed swords, a shield, chevrons, a sunburst or a four-pointed star. Each emblem
 // moves a little its own way (the bolt flickers, the flames lick, the cross beats). Drawn on a
 // flat plane (2x2 before scaling), faded with the instance uniform uAlpha. Additive.
+//
+// Sigils that stack (FxSigilLook.Ring) are drawn in two parts instead: one RING per character, the
+// same for every aura, its rings and runes turned by uTurn round an empty middle where they stand;
+// and one BADGE per aura, a small medallion round its emblem that FxSigils sets outside the ring
+// at that aura's own angle, so several auras sit side by side rather than on top of each other.
 shader_type spatial;
 render_mode unshaded, fog_disabled, shadows_disabled, blend_add, cull_disabled, depth_draw_never;
 
@@ -30,12 +35,22 @@ const float SPIN = 0.35;
 const float EMBLEM = 0.5;
 const float EMBLEM_DROP = 0.1;
 
+// What is drawn: a whole DISC, a stacking RING, or one aura's BADGE.
+const int DISC = 0;
+const int RING = 1;
+const int BADGE = 2;
+// A badge's emblem fits in this share of its radius.
+const float BADGE_EMBLEM = 0.62;
+
 uniform int uStyle = 0;
+uniform int uMode = 0;
 uniform vec3 uColor = vec3(1.0);
 
 // 1 when fully there, 0 when gone; and a turn of its own, so two sigils don't spin in step.
 instance uniform float uAlpha = 1.0;
 instance uniform float uPhase = 0.0;
+// A ring's turn in radians, set by FxSigils so its badges turn with it.
+instance uniform float uTurn = 0.0;
 
 varying vec2 vLocal;
 
@@ -125,6 +140,17 @@ vec2 emblem(vec2 q, float t)
 		// It flickers in steps, as lightning does.
 		float flick = step(0.7, fx_hash(vec2(floor(t * 14.0), 3.0)));
 		return vec2(d - 0.11, flick * 0.8);
+	}
+	if (uStyle == FIRE && uMode == BADGE)
+	{
+		// On a badge nothing stands on it: three tongues, licking.
+		vec2 w = q;
+		w.x += 0.07 * sin(q.y * 7.0 - t * 6.0) * (q.y + 0.6);
+		float mid = sd_drop(w - vec2(0.0, -0.75), 0.34, 0.02, 1.6);
+		float left = sd_drop(rot(w - vec2(-0.38, -0.72), 0.45), 0.22, 0.02, 0.85);
+		float right = sd_drop(rot(w - vec2(0.38, -0.72), -0.45), 0.22, 0.02, 0.85);
+		float flare = 0.3 * fx_noise(vec2(q.y * 3.0 - t * 4.0, q.x * 3.0));
+		return vec2(smin(mid, min(left, right), 0.12), flare);
 	}
 	if (uStyle == FIRE)
 	{
@@ -263,6 +289,28 @@ float runes(vec2 p, float r0, float r1, float spin)
 	return line(d, 0.009);
 }
 
+// A stacking ring: two rings bounding a band of runes, a soft edge of light falling inward
+// from it and nothing in the middle.
+float ring(vec2 p, float r)
+{
+	float frame = line(r - 0.965, 0.011) + line(r - 0.8, 0.008) * 0.8;
+	frame += runes(p, 0.83, 0.94, uTurn) * 0.85;
+	float rim = smoothstep(0.45, 0.8, r) * (1.0 - step(0.8, r)) * 0.18;
+	return frame + rim;
+}
+
+// One aura's badge: its emblem in a double ring, over a soft glow.
+float badge(vec2 p, float r, float t)
+{
+	float frame = line(r - 0.93, 0.02) + line(r - 0.8, 0.012) * 0.7;
+	vec2 e = emblem(p / BADGE_EMBLEM, t);
+	float d = e.x * BADGE_EMBLEM;
+	float aa = fwidth(d);
+	float fill = 1.0 - smoothstep(-aa, aa, d);
+	float mark = fill * (0.6 + 0.6 * e.y) + line(d, 0.02) * 1.1;
+	return frame + mark + 0.22 * (1.0 - r * r);
+}
+
 void fragment()
 {
 	vec2 p = vLocal;
@@ -270,27 +318,35 @@ void fragment()
 	if (r > 1.0)
 		discard;
 	float t = TIME + uPhase * 10.0;
-	float turn = t * SPIN + uPhase * 2.0 * PI;
+	if (uMode != DISC)
+	{
+		float v = uMode == RING ? ring(p, r) : badge(p, r, t);
+		ALBEDO = fx_out(fx_ramp(uColor, clamp(0.38 + 0.4 * v, 0.0, 1.0))) * v * uAlpha;
+	}
+	else
+	{
+		float turn = t * SPIN + uPhase * 2.0 * PI;
 
-	// The frame: two rings bounding the runes, a dashed ring turning back inside them.
-	float frame = line(r - 0.965, 0.012) + line(r - 0.73, 0.008) * 0.8;
-	frame += runes(p, 0.76, 0.93, turn) * 0.9;
-	float dash = step(0.45, fract((atan(p.x, p.y) - turn * 0.5) / (2.0 * PI) * 30.0));
-	frame += line(r - 0.665, 0.01) * dash * 0.7;
+		// The frame: two rings bounding the runes, a dashed ring turning back inside them.
+		float frame = line(r - 0.965, 0.012) + line(r - 0.73, 0.008) * 0.8;
+		frame += runes(p, 0.76, 0.93, turn) * 0.9;
+		float dash = step(0.45, fract((atan(p.x, p.y) - turn * 0.5) / (2.0 * PI) * 30.0));
+		frame += line(r - 0.665, 0.01) * dash * 0.7;
 
-	// The emblem: a soft fill, a bright outline and its own light.
-	vec2 e = emblem((p + vec2(0.0, EMBLEM_DROP)) / EMBLEM, t);
-	float d = e.x * EMBLEM;
-	float aa = fwidth(d);
-	float fill = 1.0 - smoothstep(-aa, aa, d);
-	float edge = line(d, 0.01);
-	float mark = fill * (0.55 + 0.6 * e.y) + edge * 1.1;
+		// The emblem: a soft fill, a bright outline and its own light.
+		vec2 e = emblem((p + vec2(0.0, EMBLEM_DROP)) / EMBLEM, t);
+		float d = e.x * EMBLEM;
+		float aa = fwidth(d);
+		float fill = 1.0 - smoothstep(-aa, aa, d);
+		float edge = line(d, 0.01);
+		float mark = fill * (0.55 + 0.6 * e.y) + edge * 1.1;
 
-	// A soft floor of light, and a pulse running out every couple of seconds.
-	float pulse_r = fract(t * 0.45);
-	float pulse = exp(-pow((r - pulse_r) * 14.0, 2.0)) * (1.0 - pulse_r) * 0.5;
-	float floor_glow = 0.16 * (1.0 - r * r) + 0.1 * smoothstep(1.0, 0.7, r) * smoothstep(0.55, 0.75, r);
+		// A soft floor of light, and a pulse running out every couple of seconds.
+		float pulse_r = fract(t * 0.45);
+		float pulse = exp(-pow((r - pulse_r) * 14.0, 2.0)) * (1.0 - pulse_r) * 0.5;
+		float floor_glow = 0.16 * (1.0 - r * r) + 0.1 * smoothstep(1.0, 0.7, r) * smoothstep(0.55, 0.75, r);
 
-	float v = frame + mark + pulse + floor_glow;
-	ALBEDO = fx_out(fx_ramp(uColor, clamp(0.38 + 0.4 * v, 0.0, 1.0))) * v * uAlpha;
+		float v = frame + mark + pulse + floor_glow;
+		ALBEDO = fx_out(fx_ramp(uColor, clamp(0.38 + 0.4 * v, 0.0, 1.0))) * v * uAlpha;
+	}
 }

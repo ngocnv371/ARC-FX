@@ -23,6 +23,7 @@ public partial class FxWorld : Node3D
     private FxShots? _shots;
     private FxCasts? _casts;
     private FxSigils? _sigils;
+    private FxVortices? _vortices;
 
     /// <summary>Advance in <c>_Process</c>; false: the game calls <see cref="Tick"/>.</summary>
     public bool AutoTick { get; set; } = true;
@@ -40,6 +41,7 @@ public partial class FxWorld : Node3D
     private FxShots Shots => _shots ??= new FxShots(Kit);
     private FxCasts Casts => _casts ??= new FxCasts(Kit, this);
     private FxSigils Sigils => _sigils ??= new FxSigils(Kit);
+    private FxVortices Vortices => _vortices ??= new FxVortices(Kit);
 
     public override void _EnterTree() => Fx.World = this;
 
@@ -69,6 +71,7 @@ public partial class FxWorld : Node3D
         _rams?.Tick(dt);
         _beams?.Tick(dt);
         _slashes?.Tick(dt);
+        _vortices?.Tick(dt);
         _lines?.Tick(dt);
         _patches?.Tick(dt);
         _sigils?.Tick(dt);
@@ -101,6 +104,10 @@ public partial class FxWorld : Node3D
     /// <inheritdoc cref="Fx.Slash"/>
     public FxHandle Slash(Vector3 centre, Vector3 forward, float radius, float arc, Color color, Node3D? follow = null) =>
         Slashes.Spawn(centre, forward, radius, arc, color, follow);
+
+    /// <inheritdoc cref="Fx.BladeVortex(Node3D, int, float, float, FxVortexLook)"/>
+    public FxHandle BladeVortex(Node3D follow, int blades, float radius, float keep, FxVortexLook look = FxVortexLook.Steel) =>
+        Vortices.Spawn(follow, blades, radius, keep, look);
 
     /// <inheritdoc cref="Fx.Beam"/>
     public FxHandle Beam(Vector3 at, float radius, float life, Color color) => Beams.Spawn(at, radius, life, color);

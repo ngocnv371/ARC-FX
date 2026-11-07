@@ -1,10 +1,10 @@
 # ARC FX
 
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
-lightning and fire walls, slashes, beams, storm orbs, frost bombs, novas, Divine Ire, slams and
-spikes, spectral shields, fists and hammers, rams, meteors, heals and barriers, every projectile
-look and the puffs dead monsters leave. One call each, in the ARC look, so every game's fire is
-the same fire.
+lightning and fire walls, slashes, blade vortices, beams, storm orbs, frost bombs, novas, Divine
+Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, heals and barriers,
+every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
+game's fire is the same fire.
 
 Effects only draw. What one does to a game (who it hits, how hard, which status) is the game's:
 it calls the effect for the look and does its own hits, timed by `FxTiming` where an effect unfolds.
@@ -17,6 +17,7 @@ Fx.Sigil(hero, FxSigil.Haste, 1.6f, keep: 1f);      // the disc at their feet th
 Fx.Sigil(hero, FxSigil.Fire, 1.4f, keep: 1f, FxSigilLook.Ring);  // several auras: one ring, a badge each
 Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f);  // a strike from the sky
 Fx.Slash(hero.Position, facing, 3f, arc: 120f, steel);
+Fx.BladeVortex(hero, stacks, 1.6f, keep: 1f, FxElement.Fire);  // renew each cast; blood for physical
 Fx.Nova(hero.Position, 6f);                         // hit with FxTiming.NovaFront(age, 6f)
 Fx.Meteor(at, 3f);                                  // lands after FxTiming.MeteorFall
 var barrier = Fx.Barrier(hero, 1.4f, life: 5f, FxTheme.Of(FxElement.Spirit));

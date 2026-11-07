@@ -101,6 +101,24 @@ public static class Fx
     public static FxHandle Slash(Vector3 centre, Vector3 forward, float radius, float arc, Color color, Node3D? follow = null) =>
         World?.Slash(centre, forward, radius, arc, color, follow) ?? default;
 
+    /// <summary>
+    /// A blade vortex round <paramref name="follow"/> for <paramref name="keep"/> more seconds:
+    /// <paramref name="blades"/> small blades (up to <see cref="BladeVortexMax"/>) whirling round
+    /// them within <paramref name="radius"/>, each on its own tilted orbit trailing a streak, made
+    /// as <paramref name="look"/> says: steel, blood, fire, frost and so on. Calling again for the
+    /// same node renews it and sets its blade count, so stacks can grow and shrink (new blades
+    /// swell in, dropped ones shrink away); once nothing renews it, the blades fly out and go.
+    /// </summary>
+    public static FxHandle BladeVortex(Node3D follow, int blades, float radius, float keep, FxVortexLook look = FxVortexLook.Steel) =>
+        World?.BladeVortex(follow, blades, radius, keep, look) ?? default;
+
+    /// <summary>A blade vortex of an element: blood for physical, otherwise the element's own look.</summary>
+    public static FxHandle BladeVortex(Node3D follow, int blades, float radius, float keep, FxElement element) =>
+        World?.BladeVortex(follow, blades, radius, keep, FxVortices.LookOf(element)) ?? default;
+
+    /// <summary>The most blades a blade vortex shows.</summary>
+    public const int BladeVortexMax = FxVortices.MaxBlades;
+
     /// <summary>A column of light from the sky down to <paramref name="at"/>, lighting the ground round its foot.</summary>
     public static FxHandle Beam(Vector3 at, float radius, float life, Color color) =>
         World?.Beam(at, radius, life, color) ?? default;

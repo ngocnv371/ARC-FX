@@ -354,6 +354,13 @@ public partial class Gallery : Node3D
                 _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 120f, new Color(0.85f, 0.92f, 1f))),
             new("Melee", "Whirl", "Fx.Slash(at, forward, 3f, arc: 360f, steel);", 1f, 0.1f,
                 _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 360f, new Color(0.85f, 0.92f, 1f))),
+            new("Melee", "Blade vortex", "Fx.BladeVortex(caster, blades: 6, 1.6f, keep: 1f);  // renewed as it ticks", 4f, 1.5f,
+                g => g.Run(new Vortex(g._caster, 6, 6).Step)),
+            new("Melee", "Blade vortex stacking", "Fx.BladeVortex(caster, stacks, 1.6f, keep: 1f);  // a blade more each cast, up to Fx.BladeVortexMax", 5f, 3f,
+                g => g.Run(new Vortex(g._caster, 1, Fx.BladeVortexMax).Step)),
+            .. Enum.GetValues<FxVortexLook>().Where(look => look != FxVortexLook.Steel).Select(look => new Entry("Melee", $"{look} vortex",
+                $"Fx.BladeVortex(caster, blades: 8, 1.6f, keep: 1f, FxVortexLook.{look});", 4f, 1.5f,
+                g => g.Run(new Vortex(g._caster, 8, 8, look).Step))),
 
             new("Sky", "Beam", "Fx.Beam(at, 1.2f, life: 2f, gold);", 2.5f, 0.5f, _ => Fx.Beam(Vector3.Zero, 1.2f, 2f, new Color(1f, 0.62f, 0.25f))),
             new("Storm", "Storm orb", "var orb = Fx.StormOrb(at, 5f, life: 4f);  // strikes: Fx.Lightning from orb.Heart", 4.5f, 1.2f,
@@ -477,6 +484,25 @@ public partial class Gallery : Node3D
                 }
             }
             return _age < 3.8f;
+        }
+    }
+
+    /// <summary>A blade vortex renewed every quarter second, its blades rising from <paramref name="from"/> to <paramref name="to"/>, then left to fly out.</summary>
+    private sealed class Vortex(Node3D caster, int from, int to, FxVortexLook look = FxVortexLook.Steel)
+    {
+        private float _next;
+        private float _age;
+
+        public bool Step(float dt)
+        {
+            _age += dt;
+            if (_age < 3.5f && (_next -= dt) <= 0f)
+            {
+                _next = 0.25f;
+                var blades = Mathf.Min(to, from + (int)(_age / 0.28f));
+                Fx.BladeVortex(caster, blades, 1.6f, 0.5f, look);
+            }
+            return _age < 3.5f;
         }
     }
 

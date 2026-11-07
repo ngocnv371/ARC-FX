@@ -59,6 +59,19 @@ public static class Fx
         World?.Aura(follow, radius, keep, color, look) ?? default;
 
     /// <summary>
+    /// An aura's sigil at <paramref name="follow"/>'s feet for <paramref name="keep"/> more seconds:
+    /// a disc of light <paramref name="radius"/> round, its rings and runes slowly turning round
+    /// the emblem of what the aura does, in <see cref="FxTheme.Of(FxSigil)"/>'s colour. Calling
+    /// again for the same node and sigil renews that one; once nothing does, it fades.
+    /// </summary>
+    public static FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep) =>
+        World?.Sigil(follow, sigil, radius, keep, FxTheme.Of(sigil)) ?? default;
+
+    /// <summary>An aura's sigil in any colour.</summary>
+    public static FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep, Color color) =>
+        World?.Sigil(follow, sigil, radius, keep, color) ?? default;
+
+    /// <summary>
     /// Lightning along each segment for <paramref name="life"/> seconds: jagged strands that
     /// flicker as they reshape, with <paramref name="tendrils"/> tiny twigs off each. Drawn
     /// <see cref="LineLift"/> above both ends, so a segment along the ground is a fence at chest

@@ -25,6 +25,25 @@ public static class FxTheme
 
     public static Color Of(FxElement element) => Colors[element];
 
+    /// <summary>
+    /// Each aura sigil's colour: an element's own for the elemental ones (so a retint carries
+    /// over), the rest the ARC look's: green life, red might, silver guard, pale gold haste and
+    /// violet arcane.
+    /// </summary>
+    public static Color Of(FxSigil sigil) => sigil switch
+    {
+        FxSigil.Lightning => Colors[FxElement.Lightning],
+        FxSigil.Fire => Colors[FxElement.Fire],
+        FxSigil.Frost => Colors[FxElement.Frost],
+        FxSigil.Poison => Colors[FxElement.Poison],
+        FxSigil.Holy => Colors[FxElement.Holy],
+        FxSigil.Life => new Color(0.45f, 1f, 0.5f),
+        FxSigil.Might => new Color(1f, 0.3f, 0.22f),
+        FxSigil.Guard => new Color(0.82f, 0.88f, 0.98f),
+        FxSigil.Haste => new Color(1f, 0.95f, 0.45f),
+        _ => new Color(0.72f, 0.45f, 1f),
+    };
+
     /// <summary>The colour a fire effect lights its surroundings with, whatever it is tinted.</summary>
     public static Color FireLight => Colors[FxElement.Fire];
 }

@@ -332,6 +332,10 @@ public partial class Gallery : Node3D
             new("Ground", "Frost aura", "Fx.Aura(caster, 3.5f, keep: 1f, FxElement.Frost);  // renewed as it ticks", 4f, 1.5f,
                 g => g.Run(new Aura(g._caster, FxTheme.Of(FxElement.Frost), FxGround.Frost, 3.5f).Step)),
 
+            .. Enum.GetValues<FxSigil>().Select(sigil => new Entry("Sigil", sigil.ToString(),
+                $"Fx.Sigil(caster, FxSigil.{sigil}, 1.6f, keep: 1f);  // renewed as the aura ticks", 4f, 1.5f,
+                g => g.Run(new Sigil(g._caster, sigil).Step))),
+
             new("Line", "Lightning strike", "Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f, tendrils: 2);", 1f, 0.05f,
                 _ => Fx.Lightning([(Vector3.Up * 12f, Vector3.Zero)], 0.2f, 2)),
             new("Line", "Lightning fence", "Fx.Lightning([(a, b), (b, c), (c, a)], 2f);", 2.5f, 0.5f,
@@ -424,6 +428,24 @@ public partial class Gallery : Node3D
     }
 
     /// <summary>An aura renewed every half second, as a game's aura skill would.</summary>
+    /// <summary>An aura's sigil renewed every half second for three seconds, then left to fade.</summary>
+    private sealed class Sigil(Node3D caster, FxSigil sigil)
+    {
+        private float _next;
+        private float _age;
+
+        public bool Step(float dt)
+        {
+            _age += dt;
+            if (_age < 3f && (_next -= dt) <= 0f)
+            {
+                _next = 0.5f;
+                Fx.Sigil(caster, sigil, 1.6f, 1f);
+            }
+            return _age < 3f;
+        }
+    }
+
     private sealed class Aura(Node3D caster, Color color, FxGround look, float radius)
     {
         private float _next;

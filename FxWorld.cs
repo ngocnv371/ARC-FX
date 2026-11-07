@@ -22,6 +22,7 @@ public partial class FxWorld : Node3D
     private FxRams? _rams;
     private FxShots? _shots;
     private FxCasts? _casts;
+    private FxSigils? _sigils;
 
     /// <summary>Advance in <c>_Process</c>; false: the game calls <see cref="Tick"/>.</summary>
     public bool AutoTick { get; set; } = true;
@@ -38,6 +39,7 @@ public partial class FxWorld : Node3D
     private FxRams Rams => _rams ??= new FxRams(Kit, this);
     private FxShots Shots => _shots ??= new FxShots(Kit);
     private FxCasts Casts => _casts ??= new FxCasts(Kit, this);
+    private FxSigils Sigils => _sigils ??= new FxSigils(Kit);
 
     public override void _EnterTree() => Fx.World = this;
 
@@ -69,6 +71,7 @@ public partial class FxWorld : Node3D
         _slashes?.Tick(dt);
         _lines?.Tick(dt);
         _patches?.Tick(dt);
+        _sigils?.Tick(dt);
         _explosions?.Tick(dt);
     }
 
@@ -83,6 +86,10 @@ public partial class FxWorld : Node3D
     /// <inheritdoc cref="Fx.Aura(Node3D, float, float, Color, FxGround)"/>
     public FxPatch Aura(Node3D follow, float radius, float keep, Color color, FxGround look = FxGround.Glow) =>
         Patches.Aura(follow, radius, keep, color, look);
+
+    /// <inheritdoc cref="Fx.Sigil(Node3D, FxSigil, float, float, Color)"/>
+    public FxHandle Sigil(Node3D follow, FxSigil sigil, float radius, float keep, Color color) =>
+        Sigils.Spawn(follow, sigil, radius, keep, color);
 
     /// <inheritdoc cref="Fx.Lightning"/>
     public FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0) =>

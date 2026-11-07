@@ -1,9 +1,10 @@
 # ARC FX
 
-The shared effects library for the ARC games: explosions, burning ground and auras, lightning and
-fire walls, slashes, beams, storm orbs, frost bombs, novas, Divine Ire, slams and spikes, spectral
-shields, fists and hammers, rams, meteors, heals and barriers, every projectile look and the puffs
-dead monsters leave. One call each, in the ARC look, so every game's fire is the same fire.
+The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
+lightning and fire walls, slashes, beams, storm orbs, frost bombs, novas, Divine Ire, slams and
+spikes, spectral shields, fists and hammers, rams, meteors, heals and barriers, every projectile
+look and the puffs dead monsters leave. One call each, in the ARC look, so every game's fire is
+the same fire.
 
 Effects only draw. What one does to a game (who it hits, how hard, which status) is the game's:
 it calls the effect for the look and does its own hits, timed by `FxTiming` where an effect unfolds.
@@ -12,6 +13,7 @@ it calls the effect for the look and does its own hits, timed by `FxTiming` wher
 Fx.Explosion(at, radius: 3f, FxElement.Fire);
 Fx.Patch(at, 3f, life: 4f, FxElement.Poison);
 Fx.Aura(hero, 3.5f, keep: 1f, FxElement.Frost);     // renew it each time the aura ticks
+Fx.Sigil(hero, FxSigil.Haste, 1.6f, keep: 1f);      // the disc at their feet that says what it does
 Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f);  // a strike from the sky
 Fx.Slash(hero.Position, facing, 3f, arc: 120f, steel);
 Fx.Nova(hero.Position, 6f);                         // hit with FxTiming.NovaFront(age, 6f)

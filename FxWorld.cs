@@ -21,6 +21,7 @@ public partial class FxWorld : Node3D
     private FxSlams? _slams;
     private FxRams? _rams;
     private FxShots? _shots;
+    private FxCasts? _casts;
 
     /// <summary>Advance in <c>_Process</c>; false: the game calls <see cref="Tick"/>.</summary>
     public bool AutoTick { get; set; } = true;
@@ -36,6 +37,7 @@ public partial class FxWorld : Node3D
     private FxSlams Slams => _slams ??= new FxSlams(Kit, this);
     private FxRams Rams => _rams ??= new FxRams(Kit, this);
     private FxShots Shots => _shots ??= new FxShots(Kit);
+    private FxCasts Casts => _casts ??= new FxCasts(Kit, this);
 
     public override void _EnterTree() => Fx.World = this;
 
@@ -56,7 +58,8 @@ public partial class FxWorld : Node3D
     public void Tick(float dt)
     {
         // Things that spawn others (a storm's crackles, a smite's blast, a bomb's burst, a ram's
-        // dust) go first, so what they spawn starts this frame.
+        // dust, a meteor's flame and blast) go first, so what they spawn starts this frame.
+        _casts?.Tick(dt);
         _shots?.Tick(dt);
         _storms?.Tick(dt);
         _ires?.Tick(dt);
@@ -130,6 +133,16 @@ public partial class FxWorld : Node3D
     /// <inheritdoc cref="Fx.Ram"/>
     public FxHandle Ram(FxRam look, Func<Vector3?> at, Vector3 direction, float life, float size = 1f) =>
         Rams.Spawn(look, at, direction, life, size);
+
+    /// <inheritdoc cref="Fx.Meteor"/>
+    public FxHandle Meteor(Vector3 at, float radius) => Casts.SpawnMeteor(at, radius);
+
+    /// <inheritdoc cref="Fx.Heal"/>
+    public FxHandle Heal(Node3D target, Color color, float size = 1f) => Casts.SpawnHeal(target, target.Position, color, size);
+
+    /// <inheritdoc cref="Fx.Barrier"/>
+    public FxBarrier Barrier(Node3D target, float radius, float life, Color color) =>
+        Casts.SpawnBarrier(target, target.Position, radius, life, color);
 
     /// <inheritdoc cref="Fx.Shot"/>
     public FxShot Shot(FxShotLook look) => Shots.Spawn(look);

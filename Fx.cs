@@ -158,6 +158,31 @@ public static class Fx
         World?.Ram(look, at, direction, life, size) ?? default;
 
     /// <summary>
+    /// A meteor onto <paramref name="at"/>: a burning rock falls slanting out of the sky and, after
+    /// <see cref="FxTiming.MeteorFall"/>, lands as a fire blast <paramref name="radius"/> across and
+    /// leaves the ground burning. Stopping it calls it off. It marks nothing on the ground first:
+    /// a game that warns does so itself (a <see cref="FxGround.Warning"/> patch for MeteorFall).
+    /// </summary>
+    public static FxHandle Meteor(Vector3 at, float radius) => World?.Meteor(at, radius) ?? default;
+
+    /// <summary>
+    /// A heal on <paramref name="target"/>: motes of light spiral up round them through a band
+    /// of light washing up their body, over a glow at their feet. <paramref name="size"/> scales
+    /// it to whoever is healed.
+    /// </summary>
+    public static FxHandle Heal(Node3D target, Color color, float size = 1f) =>
+        World?.Heal(target, color, size) ?? default;
+
+    /// <summary>
+    /// A barrier round <paramref name="target"/> for <paramref name="life"/> seconds: a bubble of
+    /// light <paramref name="radius"/> round that swells in, ripples where
+    /// <see cref="FxBarrier.Hit"/> says a blow landed, and fades at the end or bursts on
+    /// <see cref="FxBarrier.Break"/>.
+    /// </summary>
+    public static FxBarrier Barrier(Node3D target, float radius, float life, Color color) =>
+        World?.Barrier(target, radius, life, color) ?? default;
+
+    /// <summary>
     /// A projectile's look, shown until released: the game flies it and calls
     /// <see cref="FxShot.Place"/> every frame. Shots fly <see cref="ShotHeight"/> above the ground.
     /// </summary>

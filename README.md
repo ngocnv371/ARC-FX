@@ -2,8 +2,8 @@
 
 The shared effects library for the ARC games: explosions, burning ground and auras, lightning and
 fire walls, slashes, beams, storm orbs, frost bombs, novas, Divine Ire, slams and spikes, spectral
-shields, fists and hammers, rams, every projectile look and the puffs dead monsters leave. One call
-each, in the ARC look, so every game's fire is the same fire.
+shields, fists and hammers, rams, meteors, heals and barriers, every projectile look and the puffs
+dead monsters leave. One call each, in the ARC look, so every game's fire is the same fire.
 
 Effects only draw. What one does to a game (who it hits, how hard, which status) is the game's:
 it calls the effect for the look and does its own hits, timed by `FxTiming` where an effect unfolds.
@@ -15,6 +15,9 @@ Fx.Aura(hero, 3.5f, keep: 1f, FxElement.Frost);     // renew it each time the au
 Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f);  // a strike from the sky
 Fx.Slash(hero.Position, facing, 3f, arc: 120f, steel);
 Fx.Nova(hero.Position, 6f);                         // hit with FxTiming.NovaFront(age, 6f)
+Fx.Meteor(at, 3f);                                  // lands after FxTiming.MeteorFall
+var barrier = Fx.Barrier(hero, 1.4f, life: 5f, FxTheme.Of(FxElement.Spirit));
+barrier.Hit(attacker.Position);                     // ripples where the blow lands
 
 var shot = Fx.Shot(FxShotLook.Fireball);            // the game flies it:
 shot.Place(position, velocity);                     //   every frame
@@ -44,7 +47,7 @@ places itself.
 |---|---|
 | `Fx.cs` | The front door: every effect as one static call |
 | `FxWorld.cs` | The node that holds and ticks effects |
-| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, smite fall, rupture speed) |
+| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, smite fall, meteor fall, rupture speed) |
 | `FxElement.cs`, `FxLighting.cs`, `FxModels.cs` | Elements and their palette, the lighting and model hooks |
 | `Fx*.cs` | The effects, one family per file; `FxKit.cs` holds what they share and `FxHandle`, the handle most calls return |
 | `shaders/` | The `fx_*` shaders; `fx_common.gdshaderinc` and `fx_noise.gdshaderinc` are their shared pieces |

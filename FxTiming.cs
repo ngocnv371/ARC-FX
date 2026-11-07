@@ -42,6 +42,9 @@ public static class FxTiming
     public const float SmiteFall = 0.32f;
     public const float SmiteLinger = 0.45f;
 
+    /// <summary>A meteor lands (and its blast goes off) this long after it is called.</summary>
+    public const float MeteorFall = 0.9f;
+
     /// <summary>A rupture's spikes race along the ground at this many metres a second.</summary>
     public const float RuptureSpeed = 26f;
 }

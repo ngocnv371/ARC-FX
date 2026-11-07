@@ -359,6 +359,17 @@ public partial class Gallery : Node3D
                     });
                 }),
 
+            new("Cast", "Meteor", "Fx.Meteor(at, 3f);  // lands after FxTiming.MeteorFall", 2.8f, 0.7f, _ => Fx.Meteor(Vector3.Zero, 3f)),
+            new("Cast", "Meteor with warning", "Fx.Meteor(at, 3f);  Fx.Patch(at, 3f, life: FxTiming.MeteorFall, red, FxGround.Warning);  // the game's own warning", 2.8f, 0.7f,
+                _ =>
+                {
+                    Fx.Meteor(Vector3.Zero, 3f);
+                    Fx.Patch(Vector3.Zero, 3f, FxTiming.MeteorFall, new Color(1f, 0.25f, 0.15f), FxGround.Warning);
+                }),
+            new("Cast", "Heal", "Fx.Heal(target, green);", 1.6f, 0.45f, g => Fx.Heal(g._caster, new Color(0.55f, 1f, 0.6f))),
+            new("Cast", "Barrier", "var barrier = Fx.Barrier(target, 1.4f, life: 3f, spirit);  // barrier.Hit(from), barrier.Break()", 3.2f, 1f,
+                g => g.Run(new Barrier(Fx.Barrier(g._caster, 1.4f, 3f, FxTheme.Of(FxElement.Spirit))).Step)),
+
             new("Earth", "Stone slam", "Fx.Slam(at, 3f, FxSpike.Stone);", 2f, 0.2f, _ => Fx.Slam(Vector3.Zero, 3f, FxSpike.Stone)),
             new("Earth", "Ice slam", "Fx.Slam(at, 3f, FxSpike.Ice);", 2f, 0.2f, _ => Fx.Slam(Vector3.Zero, 3f, FxSpike.Ice)),
             new("Earth", "Rupture", "Fx.Rupture(from, forward, 12f, width: 2f);", 2f, 0.45f, _ => Fx.Rupture(new Vector3(-6f, 0f, 0f), Vector3.Right, 12f, 2f)),
@@ -427,6 +438,32 @@ public partial class Gallery : Node3D
                 Fx.Aura(caster, radius, 1f, color, look);
             }
             return _age < 3f;
+        }
+    }
+
+    /// <summary>A barrier struck from somewhere round it every so often, giving way at the end.</summary>
+    private sealed class Barrier(FxBarrier barrier)
+    {
+        private float _next = 0.5f;
+        private float _age;
+
+        public bool Step(float dt)
+        {
+            if (!barrier.Alive)
+                return false;
+            _age += dt;
+            if (_age >= 2.6f)
+            {
+                barrier.Break();
+                return false;
+            }
+            if ((_next -= dt) > 0f)
+                return true;
+            _next = 0.45f;
+            // Mostly from the camera's side, so the ripples show.
+            var from = Vector3.Back.Rotated(Vector3.Up, (float)GD.RandRange(-1.3, 1.3)) * 4f + Vector3.Up * (float)GD.RandRange(0.4, 1.6);
+            barrier.Hit(from);
+            return true;
         }
     }
 

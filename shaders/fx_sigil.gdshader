@@ -257,7 +257,9 @@ vec2 emblem(vec2 q, float t)
 // A thin line along d's zero: 1 on it, fading over w either side.
 float line(float d, float w)
 {
-	float aa = fwidth(d);
+	// Capped: where d jumps (a rune cell's edge, the seam where the angle wraps) its pixel
+	// width spikes and would smear a pixel into a blot.
+	float aa = min(fwidth(d), 0.02);
 	return 1.0 - smoothstep(w - aa, w + aa, abs(d));
 }
 
@@ -265,8 +267,6 @@ float line(float d, float w)
 float runes(vec2 p, float r0, float r1, float spin)
 {
 	float r = length(p);
-	if (r < r0 - 0.02 || r > r1 + 0.02)
-		return 0.0;
 	const float CELLS = 26.0;
 	float a = (atan(p.x, p.y) + spin) / (2.0 * PI) * CELLS;
 	float id = floor(a);
@@ -286,7 +286,9 @@ float runes(vec2 p, float r0, float r1, float spin)
 		d = min(d, sd_segment(g, vec2(x - side * width * 0.28, -h * 0.7), vec2(x - side * width * 0.28, h * 0.1)));
 	if (k2.y > 0.8)
 		d = min(d, length(g - vec2(x + side * width * 0.25, -h * 0.55)) - 0.004);
-	return line(d, 0.009);
+	// Masked off outside the band afterwards, not skipped: line() measures its pixel width
+	// from its neighbours, which a branch round it would leave undefined.
+	return line(d, 0.009) * step(r0 - 0.02, r) * step(r, r1 + 0.02);
 }
 
 // A stacking ring: two rings bounding a band of runes, a soft edge of light falling inward
@@ -315,13 +317,15 @@ void fragment()
 {
 	vec2 p = vLocal;
 	float r = length(p);
-	if (r > 1.0)
-		discard;
+	// The rim fades out over a pixel and a half rather than being cut off: discarding the
+	// pixels outside would also leave line()'s pixel widths undefined along the rim, which
+	// shows as stray specks there.
+	float rim = 1.0 - smoothstep(1.0 - 1.5 * fwidth(r), 1.0, r);
 	float t = TIME + uPhase * 10.0;
 	if (uMode != DISC)
 	{
 		float v = uMode == RING ? ring(p, r) : badge(p, r, t);
-		ALBEDO = fx_out(fx_ramp(uColor, clamp(0.38 + 0.4 * v, 0.0, 1.0))) * v * uAlpha;
+		ALBEDO = fx_out(fx_ramp(uColor, clamp(0.38 + 0.4 * v, 0.0, 1.0))) * v * uAlpha * rim;
 	}
 	else
 	{
@@ -347,6 +351,6 @@ void fragment()
 		float floor_glow = 0.16 * (1.0 - r * r) + 0.1 * smoothstep(1.0, 0.7, r) * smoothstep(0.55, 0.75, r);
 
 		float v = frame + mark + pulse + floor_glow;
-		ALBEDO = fx_out(fx_ramp(uColor, clamp(0.38 + 0.4 * v, 0.0, 1.0))) * v * uAlpha;
+		ALBEDO = fx_out(fx_ramp(uColor, clamp(0.38 + 0.4 * v, 0.0, 1.0))) * v * uAlpha * rim;
 	}
 }

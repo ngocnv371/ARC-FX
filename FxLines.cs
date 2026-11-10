@@ -28,6 +28,7 @@ internal sealed class FxLines(FxKit kit)
         public required MeshInstance3D[] Beds;
         public bool Fire;
         public int Tendrils;
+        public float Thickness = 1f;
         public (Vector3 A, Vector3 B)[] Segments = [];
         public int[] FirstStrand = [];
         public float NextShape;
@@ -36,7 +37,7 @@ internal sealed class FxLines(FxKit kit)
     private readonly List<Line> _pool = [];
     private readonly ShaderMaterial _flameMaterial = FxKit.Shader("flame");
 
-    public FxHandle Spawn((Vector3 A, Vector3 B)[] segments, float life, bool fire, int tendrils)
+    public FxHandle Spawn((Vector3 A, Vector3 B)[] segments, float life, bool fire, int tendrils, float thickness = 1f)
     {
         if (fire)
             tendrils = 0;
@@ -55,6 +56,7 @@ internal sealed class FxLines(FxKit kit)
         line.Segments = segments;
         line.FirstStrand = first;
         line.Tendrils = tendrils;
+        line.Thickness = Mathf.Max(0.05f, thickness);
         line.NextShape = 0f;
         foreach (var strand in line.Strands)
             strand.Visible = true;
@@ -98,7 +100,7 @@ internal sealed class FxLines(FxKit kit)
             if (line.Fire)
                 ShapeFlames(line.Strands, line.FirstStrand[i], end, a, b, line.Age, line.Life);
             else
-                ShapeBolt(line.Strands, line.FirstStrand[i], a, b, line.Tendrils);
+                ShapeBolt(line.Strands, line.FirstStrand[i], a, b, line.Tendrils, line.Thickness);
         }
     }
 
@@ -126,9 +128,10 @@ internal sealed class FxLines(FxKit kit)
     /// A jagged bolt from a to b: kinks pushed sideways and up at random, one thin box per piece,
     /// each wrapped in a blue sheath a fixed rim wider (a child, so it follows the box). Then
     /// <paramref name="tendrils"/> tiny forked twigs sprouting off it at random; they grow anew
-    /// with every reshape, so they flicker.
+    /// with every reshape, so they flicker. Their core and sheath are about half the bolt's, so they read as finer
+    /// offshoots of it. <paramref name="thickness"/> scales the bolt and twigs, sheaths and all.
     /// </summary>
-    private static void ShapeBolt(MeshInstance3D[] strands, int first, Vector3 a, Vector3 b, int tendrils)
+    private static void ShapeBolt(MeshInstance3D[] strands, int first, Vector3 a, Vector3 b, int tendrils, float thickness)
     {
         var along = b - a;
         var side = Mathf.Abs(along.Normalized().Y) > 0.95f ? Vector3.Right : along.Cross(Vector3.Up).Normalized();
@@ -140,7 +143,7 @@ internal sealed class FxLines(FxKit kit)
             var point = a.Lerp(b, (float)k / BoltKinks) + lift;
             if (k < BoltKinks)
                 point += side * (float)GD.RandRange(-0.35, 0.35) + Vector3.Up * (float)GD.RandRange(-0.2, 0.25);
-            FxKit.Lay(strands[first + k - 1], points[k - 1], point, (float)GD.RandRange(0.02, 0.035));
+            FxKit.Lay(strands[first + k - 1], points[k - 1], point, (float)GD.RandRange(0.02, 0.035) * thickness, FxKit.SheathRim * thickness);
             points[k] = point;
         }
 
@@ -152,14 +155,17 @@ internal sealed class FxLines(FxKit kit)
             // Off to either side, leaning along the bolt a little and mostly drooping.
             var dir = (side * (GD.Randf() < 0.5f ? -1f : 1f) + forward * (float)GD.RandRange(-0.7, 0.7)
                 + Vector3.Up * (float)GD.RandRange(-0.7, 0.3)).Normalized();
-            // Mostly tiny, now and then one reaching further: cubing skews the spread short.
-            var reach = 0.04f + 0.4f * Mathf.Pow(GD.Randf(), 3f);
+            // Mostly short, now and then one reaching further: squaring skews the spread short.
+            // A long bolt's pieces are long, and its twigs grow with them, up to 2.5 times.
+            var grow = Mathf.Clamp(points[piece].DistanceTo(points[piece + 1]) / 1.5f, 1f, 2.5f);
+            var reach = (0.08f + 0.45f * Mathf.Pow(GD.Randf(), 2f)) * grow;
             var kink = root + dir * reach * 0.5f + FxKit.Jitter(reach * 0.25f);
             var tip = root + dir * reach + FxKit.Jitter(reach * 0.3f);
-            var width = (float)GD.RandRange(0.004, 0.008);
+            var width = (float)GD.RandRange(0.006, 0.012) * thickness;
+            var rim = FxKit.SheathRim * 0.6f * thickness;
             var strand = first + BoltKinks + t * TendrilPieces;
-            FxKit.Lay(strands[strand], root, kink, width);
-            FxKit.Lay(strands[strand + 1], kink, tip, width * 0.7f);
+            FxKit.Lay(strands[strand], root, kink, width, rim);
+            FxKit.Lay(strands[strand + 1], kink, tip, width * 0.7f, rim * 0.7f);
         }
     }
 

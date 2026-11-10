@@ -79,12 +79,13 @@ public static class Fx
 
     /// <summary>
     /// Lightning along each segment for <paramref name="life"/> seconds: jagged strands that
-    /// flicker as they reshape, with <paramref name="tendrils"/> tiny twigs off each. Drawn
-    /// <see cref="LineLift"/> above both ends, so a segment along the ground is a fence at chest
-    /// height and one from the sky to a spot on the ground is a strike.
+    /// flicker as they reshape, with <paramref name="tendrils"/> tiny twigs off each (finer than
+    /// the bolt, purely decoration). <paramref name="thickness"/> scales the bolt and its twigs
+    /// (0.5: half as thick). Drawn <see cref="LineLift"/> above both ends, so a segment along the
+    /// ground is a fence at chest height and one from the sky to a spot on the ground is a strike.
     /// </summary>
-    public static FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0) =>
-        World?.Lightning(segments, life, tendrils) ?? default;
+    public static FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0, float thickness = 1f) =>
+        World?.Lightning(segments, life, tendrils, thickness) ?? default;
 
     /// <summary>A wall of flame tongues along each segment, over a strip of burning ground, for <paramref name="life"/> seconds.</summary>
     public static FxHandle FireWall((Vector3 A, Vector3 B)[] segments, float life) =>

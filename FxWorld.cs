@@ -95,8 +95,8 @@ public partial class FxWorld : Node3D
         Sigils.Spawn(follow, sigil, radius, keep, color, look);
 
     /// <inheritdoc cref="Fx.Lightning"/>
-    public FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0) =>
-        Lines.Spawn(segments, life, fire: false, tendrils);
+    public FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0, float thickness = 1f) =>
+        Lines.Spawn(segments, life, fire: false, tendrils, thickness);
 
     /// <inheritdoc cref="Fx.FireWall"/>
     public FxHandle FireWall((Vector3 A, Vector3 B)[] segments, float life) => Lines.Spawn(segments, life, fire: true, 0);

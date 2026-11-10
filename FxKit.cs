@@ -68,7 +68,7 @@ internal sealed class FxKit(Node3D parent)
     }
 
     /// <summary>Stretches one bolt piece (a thin box and its sheath) from a to b in its parent's space.</summary>
-    public static void Lay(MeshInstance3D strand, Vector3 a, Vector3 b, float width)
+    public static void Lay(MeshInstance3D strand, Vector3 a, Vector3 b, float width, float rim = SheathRim)
     {
         var along = b - a;
         var length = along.Length();
@@ -76,7 +76,7 @@ internal sealed class FxKit(Node3D parent)
             ? Basis.LookingAt(along, Mathf.Abs(along.Y / length) > 0.99f ? Vector3.Right : Vector3.Up)
             : Basis.Identity;
         strand.Transform = new Transform3D(basis * Basis.FromScale(new Vector3(width, width, length)), (a + b) * 0.5f);
-        var sheath = 1f + 2f * SheathRim / width;
+        var sheath = 1f + 2f * rim / width;
         strand.GetChild<MeshInstance3D>(0).Scale = new Vector3(sheath, sheath, 1f);
     }
 

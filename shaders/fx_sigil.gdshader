@@ -300,6 +300,13 @@ vec2 tatter(vec2 p, float t)
 	return vec2(smoothstep(0.38, 0.5, n), smoothstep(0.3, 0.42, n));
 }
 
+// An emblem is broken like the rings, in finer patches so it still reads.
+float worn(vec2 p, float t)
+{
+	float n = fx_fbm(p * 5.0 + vec2(-t * 0.1 + uPhase * 11.0, t * 0.13));
+	return smoothstep(0.36, 0.48, n);
+}
+
 // A stacking ring: two rings bounding a band of runes, a soft edge of light falling inward
 // from it and nothing in the middle.
 float ring(vec2 p, float r, float t)
@@ -314,12 +321,14 @@ float ring(vec2 p, float r, float t)
 // One aura's badge: its emblem in a double ring, over a soft glow.
 float badge(vec2 p, float r, float t)
 {
-	float frame = line(r - 0.93, 0.009) + line(r - 0.8, 0.006) * 0.7;
+	// Worn like the disc: its rings broken into arcs, its emblem in finer patches.
+	float frame = (line(r - 0.93, 0.009) + line(r - 0.8, 0.006) * 0.7) * tatter(p, t).x;
 	vec2 e = emblem(p / BADGE_EMBLEM, t);
 	float d = e.x * BADGE_EMBLEM;
 	float aa = fwidth(d);
 	float fill = 1.0 - smoothstep(-aa, aa, d);
 	float mark = fill * (0.6 + 0.6 * e.y) + line(d, 0.02) * 1.1;
+	mark *= worn(p, t);
 	return frame + mark + 0.22 * (1.0 - r * r);
 }
 
@@ -355,9 +364,7 @@ void fragment()
 		float fill = 1.0 - smoothstep(-aa, aa, d);
 		float edge = line(d, 0.01);
 		float mark = fill * (0.55 + 0.6 * e.y) + edge * 1.1;
-		// Broken like the rings, in finer patches so it still reads.
-		float worn = fx_fbm(p * 5.0 + vec2(-t * 0.1 + uPhase * 11.0, t * 0.13));
-		mark *= smoothstep(0.36, 0.48, worn);
+		mark *= worn(p, t);
 
 		// A soft floor of light, and a pulse running out every couple of seconds.
 		float pulse_r = fract(t * 0.45);

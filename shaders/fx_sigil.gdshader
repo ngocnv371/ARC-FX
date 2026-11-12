@@ -291,12 +291,22 @@ float runes(vec2 p, float r0, float r1, float spin)
 	return line(d, 0.009) * step(r0 - 0.02, r) * step(r, r1 + 0.02);
 }
 
+// Tatters, as on the blasts: a slow drifting noise breaks the rings into arcs, so a sigil reads
+// as a circle without being drawn as a hard one. x for the rings, y (looser) for the runes and
+// dashes, which survive more of it.
+vec2 tatter(vec2 p, float t)
+{
+	float n = fx_fbm(p * 2.6 + vec2(t * 0.12 + uPhase * 17.0, -t * 0.08));
+	return vec2(smoothstep(0.38, 0.5, n), smoothstep(0.3, 0.42, n));
+}
+
 // A stacking ring: two rings bounding a band of runes, a soft edge of light falling inward
 // from it and nothing in the middle.
-float ring(vec2 p, float r)
+float ring(vec2 p, float r, float t)
 {
-	float frame = line(r - 0.965, 0.011) + line(r - 0.8, 0.008) * 0.8;
-	frame += runes(p, 0.83, 0.94, uTurn) * 0.85;
+	vec2 keep = tatter(p, t);
+	float frame = (line(r - 0.965, 0.003) + line(r - 0.8, 0.0025) * 0.8) * keep.x;
+	frame += runes(p, 0.83, 0.94, uTurn) * 0.85 * keep.y;
 	float rim = smoothstep(0.45, 0.8, r) * (1.0 - step(0.8, r)) * 0.18;
 	return frame + rim;
 }
@@ -304,7 +314,7 @@ float ring(vec2 p, float r)
 // One aura's badge: its emblem in a double ring, over a soft glow.
 float badge(vec2 p, float r, float t)
 {
-	float frame = line(r - 0.93, 0.02) + line(r - 0.8, 0.012) * 0.7;
+	float frame = line(r - 0.93, 0.009) + line(r - 0.8, 0.006) * 0.7;
 	vec2 e = emblem(p / BADGE_EMBLEM, t);
 	float d = e.x * BADGE_EMBLEM;
 	float aa = fwidth(d);
@@ -324,7 +334,7 @@ void fragment()
 	float t = TIME + uPhase * 10.0;
 	if (uMode != DISC)
 	{
-		float v = uMode == RING ? ring(p, r) : badge(p, r, t);
+		float v = uMode == RING ? ring(p, r, t) : badge(p, r, t);
 		ALBEDO = fx_out(fx_ramp(uColor, clamp(0.38 + 0.4 * v, 0.0, 1.0))) * v * uAlpha * rim;
 	}
 	else
@@ -332,10 +342,11 @@ void fragment()
 		float turn = t * SPIN + uPhase * 2.0 * PI;
 
 		// The frame: two rings bounding the runes, a dashed ring turning back inside them.
-		float frame = line(r - 0.965, 0.012) + line(r - 0.73, 0.008) * 0.8;
-		frame += runes(p, 0.76, 0.93, turn) * 0.9;
+		vec2 keep = tatter(p, t);
+		float frame = (line(r - 0.965, 0.003) + line(r - 0.73, 0.0025) * 0.8) * keep.x;
+		frame += runes(p, 0.76, 0.93, turn) * 0.9 * keep.y;
 		float dash = step(0.45, fract((atan(p.x, p.y) - turn * 0.5) / (2.0 * PI) * 30.0));
-		frame += line(r - 0.665, 0.01) * dash * 0.7;
+		frame += line(r - 0.665, 0.003) * dash * 0.7 * keep.y;
 
 		// The emblem: a soft fill, a bright outline and its own light.
 		vec2 e = emblem((p + vec2(0.0, EMBLEM_DROP)) / EMBLEM, t);
@@ -344,6 +355,9 @@ void fragment()
 		float fill = 1.0 - smoothstep(-aa, aa, d);
 		float edge = line(d, 0.01);
 		float mark = fill * (0.55 + 0.6 * e.y) + edge * 1.1;
+		// Broken like the rings, in finer patches so it still reads.
+		float worn = fx_fbm(p * 5.0 + vec2(-t * 0.1 + uPhase * 11.0, t * 0.13));
+		mark *= smoothstep(0.36, 0.48, worn);
 
 		// A soft floor of light, and a pulse running out every couple of seconds.
 		float pulse_r = fract(t * 0.45);

@@ -174,6 +174,75 @@ internal static class FxProps
     }
 
     /// <summary>
+    /// A clenched fist in an armoured gauntlet, about a metre across, knuckles down on the origin
+    /// and the forearm rising from it along +Y, the fingers curled toward -Z (the way it faces),
+    /// the thumb on the -X side. All of it is bevelled plates, packed close so it reads as one
+    /// mass: each finger a plate along the bottom and one up the front, hinged between; a guard
+    /// across the knuckles studded with short spikes; the back of the hand in overlapping lames;
+    /// the thumb folded across the fingers; and a flared, riveted cuff. Above the cuff the forearm
+    /// is plain, for fx_spectral to fade out (its uFadeFrom and uFadeTo, <see cref="FistFade"/>).
+    /// </summary>
+    public static ArrayMesh Fist()
+    {
+        var st = Begin();
+        // Index to little finger: how much lower each reaches, and how big.
+        var drop = new[] { 0.04f, 0f, 0f, 0.035f };
+        var size = new[] { 1f, 1f, 0.96f, 0.88f };
+        var spike = new CylinderMesh { TopRadius = 0f, BottomRadius = 0.04f, Height = 0.085f, RadialSegments = 4, Rings = 1 };
+        for (var i = 0; i < 4; i++)
+        {
+            var x = -0.345f + 0.23f * i;
+            var (d, k) = (drop[i], size[i]);
+            // Along the bottom from the knuckle to the bend, then up the front to the curled tip,
+            // with a hinge across the bend.
+            Bar(st, new Vector3(x, 0.12f + d, 0.26f), new Vector3(x, 0.12f + d, -0.2f), 0.215f * k, 0.22f * k, Vector3.Right);
+            Bar(st, new Vector3(x, 0.08f + d, -0.22f), new Vector3(x, 0.42f + d, -0.25f), 0.205f * k, 0.17f * k, Vector3.Right);
+            Bar(st, new Vector3(x - 0.1f * k, 0.1f + d, -0.21f), new Vector3(x + 0.1f * k, 0.1f + d, -0.21f), 0.15f * k, 0.15f * k, Vector3.Up);
+            // A short spike on each knuckle, leaning out of the fist's leading edge.
+            Append(st, spike, new Transform3D(Toward(new Vector3(0f, -0.7f, 1f)), new Vector3(x, 0.04f + d, 0.31f)));
+        }
+        // The guard across the knuckles.
+        Bar(st, new Vector3(-0.48f, 0.16f, 0.29f), new Vector3(0.48f, 0.16f, 0.29f), 0.17f, 0.1f, Vector3.Up);
+
+        // The hand, the lames over its back, and the thumb folded across the fingers.
+        Bar(st, new Vector3(0f, 0.3f, 0.04f), new Vector3(0f, 0.9f, 0.04f), 0.9f, 0.46f, Vector3.Right);
+        Bar(st, new Vector3(0f, 0.3f, 0.26f), new Vector3(0f, 0.56f, 0.28f), 0.86f, 0.07f, Vector3.Right);
+        Bar(st, new Vector3(0f, 0.52f, 0.27f), new Vector3(0f, 0.8f, 0.26f), 0.8f, 0.07f, Vector3.Right);
+        var joint = new Vector3(-0.5f, 0.5f, -0.27f);
+        Bar(st, new Vector3(-0.52f, 0.84f, 0.02f), joint, 0.22f, 0.2f, Vector3.Back);
+        Bar(st, joint, new Vector3(-0.03f, 0.45f, -0.38f), 0.19f, 0.17f, Vector3.Up);
+        Bar(st, joint + new Vector3(0f, 0f, -0.1f), joint + new Vector3(0f, 0f, 0.1f), 0.2f, 0.2f, Vector3.Up);
+
+        // The cuff, flaring from the wrist, riveted round its rim; then the bare forearm.
+        Append(st, new CylinderMesh { TopRadius = 0.5f, BottomRadius = 0.33f, Height = 0.45f, RadialSegments = 10, Rings = 1, CapBottom = false, CapTop = false }, Vector3.Up * 1.06f);
+        Append(st, new CylinderMesh { TopRadius = 0.52f, BottomRadius = 0.52f, Height = 0.06f, RadialSegments = 10, Rings = 1 }, Vector3.Up * 1.27f);
+        var rivet = new SphereMesh { Radius = 0.032f, Height = 0.05f, RadialSegments = 6, Rings = 2 };
+        for (var r = 0; r < 10; r++)
+            Append(st, rivet, new Vector3(0f, 1.22f, 0.49f).Rotated(Vector3.Up, Mathf.Tau * (r + 0.5f) / 10f));
+        Append(st, new CylinderMesh { TopRadius = 0.42f, BottomRadius = 0.37f, Height = 1.5f, RadialSegments = 10, Rings = 1, CapBottom = false }, Vector3.Up * 1.95f);
+        return End(st);
+    }
+
+    /// <summary>Over what height (in the fist's own metre) its forearm fades out above the cuff.</summary>
+    public static readonly Vector2 FistFade = new(1.3f, 2.5f);
+
+    /// <summary>
+    /// A bevelled plate (an eight-sided bar) from <paramref name="a"/> to <paramref name="b"/>,
+    /// <paramref name="width"/> across along <paramref name="across"/> and <paramref name="thick"/>
+    /// through the third way.
+    /// </summary>
+    private static void Bar(SurfaceTool st, Vector3 a, Vector3 b, float width, float thick, Vector3 across)
+    {
+        var along = b - a;
+        var y = along.Normalized();
+        var x = (across - y * across.Dot(y)).Normalized();
+        var z = x.Cross(y);
+        var basis = new Basis(x * width, y * along.Length(), z * thick) * new Basis(Vector3.Up, Mathf.Pi / 8f);
+        Append(st, new CylinderMesh { TopRadius = 0.5f / Mathf.Cos(Mathf.Pi / 8f), BottomRadius = 0.5f / Mathf.Cos(Mathf.Pi / 8f), Height = 1f, RadialSegments = 8, Rings = 1 },
+            new Transform3D(basis, (a + b) * 0.5f));
+    }
+
+    /// <summary>
     /// The blade, its point on the origin and its base at <c>y = 0.7</c>: an eight-sided section,
     /// a flat diamond near the point and the base and a groove (the fuller) sunk into both faces
     /// between, keeping its width to the shoulders, then tapering to the point.

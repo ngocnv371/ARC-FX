@@ -14,6 +14,10 @@ uniform float uGain = 1.0;
 // Runes etched down a sword's fuller (Bladefall's swords: the blade's middle, |x| under 0.017
 // and y from 0.34 to 0.61 in the mesh), 0 for none.
 uniform float uRunes = 0.0;
+// Fades it out going up its mesh, from fully there at y = uFadeFrom to gone at uFadeTo (the
+// fist's forearm trailing off into light); off while uFadeTo is not above uFadeFrom.
+uniform float uFadeFrom = 0.0;
+uniform float uFadeTo = 0.0;
 
 // 1 when fully there, 0 when gone (fades it in and out).
 instance uniform float uAlpha = 1.0;
@@ -66,6 +70,8 @@ void fragment()
 	float t = 0.07 + rim * 1.6 + band * 0.7 + sheen * 0.6 + uImpact * 0.9;
 	if (uRunes > 0.0)
 		t += runes(vLocal) * uRunes * (0.9 + 0.3 * sin(TIME * 9.0 + vWorld.y * 4.0));
+	if (uFadeTo > uFadeFrom)
+		t *= 1.0 - smoothstep(uFadeFrom, uFadeTo, vLocal.y);
 	if (uDissolve > 0.0)
 	{
 		// Grains first, then a lean toward the top going first; what is left glows at its edge.

@@ -352,7 +352,14 @@ internal sealed class FxSlams(FxKit kit, FxWorld world)
     {
         var node = new Node3D { Visible = false };
         node.AddChild(look == FxSmite.Fist ? BuildFist() : BuildHammer());
-        var parts = FxKit.Paint(node, FxKit.Spectral(look == FxSmite.Fist ? FistColor : HammerColor));
+        var material = FxKit.Spectral(look == FxSmite.Fist ? FistColor : HammerColor);
+        if (look == FxSmite.Fist)
+        {
+            // The forearm fades out above the gauntlet's cuff, so the fist is what reads.
+            material.SetShaderParameter("uFadeFrom", FxProps.FistFade.X);
+            material.SetShaderParameter("uFadeTo", FxProps.FistFade.Y);
+        }
+        var parts = FxKit.Paint(node, material);
         kit.Parent.AddChild(node);
         var smite = new Smiting { Node = node, Parts = parts, Look = look };
         _smites.Add(smite);
@@ -361,26 +368,9 @@ internal sealed class FxSlams(FxKit kit, FxWorld world)
 
     /// <summary>
     /// A clenched fist about a metre across, knuckles down on the origin and the forearm rising
-    /// from it along +Y, the fingers curled toward -Z (the way it faces).
+    /// from it along +Y, the fingers curled toward -Z (the way it faces): <see cref="FxProps.Fist"/>.
     /// </summary>
-    private static Node3D BuildFist()
-    {
-        var fist = new Node3D();
-        void Block(Vector3 size, Vector3 at, float roll = 0f) =>
-            fist.AddChild(new MeshInstance3D { Mesh = new BoxMesh { Size = size }, Position = at, Rotation = new Vector3(0f, 0f, roll) });
-        // Four curled fingers, the middle two reaching lowest, then the back of the hand and the thumb across them.
-        var drop = new[] { 0.05f, 0f, 0f, 0.04f };
-        for (var i = 0; i < 4; i++)
-            Block(new Vector3(0.23f, 0.34f, 0.5f), new Vector3(-0.36f + 0.24f * i, 0.17f + drop[i], -0.05f));
-        Block(new Vector3(1.02f, 0.62f, 0.62f), new Vector3(0f, 0.62f, 0.04f));
-        Block(new Vector3(0.24f, 0.5f, 0.26f), new Vector3(-0.6f, 0.42f, -0.12f), 0.35f);
-        fist.AddChild(new MeshInstance3D
-        {
-            Mesh = new CylinderMesh { TopRadius = 0.42f, BottomRadius = 0.34f, Height = 1.8f, RadialSegments = 8, Rings = 1 },
-            Position = new Vector3(0f, 1.8f, 0.04f),
-        });
-        return fist;
-    }
+    private static Node3D BuildFist() => FxKit.Wrap(new MeshInstance3D { Mesh = FxProps.Fist() });
 
     /// <summary>
     /// A war hammer a metre long, the end of its haft on the origin and the head at +Y, lying

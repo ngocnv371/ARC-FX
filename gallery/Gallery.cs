@@ -348,6 +348,10 @@ public partial class Gallery : Node3D
                 _ => Fx.Lightning([(Vector3.Up * 12f, Vector3.Zero)], 0.2f, 2)),
             new("Line", "Lightning fence", "Fx.Lightning([(a, b), (b, c), (c, a)], 2f);", 2.5f, 0.5f,
                 _ => Fx.Lightning([(new Vector3(-3f, 0f, 2f), new Vector3(3f, 0f, 2f)), (new Vector3(3f, 0f, 2f), new Vector3(0f, 0f, -3f)), (new Vector3(0f, 0f, -3f), new Vector3(-3f, 0f, 2f))], 2f)),
+            new("Line", "Arc", "Fx.Arc(from, to);  // one jump; a chain calls it once a jump, FxTiming.ArcLeap apart", 1.5f, 0.17f,
+                g => g.Run(new Chain([new(0f, 0f, 4f), new(-2.5f, 0f, -1f), new(1f, 0f, -3.5f), new(3.5f, 0f, -0.5f)], 0f).Step)),
+            new("Line", "Arc with blasts", "Fx.Arc(from, to, burst: 1.6f);  // a lightning blast where each jump lands", 1.5f, 0.2f,
+                g => g.Run(new Chain([new(0f, 0f, 4f), new(-2.5f, 0f, -1f), new(1f, 0f, -3.5f), new(3.5f, 0f, -0.5f)], 1.6f).Step)),
             new("Line", "Fire wall", "Fx.FireWall([(a, b)], 3f);", 3.5f, 1f, _ => Fx.FireWall([(new Vector3(-4f, 0f, 0f), new Vector3(4f, 0f, 0f))], 3f)),
 
             new("Melee", "Slash", "Fx.Slash(at, forward, 3f, arc: 120f, steel);", 1f, 0.1f,
@@ -545,6 +549,25 @@ public partial class Gallery : Node3D
             // Mostly from the camera's side, so the ripples show.
             var from = Vector3.Back.Rotated(Vector3.Up, (float)GD.RandRange(-1.3, 1.3)) * 4f + Vector3.Up * (float)GD.RandRange(0.4, 1.6);
             barrier.Hit(from);
+            return true;
+        }
+    }
+
+    /// <summary>An arc chaining along <paramref name="points"/>: one jump every <see cref="FxTiming.ArcLeap"/>.</summary>
+    private sealed class Chain(Vector3[] points, float burst)
+    {
+        private int _jump;
+        private float _next;
+
+        public bool Step(float dt)
+        {
+            // Every jump that is due, so a long frame doesn't hold the chain back.
+            for (_next -= dt; _next <= 0f; _next += FxTiming.ArcLeap)
+            {
+                Fx.Arc(points[_jump], points[_jump + 1], burst);
+                if (++_jump >= points.Length - 1)
+                    return false;
+            }
             return true;
         }
     }

@@ -87,6 +87,25 @@ public static class Fx
     public static FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0, float thickness = 1f) =>
         World?.Lightning(segments, life, tendrils, thickness) ?? default;
 
+    /// <summary>
+    /// One jump of an arc (chain lightning) from <paramref name="from"/> to <paramref name="to"/>,
+    /// both on the ground: a bolt half as thick as other lightning at chest height, with small
+    /// twigs along it (about one and a half a metre, 4 to 14), showing for
+    /// <see cref="FxTiming.ArcLife"/>. With <paramref name="burst"/> above 0, a lightning blast that
+    /// wide goes off where it lands. For a chain, call it once a jump, from the last foe struck to
+    /// the next, <see cref="FxTiming.ArcLeap"/> apart, so the eye can follow it from foe to foe.
+    /// </summary>
+    public static FxHandle Arc(Vector3 from, Vector3 to, float burst = 0f)
+    {
+        var twigs = Math.Clamp((int)(new Vector2(to.X - from.X, to.Z - from.Z).Length() * 1.5f), 4, 14);
+        var bolt = Lightning([(from, to)], FxTiming.ArcLife, twigs, ArcThickness);
+        if (burst > 0f)
+            Explosion(to + Vector3.Up * 0.6f, burst, FxElement.Lightning);
+        return bolt;
+    }
+
+    private const float ArcThickness = 0.5f;
+
     /// <summary>A wall of flame tongues along each segment, over a strip of burning ground, for <paramref name="life"/> seconds.</summary>
     public static FxHandle FireWall((Vector3 A, Vector3 B)[] segments, float life) =>
         World?.FireWall(segments, life) ?? default;

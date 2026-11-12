@@ -1,7 +1,7 @@
 # ARC FX
 
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
-lightning and fire walls, slashes, blade vortices, beams, storm orbs, frost bombs, novas, Divine
+lightning, chain lightning arcs and fire walls, slashes, blade vortices, beams, storm orbs, frost bombs, novas, Divine
 Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, heals and barriers,
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
 game's fire is the same fire.
@@ -16,6 +16,7 @@ Fx.Aura(hero, 3.5f, keep: 1f, FxElement.Frost);     // renew it each time the au
 Fx.Sigil(hero, FxSigil.Haste, 1.6f, keep: 1f);      // the disc at their feet that says what it does
 Fx.Sigil(hero, FxSigil.Fire, 1.4f, keep: 1f, FxSigilLook.Ring);  // several auras: one ring, a badge each
 Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f);  // a strike from the sky
+Fx.Arc(hero.Position, foe.Position, burst: 1.6f);   // one jump of chain lightning; the next FxTiming.ArcLeap later
 Fx.Slash(hero.Position, facing, 3f, arc: 120f, steel);
 Fx.BladeVortex(hero, stacks, 1.6f, keep: 1f, FxElement.Fire);  // renew each cast; blood for physical
 Fx.Nova(hero.Position, 6f);                         // hit with FxTiming.NovaFront(age, 6f)
@@ -51,7 +52,7 @@ places itself.
 |---|---|
 | `Fx.cs` | The front door: every effect as one static call |
 | `FxWorld.cs` | The node that holds and ticks effects |
-| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, smite fall, meteor fall, rupture speed) |
+| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, an arc's leap, smite fall, meteor fall, rupture speed) |
 | `FxElement.cs`, `FxLighting.cs`, `FxModels.cs` | Elements and their palette, the lighting and model hooks |
 | `Fx*.cs` | The effects, one family per file; `FxKit.cs` holds what they share and `FxHandle`, the handle most calls return |
 | `shaders/` | The `fx_*` shaders; `fx_common.gdshaderinc` and `fx_noise.gdshaderinc` are their shared pieces |

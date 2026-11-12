@@ -27,6 +27,10 @@ public static class FxTiming
     /// <summary>How far ahead of the caster the beam starts.</summary>
     public const float IreLead = 0.6f;
 
+    /// <summary>An arc's jump (<see cref="Fx.Arc"/>): how long its bolt shows, and the beat between one jump and the next.</summary>
+    public const float ArcLife = 0.22f;
+    public const float ArcLeap = 0.07f;
+
     /// <summary>A shield ring reaches its radius after this long (easing out), and is gone after <see cref="ShieldLife"/>.</summary>
     public const float ShieldSpread = 0.3f;
     public const float ShieldLife = 0.6f;

@@ -24,6 +24,7 @@ public partial class FxWorld : Node3D
     private FxCasts? _casts;
     private FxSigils? _sigils;
     private FxVortices? _vortices;
+    private FxBladefalls? _bladefalls;
 
     /// <summary>Advance in <c>_Process</c>; false: the game calls <see cref="Tick"/>.</summary>
     public bool AutoTick { get; set; } = true;
@@ -42,6 +43,7 @@ public partial class FxWorld : Node3D
     private FxCasts Casts => _casts ??= new FxCasts(Kit, this);
     private FxSigils Sigils => _sigils ??= new FxSigils(Kit);
     private FxVortices Vortices => _vortices ??= new FxVortices(Kit);
+    private FxBladefalls Bladefalls => _bladefalls ??= new FxBladefalls(Kit, this);
 
     public override void _EnterTree() => Fx.World = this;
 
@@ -62,8 +64,9 @@ public partial class FxWorld : Node3D
     public void Tick(float dt)
     {
         // Things that spawn others (a storm's crackles, a smite's blast, a bomb's burst, a ram's
-        // dust, a meteor's flame and blast) go first, so what they spawn starts this frame.
+        // dust, a meteor's flame and blast, a bladefall's glows) go first, so what they spawn starts this frame.
         _casts?.Tick(dt);
+        _bladefalls?.Tick(dt);
         _shots?.Tick(dt);
         _storms?.Tick(dt);
         _ires?.Tick(dt);
@@ -150,6 +153,9 @@ public partial class FxWorld : Node3D
 
     /// <inheritdoc cref="Fx.Meteor"/>
     public FxHandle Meteor(Vector3 at, float radius) => Casts.SpawnMeteor(at, radius);
+
+    /// <inheritdoc cref="Fx.Bladefall(Vector3, float, Color)"/>
+    public FxHandle Bladefall(Vector3 at, float radius, Color color) => Bladefalls.Spawn(at, radius, color);
 
     /// <inheritdoc cref="Fx.Heal"/>
     public FxHandle Heal(Node3D target, Color color, float size = 1f) => Casts.SpawnHeal(target, target.Position, color, size);

@@ -2,7 +2,7 @@
 
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
 lightning, chain lightning arcs and fire walls, slashes, blade vortices, beams, storm orbs, frost bombs, novas, Divine
-Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, heals and barriers,
+Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers,
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
 game's fire is the same fire.
 
@@ -21,6 +21,7 @@ Fx.Slash(hero.Position, facing, 3f, arc: 120f, steel);
 Fx.BladeVortex(hero, stacks, 1.6f, keep: 1f, FxElement.Fire);  // renew each cast; blood for physical
 Fx.Nova(hero.Position, 6f);                         // hit with FxTiming.NovaFront(age, 6f)
 Fx.Meteor(at, 3f);                                  // lands after FxTiming.MeteorFall
+Fx.Bladefall(at, 4f);                               // spectral swords land over FxTiming.BladefallSpread
 var barrier = Fx.Barrier(hero, 1.4f, life: 5f, FxTheme.Of(FxElement.Spirit));
 barrier.Hit(attacker.Position);                     // ripples where the blow lands
 
@@ -52,7 +53,7 @@ places itself.
 |---|---|
 | `Fx.cs` | The front door: every effect as one static call |
 | `FxWorld.cs` | The node that holds and ticks effects |
-| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, an arc's leap, smite fall, meteor fall, rupture speed) |
+| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, an arc's leap, smite fall, meteor fall, bladefall, rupture speed) |
 | `FxElement.cs`, `FxLighting.cs`, `FxModels.cs` | Elements and their palette, the lighting and model hooks |
 | `Fx*.cs` | The effects, one family per file; `FxKit.cs` holds what they share and `FxHandle`, the handle most calls return |
 | `shaders/` | The `fx_*` shaders; `fx_common.gdshaderinc` and `fx_noise.gdshaderinc` are their shared pieces |

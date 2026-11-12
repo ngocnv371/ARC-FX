@@ -389,6 +389,8 @@ public partial class Gallery : Node3D
                     Fx.Meteor(Vector3.Zero, 3f);
                     Fx.Patch(Vector3.Zero, 3f, FxTiming.MeteorFall, new Color(1f, 0.25f, 0.15f), FxGround.Warning);
                 }),
+            new("Cast", "Bladefall", "Fx.Bladefall(at, 4f);  // blades land from FxTiming.BladefallDrop over FxTiming.BladefallSpread", 2.5f, 0.6f,
+                _ => Fx.Bladefall(Vector3.Zero, 4f)),
             new("Cast", "Heal", "Fx.Heal(target, green);", 1.6f, 0.45f, g => Fx.Heal(g._caster, new Color(0.55f, 1f, 0.6f))),
             new("Cast", "Barrier", "var barrier = Fx.Barrier(target, 1.4f, life: 3f, spirit);  // barrier.Hit(from), barrier.Break()", 3.2f, 1f,
                 g => g.Run(new Barrier(Fx.Barrier(g._caster, 1.4f, 3f, FxTheme.Of(FxElement.Spirit))).Step)),

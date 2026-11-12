@@ -49,6 +49,14 @@ public static class FxTiming
     /// <summary>A meteor lands (and its blast goes off) this long after it is called.</summary>
     public const float MeteorFall = 0.9f;
 
+    /// <summary>
+    /// A bladefall's blades: each takes <see cref="BladefallDrop"/> to fall, and they start over
+    /// <see cref="BladefallSpread"/>, so they land from BladefallDrop after the call until
+    /// BladefallDrop + BladefallSpread.
+    /// </summary>
+    public const float BladefallDrop = 0.22f;
+    public const float BladefallSpread = 0.7f;
+
     /// <summary>A rupture's spikes race along the ground at this many metres a second.</summary>
     public const float RuptureSpeed = 26f;
 }

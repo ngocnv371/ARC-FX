@@ -223,6 +223,18 @@ public static class Fx
     public static FxHandle Meteor(Vector3 at, float radius) => World?.Meteor(at, radius) ?? default;
 
     /// <summary>
+    /// Bladefall onto <paramref name="at"/>: a volley of spectral swords rains point first out of
+    /// the sky across <paramref name="radius"/>, each burying its tip with a flash, then
+    /// disintegrating where it stands moments later. They land over <see cref="FxTiming.BladefallSpread"/>, starting
+    /// <see cref="FxTiming.BladefallDrop"/> after the call.
+    /// </summary>
+    public static FxHandle Bladefall(Vector3 at, float radius) => Bladefall(at, radius, FxBladefalls.BladeColor);
+
+    /// <summary>A bladefall in any colour.</summary>
+    public static FxHandle Bladefall(Vector3 at, float radius, Color color) =>
+        World?.Bladefall(at, radius, color) ?? default;
+
+    /// <summary>
     /// A heal on <paramref name="target"/>: motes of light spiral up round them through a band
     /// of light washing up their body, over a glow at their feet. <paramref name="size"/> scales
     /// it to whoever is healed.

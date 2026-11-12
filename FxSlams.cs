@@ -382,24 +382,30 @@ internal sealed class FxSlams(FxKit kit, FxWorld world)
         return fist;
     }
 
-    /// <summary>A war hammer a metre long, the end of its haft on the origin and the head at +Y.</summary>
+    /// <summary>
+    /// A war hammer a metre long, the end of its haft on the origin and the head at +Y, lying
+    /// along Z: the smite swings it down about X, so a face (the one at -Z) is what lands.
+    /// </summary>
     private static Node3D BuildHammer()
     {
         if (FxModels.Hammer?.Invoke() is not { } model)
-        {
-            var simple = new Node3D();
-            simple.AddChild(new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(0.06f, 1f, 0.06f) }, Position = Vector3.Up * 0.5f });
-            simple.AddChild(new MeshInstance3D { Mesh = new BoxMesh { Size = new Vector3(0.4f, 0.22f, 0.22f) }, Position = Vector3.Up * 0.9f });
-            return simple;
-        }
-        var upright = FxKit.Upright(model, 0f);
+            return FxKit.Wrap(new MeshInstance3D { Mesh = FxProps.Hammer() });
+        Node3D hammer = FxKit.Upright(model, 0f);
         // The model's head may be at either end of its haft: put it at the top.
-        if (!FxKit.HeadLow(upright))
-            return upright;
-        var flip = new Node3D { Basis = new Basis(Vector3.Right, Mathf.Pi), Position = Vector3.Up };
-        flip.AddChild(upright);
+        if (FxKit.HeadLow(hammer))
+        {
+            var flip = new Node3D { Basis = new Basis(Vector3.Right, Mathf.Pi), Position = Vector3.Up };
+            flip.AddChild(hammer);
+            hammer = new Node3D();
+            hammer.AddChild(flip);
+        }
+        // And its head may lie across the swing: turn it to lie along it.
+        if (!FxKit.HeadAcross(hammer))
+            return hammer;
+        var turn = new Node3D { Basis = new Basis(Vector3.Up, Mathf.Pi / 2f) };
+        turn.AddChild(hammer);
         var holder = new Node3D();
-        holder.AddChild(flip);
+        holder.AddChild(turn);
         return holder;
     }
 }

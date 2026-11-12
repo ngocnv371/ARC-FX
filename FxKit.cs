@@ -223,6 +223,28 @@ internal sealed class FxKit(Node3D parent)
         return low > high;
     }
 
+    /// <summary>
+    /// Whether a stood-up model's top (its last quarter, a hammer's head) reaches further along X
+    /// than along Z: a head lying across, rather than along Z.
+    /// </summary>
+    public static bool HeadAcross(Node3D root)
+    {
+        float across = 0f, along = 0f;
+        foreach (var mesh in root.FindChildren("*", nameof(MeshInstance3D), true, false).Cast<MeshInstance3D>())
+        {
+            var t = ToRoot(mesh, root);
+            foreach (var v in mesh.Mesh.GetFaces())
+            {
+                var p = t * v;
+                if (p.Y < 0.75f)
+                    continue;
+                across = Mathf.Max(across, Mathf.Abs(p.X));
+                along = Mathf.Max(along, Mathf.Abs(p.Z));
+            }
+        }
+        return across > along;
+    }
+
     /// <summary>A light pool from an OmniLight3D's settings: the unlit shaders cannot be lit by the light itself.</summary>
     public static void Pool(OmniLight3D light, float scale) =>
         Fx.Light(light.GlobalPosition, light.OmniRange * 1.3f, light.LightColor, light.LightEnergy * scale);

@@ -53,7 +53,7 @@ internal sealed class FxBladefalls(FxKit kit, FxWorld world)
     }
 
     private readonly List<Fall> _falls = [];
-    private readonly ArrayMesh _swordMesh = SwordMesh();
+    private readonly ArrayMesh _swordMesh = FxProps.Sword();
     private readonly BoxMesh _speckMesh = new() { Size = Vector3.One * 0.06f };
 
     public FxHandle Spawn(Vector3 centre, float radius, Color color)
@@ -233,127 +233,5 @@ internal sealed class FxBladefalls(FxKit kit, FxWorld world)
         var fall = new Fall { Blades = blades, Material = material, Color = BladeColor };
         _falls.Add(fall);
         return fall;
-    }
-
-    /// <summary>
-    /// A sword a metre long, its point on the origin and its pommel at +Y, all one mesh (one
-    /// draw, and one set of instance uniforms, per blade): a blade with a fuller grooved down
-    /// both faces (where fx_spectral etches its runes), a guard whose quillons sweep down toward
-    /// the point and end in knobs round a block set with a stone, a grip bound in raised wraps,
-    /// and a faceted pommel with a cap.
-    /// </summary>
-    private static ArrayMesh SwordMesh()
-    {
-        var st = new SurfaceTool();
-        st.Begin(Mesh.PrimitiveType.Triangles);
-        st.SetSmoothGroup(uint.MaxValue);
-        BladeOf(st);
-
-        // The guard: a block with a stone on each face, and two quillons swept toward the point.
-        const float GuardY = 0.725f, Sweep = 0.35f, Arm = 0.17f;
-        Append(st, new BoxMesh { Size = new Vector3(0.08f, 0.06f, 0.07f) }, Vector3.Up * GuardY);
-        var stone = new SphereMesh { Radius = 0.02f, Height = 0.04f, RadialSegments = 4, Rings = 2 };
-        Append(st, stone, new Vector3(0f, GuardY, 0.036f));
-        Append(st, stone, new Vector3(0f, GuardY, -0.036f));
-        var quillon = new CylinderMesh { TopRadius = 0.014f, BottomRadius = 0.024f, Height = Arm, RadialSegments = 6, Rings = 1 };
-        var knob = new SphereMesh { Radius = 0.024f, Height = 0.048f, RadialSegments = 6, Rings = 3 };
-        foreach (var side in new[] { 1f, -1f })
-        {
-            var way = new Vector3(side * Mathf.Cos(Sweep), -Mathf.Sin(Sweep), 0f);
-            var root = new Vector3(side * 0.035f, GuardY, 0f);
-            // The cylinder's +Y (its thin end) turned to point out along the quillon.
-            var turn = new Basis(Vector3.Back, side * -(Mathf.Pi / 2f + Sweep));
-            Append(st, quillon, new Transform3D(turn, root + way * Arm * 0.5f));
-            Append(st, knob, root + way * (Arm + 0.01f));
-        }
-
-        // The grip, bound in raised wraps, and the pommel.
-        Append(st, new CylinderMesh { TopRadius = 0.024f, BottomRadius = 0.027f, Height = 0.2f, RadialSegments = 6, Rings = 1 }, Vector3.Up * 0.855f);
-        var wrap = new CylinderMesh { TopRadius = 0.03f, BottomRadius = 0.03f, Height = 0.016f, RadialSegments = 6, Rings = 1 };
-        for (var i = 0; i < 5; i++)
-            Append(st, wrap, Vector3.Up * (0.785f + 0.035f * i));
-        Append(st, new CylinderMesh { TopRadius = 0.034f, BottomRadius = 0.028f, Height = 0.025f, RadialSegments = 6, Rings = 1 }, Vector3.Up * 0.765f);
-        Append(st, new SphereMesh { Radius = 0.048f, Height = 0.08f, RadialSegments = 8, Rings = 4 }, Vector3.Up * 0.985f);
-        Append(st, new CylinderMesh { TopRadius = 0f, BottomRadius = 0.022f, Height = 0.04f, RadialSegments = 6, Rings = 1 }, Vector3.Up * 1.035f);
-
-        st.GenerateNormals();
-        return st.Commit();
-    }
-
-    /// <summary>
-    /// The blade, its point on the origin and its base at <c>y = 0.7</c>: an eight-sided section,
-    /// a flat diamond near the point and the base and a groove (the fuller) sunk into both faces
-    /// between, keeping its width to the shoulders, then tapering to the point.
-    /// </summary>
-    private static void BladeOf(SurfaceTool st)
-    {
-        const float Half = 0.055f, Ridge = 0.016f;
-        // Heights up the blade and how deep the fuller is there (a share of the ridge).
-        var levels = new (float Y, float Groove, float Width)[]
-        {
-            (0.2f, 0f, 1f), (0.28f, 0f, 1f), (0.33f, 0.7f, 1f), (0.62f, 0.7f, 1f), (0.67f, 0f, 1f), (0.7f, 0f, 1.08f),
-        };
-        // Each ring runs anticlockwise seen from above (+Y), as (x, z) pairs.
-        Vector3[] Ring(float y, float groove, float width)
-        {
-            var h = Half * width;
-            var side = Ridge * 0.65f;
-            var mid = Ridge * (1f - groove);
-            return
-            [
-                new(h, y, 0f), new(0.35f * h, y, -side), new(0f, y, -mid), new(-0.35f * h, y, -side),
-                new(-h, y, 0f), new(-0.35f * h, y, side), new(0f, y, mid), new(0.35f * h, y, side),
-            ];
-        }
-        // Wound so its front faces <paramref name="outward"/>; Godot's front faces wind clockwise
-        // as seen from outside.
-        void Tri(Vector3 a, Vector3 b, Vector3 c, Vector3 outward)
-        {
-            if ((b - a).Cross(c - a).Dot(outward) < 0f)
-                (b, c) = (c, b);
-            st.AddVertex(a);
-            st.AddVertex(c);
-            st.AddVertex(b);
-        }
-        // Outward from a side face: away from the blade's axis across the section, which holds
-        // in the fuller too (its faces lean in, but still face out of the blade's face).
-        static Vector3 Out(Vector3 a, Vector3 b)
-        {
-            var edge = b - a;
-            var normal = new Vector3(edge.Z, 0f, -edge.X);
-            var mid = (a + b) * 0.5f;
-            return normal.Dot(mid with { Y = 0f }) >= 0f ? normal : -normal;
-        }
-        var rings = levels.Select(l => Ring(l.Y, l.Groove, l.Width)).ToArray();
-        var tip = Vector3.Zero;
-        for (var i = 0; i < 8; i++)
-        {
-            var j = (i + 1) % 8;
-            var first = rings[0];
-            Tri(tip, first[i], first[j], Out(first[i], first[j]) + Vector3.Down * 0.1f);
-            for (var r = 0; r + 1 < rings.Length; r++)
-            {
-                var (lo, hi) = (rings[r], rings[r + 1]);
-                var outward = Out(lo[i], lo[j]) + Out(hi[i], hi[j]);
-                Tri(lo[i], hi[i], hi[j], outward);
-                Tri(lo[i], hi[j], lo[j], outward);
-            }
-        }
-        var top = rings[^1];
-        var centre = new Vector3(0f, top[0].Y, 0f);
-        for (var i = 0; i < 8; i++)
-            Tri(centre, top[i], top[(i + 1) % 8], Vector3.Up);
-    }
-
-    /// <summary>Adds a primitive mesh's triangles at <paramref name="at"/>.</summary>
-    private static void Append(SurfaceTool st, PrimitiveMesh mesh, Vector3 at) => Append(st, mesh, new Transform3D(Basis.Identity, at));
-
-    private static void Append(SurfaceTool st, PrimitiveMesh mesh, Transform3D transform)
-    {
-        var arrays = mesh.SurfaceGetArrays(0);
-        var vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
-        var indices = arrays[(int)Mesh.ArrayType.Index].AsInt32Array();
-        foreach (var index in indices)
-            st.AddVertex(transform * vertices[index]);
     }
 }

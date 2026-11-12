@@ -208,7 +208,7 @@ internal sealed class FxStorms(FxKit kit, FxWorld world)
             return;
         }
         nova.Material.SetShaderParameter("uAge", nova.Age);
-        FxExplosions.PlaceGlobe(nova.Globe, nova.GlobeMaterial, nova.Centre, nova.Radius, nova.Age, spark: true);
+        FxExplosions.PlaceGlobe(nova.Globe, nova.GlobeMaterial, nova.Centre, nova.Radius, nova.Age, FxBurst.Lightning);
         var spent = 1f - nova.Age / FxTiming.NovaLife;
         Fx.Light(nova.Centre + Vector3.Up * 0.8f, nova.Radius * 1.6f + 1f, NovaColor, 1.4f * spent * spent);
 

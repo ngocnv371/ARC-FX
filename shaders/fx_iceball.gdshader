@@ -41,6 +41,10 @@ void fragment()
 	float crack = (1.0 - smoothstep(0.0, 0.06, cells.y)) * smoothstep(0.3, 0.6, u); // to Blasts.GlobePop
 	float pop = smoothstep(0.6, 1.0, u);
 	float body = step(pop * 1.05, cells.z * 0.95 + 0.02);
+	// Missing shards: some pieces are gone from the start, the most at the silhouette (cut by
+	// facet, so the outline breaks along the crystal's edges), so it reads as a burst of ice,
+	// not a solid lump. They are the pieces that would wink out first, so the shatter carries on.
+	body *= step(0.1 + rim * 0.3 + u * 0.08, cells.z);
 	float edge = (1.0 - smoothstep(0.0, 0.12, cells.y)) * pop;
 
 	float flash = 1.0 - smoothstep(0.0, 0.3, u);

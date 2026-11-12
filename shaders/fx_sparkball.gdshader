@@ -41,16 +41,25 @@ void fragment()
 	}
 	arcs = min(arcs, 1.5);
 
+	// Tatters: a churning noise eats holes in the bubble so it reads as a burst of energy, not
+	// a solid ball. It bites hardest at the silhouette, so the outline breaks up, and wider as
+	// the globe pops. The arcs survive more of it than the haze, flickering across the gaps.
+	vec3 q = vLocal * 2.6 + vSeed + vec3(0.0, -TIME * 2.5, TIME * 1.3);
+	float tear = fx_noise3(q) * 0.65 + fx_noise3(q * 2.7 + 7.1) * 0.35;
+	float cut = 0.2 + rim * 0.15 + u * 0.1 + pop * 0.2;
+	float body = smoothstep(cut, cut + 0.22, tear);
+	float arcBody = smoothstep(cut - 0.22, cut, tear);
+
 	float haze = 0.12 + 0.12 * fx_noise3(vLocal * 5.0 + vec3(0.0, TIME * 6.0, 0.0));
 	float flash = 1.0 - smoothstep(0.0, 0.12, abs(u - 0.78));
 	// The bubble fades away after the pop; its arcs flare and linger a moment longer.
-	float fade = 1.0 - pop;
-	float bolt = arcs * (0.8 + pop * 1.2) * (1.0 - smoothstep(0.85, 1.0, u));
+	float fade = (1.0 - pop) * body;
+	float bolt = arcs * arcBody * (0.8 + pop * 1.2) * (1.0 - smoothstep(0.85, 1.0, u));
 	// The flash lights up the rim and the arcs, not the middle, so it stays a bubble.
 	float bright = clamp(haze + rim * (0.6 + flash * 0.6), 0.0, 1.0) * fade;
 	vec3 col = fx_ramp(uColor, 0.4 + bright * 0.4) * bright * 1.4
 		+ fx_ramp(uColor, 0.8 + min(bolt, 1.0) * 0.2) * bolt * (1.0 + flash * 0.5)
-		+ fx_ramp(uColor, 0.7) * flash * 0.15;
+		+ fx_ramp(uColor, 0.7) * flash * 0.15 * body;
 	ALBEDO = fx_out(col);
 	ALPHA = clamp((0.08 + rim * 0.35) * fade, 0.0, 1.0);
 }

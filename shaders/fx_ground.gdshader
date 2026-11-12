@@ -196,6 +196,13 @@ void fragment()
 		float ridge = fx_noise3(vec3(dir * 2.5, d * 11.0 + churn * 2.5 - age * 4.0));
 		float streak = pow(1.0 - abs(ridge * 2.0 - 1.0), 7.0) * smoothstep(1.4, 0.0, inside) * band;
 
+		// Tatters, as on its globe (fx_fireball): a drifting noise thins the ring out in gaps so
+		// it reads as rolling flame, not a drawn circle. The streaks survive more of it.
+		float wisp = fx_fbm(local * 2.5 + vec2(TIME * 0.3, -age * 0.6));
+		float cut = 0.37 + min(age / uLife, 1.0) * 0.12;
+		band *= smoothstep(cut, cut + 0.1, wisp);
+		streak *= smoothstep(cut - 0.1, cut, wisp);
+
 		// The core: a flash of flame at the centre that sinks into embers.
 		float hot = 1.0 - smoothstep(0.05, 0.6, age);
 		float core = exp(-pow(d / (0.16 + 0.16 * front), 2.0)) * hot * (0.6 + 0.8 * churn);
@@ -246,6 +253,10 @@ void fragment()
 		vec3 chunks = fx_cells(local * 4.0 + 1.7);
 		float seam = 1.0 - smoothstep(0.0, 0.05, chunks.y);
 		band *= step(smoothstep(0.0, 0.55, wave) * 1.05, chunks.z * 0.95 + 0.02);
+		// Missing chunks, as on its globe (fx_iceball): some pieces are gone from the start, in
+		// clusters, so the ring reads as shattering ice, not a drawn circle.
+		float gaps = fx_fbm(local * 1.8 + 3.7);
+		band *= step(0.4, chunks.z * 0.55 + gaps * 0.45);
 		float ice = band * (0.45 + 0.35 * chunks.z + seam * 0.6);
 
 		// A cold flash where the globe burst.
@@ -253,8 +264,9 @@ void fragment()
 			* (1.0 - smoothstep(BLAST_POP, BLAST_POP + 0.3, age));
 
 		// Hoarfrost over what the front has passed: crystal veins and glints, melting away.
-		float frosted = smoothstep(edge + 0.02, edge - 0.1, d) * smoothstep(1.1, 0.9, d);
 		vec2 bend = vec2(fx_fbm(local * 1.5), fx_fbm(local * 1.5 + 5.1)) - 0.5;
+		// Its outer edge ragged, not a clean circle.
+		float frosted = smoothstep(edge + 0.02, edge - 0.1, d) * smoothstep(1.1, 0.85, d + bend.y * 0.35);
 		vec3 veins = fx_cells((local + bend * 0.5) * 3.0);
 		float vein = 1.0 - smoothstep(0.0, 0.04 + 0.04 * bend.x, veins.y);
 		vec3 dots = fx_cells(local * 9.0);
@@ -307,6 +319,17 @@ void fragment()
 		float rim = exp(-pow(d / 0.05, 2.0)) * (0.6 + 0.4 * fx_fbm(dir * 6.0 + TIME * 7.0));
 		float haze = exp(-pow((d + band * 0.5) / (band * 0.6), 2.0)) * 0.22;
 		float blue = clamp(arcs + rim + haze, 0.0, 1.2) * settle;
+
+		// Tatters, as on its globe (fx_sparkball): a drifting noise eats gaps in both rings so
+		// they read as bursts of energy, not drawn circles, and more of them as they settle.
+		// The arcs and sparks survive more of it than the rim and haze.
+		vec2 q = local / metres * 3.2 + vec2(TIME * 0.9, -TIME * 0.6);
+		float tear = fx_fbm(q);
+		float cut = 0.37 + u * 0.12;
+		float body = smoothstep(cut, cut + 0.1, tear);
+		float arcBody = smoothstep(cut - 0.1, cut, tear);
+		blue = clamp((arcs * arcBody + (rim + haze) * body), 0.0, 1.2) * settle;
+		gold *= arcBody;
 
 		glow = fx_ramp(vec3(1.0, 0.72, 0.3), 0.55 + gold * 0.45) * gold * 2.4
 			+ fx_ramp(uColor, 0.45 + min(blue, 1.0) * 0.55) * blue * 1.5;

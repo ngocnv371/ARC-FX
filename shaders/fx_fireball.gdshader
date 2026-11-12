@@ -38,6 +38,13 @@ void fragment()
 	float body = smoothstep(erode, erode + 0.1, n);
 	float tear = smoothstep(0.06, 0.0, abs(n - erode - 0.05)) * step(0.01, pop);
 
+	// Tatters: a second, slower noise thins the bubble out in drifting patches, hardest at the
+	// silhouette, so it reads as a burst of flame rather than a solid ball (as fx_sparkball).
+	vec3 q = vLocal * 2.4 + vSeed * 1.7 + vec3(TIME * 0.8, -TIME * 1.8, 0.0);
+	float wisp = fx_noise3(q) * 0.65 + fx_noise3(q * 2.6 + 4.3) * 0.35;
+	float cut = 0.18 + rim * 0.2 + u * 0.1;
+	body *= smoothstep(cut, cut + 0.24, wisp);
+
 	float flash = 1.0 - smoothstep(0.0, 0.3, u);
 	float heat = clamp(-0.05 + n * 0.95 + rim * 0.35 + ridge * 0.3 + flash * 0.35 + tear * 0.6 - u * 0.1, 0.0, 1.0);
 	vec3 col = fx_ramp(uColor, heat) * (0.6 + rim * 1.4 + ridge * 0.6 + tear * 1.2);

@@ -226,6 +226,114 @@ internal static class FxProps
     /// <summary>Over what height (in the fist's own metre) its forearm fades out above the cuff.</summary>
     public static readonly Vector2 FistFade = new(1.3f, 2.5f);
 
+    /// <summary>How many looks <see cref="RockSpike"/> has.</summary>
+    public const int RockSpikeLooks = 4;
+
+    /// <summary>
+    /// A jagged spike of rock a metre tall, its foot on the origin and its point up, in one of
+    /// <see cref="RockSpikeLooks"/> looks (<paramref name="look"/>): a crooked, faceted column whose
+    /// sides bulge and pinch unevenly and break into a ledge or two on the way up, smaller shards
+    /// bursting out of its foot, and rubble round it.
+    /// </summary>
+    public static ArrayMesh RockSpike(int look)
+    {
+        var rng = new Random(look * 7919 + 17);
+        float R() => (float)rng.NextDouble();
+        var st = Begin();
+        Crag(st, Transform3D.Identity, 6 + look % 2, R);
+        // Shards breaking out of the foot, leaning away from the main spike.
+        var shards = 2 + look % 2;
+        var turn = R() * Mathf.Tau;
+        for (var i = 0; i < shards; i++)
+        {
+            var angle = turn + Mathf.Tau * (i + 0.3f * (R() - 0.5f)) / shards;
+            var outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            var lean = new Basis(Vector3.Up.Cross(outward).Normalized(), 0.45f + 0.35f * R());
+            var basis = lean * new Basis(Vector3.Up, R() * Mathf.Tau) * Basis.FromScale(Vector3.One * (0.32f + 0.18f * R()));
+            Crag(st, new Transform3D(basis, outward * 0.17f + Vector3.Down * 0.06f), 5, R);
+        }
+        // Rubble round the foot.
+        var chunk = new SphereMesh { Radius = 1f, Height = 2f, RadialSegments = 5, Rings = 3 };
+        for (var i = 0; i < 4; i++)
+        {
+            var angle = turn + Mathf.Tau * (i + 0.5f + 0.4f * (R() - 0.5f)) / 4f;
+            var at = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * (0.28f + 0.12f * R());
+            var size = new Vector3(0.05f + 0.04f * R(), 0.03f + 0.03f * R(), 0.05f + 0.04f * R());
+            Append(st, chunk, new Transform3D(new Basis(RandomAxis(R), R() * Mathf.Tau) * Basis.FromScale(size), at));
+        }
+        return End(st);
+    }
+
+    /// <summary>
+    /// One crooked spike of rock a metre tall on <paramref name="xf"/>: rings of
+    /// <paramref name="sides"/> uneven corners narrowing up to an off-centre point, each ring's
+    /// centre drifting from the last, and a ledge stepping in partway up.
+    /// </summary>
+    private static void Crag(SurfaceTool st, Transform3D xf, int sides, Func<float> R)
+    {
+        // Heights, how wide (a share of the foot) and whether the side steps in there.
+        var profile = new (float Y, float Width, bool Ledge)[]
+        {
+            (-0.05f, 1f, false), (0.14f, 0.86f, false), (0.3f, 0.74f, true), (0.48f, 0.52f, false), (0.64f, 0.4f, R() > 0.4f), (0.82f, 0.22f, false),
+        };
+        const float Foot = 0.3f;
+        var spin = R() * Mathf.Tau;
+        var angles = new float[sides];
+        for (var i = 0; i < sides; i++)
+            angles[i] = spin + Mathf.Tau * (i + 0.45f * (R() - 0.5f)) / sides;
+        var rings = new List<(Vector3 Centre, Vector3[] Corners)>();
+        var drift = Vector3.Zero;
+        foreach (var (y, width, ledge) in profile)
+        {
+            drift += new Vector3(R() - 0.5f, 0f, R() - 0.5f) * 0.07f;
+            var centre = drift + Vector3.Up * y;
+            var corners = new Vector3[sides];
+            for (var i = 0; i < sides; i++)
+                corners[i] = centre + new Vector3(Mathf.Cos(angles[i]), (R() - 0.5f) * 0.06f, Mathf.Sin(angles[i])) * Foot * width * (0.72f + 0.5f * R());
+            rings.Add((centre, corners));
+            if (ledge)
+            {
+                // The ledge: the side steps in at the same height, leaving a shelf.
+                var inner = new Vector3[sides];
+                for (var i = 0; i < sides; i++)
+                    inner[i] = centre + (corners[i] - centre) * (0.72f + 0.1f * R()) + Vector3.Up * 0.015f;
+                rings.Add((centre + Vector3.Up * 0.015f, inner));
+            }
+        }
+        var tip = drift + new Vector3(R() - 0.5f, 0f, R() - 0.5f) * 0.06f + Vector3.Up;
+
+        // Faces wound outward from the column's axis (and upward on a ledge's shelf).
+        void Face(Vector3 a, Vector3 b, Vector3 c, Vector3 axis)
+        {
+            var mid = (a + b + c) / 3f;
+            var radial = mid - axis;
+            radial.Y = 0f;
+            Tri(st, xf * a, xf * b, xf * c, xf.Basis * (radial + Vector3.Up * 0.3f));
+        }
+        for (var r = 0; r + 1 < rings.Count; r++)
+        {
+            var (lo, hi) = (rings[r], rings[r + 1]);
+            var axis = (lo.Centre + hi.Centre) * 0.5f;
+            for (var i = 0; i < sides; i++)
+            {
+                var j = (i + 1) % sides;
+                Face(lo.Corners[i], hi.Corners[i], hi.Corners[j], axis);
+                Face(lo.Corners[i], hi.Corners[j], lo.Corners[j], axis);
+            }
+        }
+        var (topCentre, top) = rings[^1];
+        var (footCentre, foot) = rings[0];
+        for (var i = 0; i < sides; i++)
+        {
+            var j = (i + 1) % sides;
+            Face(top[i], top[j], tip, topCentre);
+            Tri(st, xf * foot[i], xf * foot[j], xf * footCentre, xf.Basis * Vector3.Down);
+        }
+    }
+
+    private static Vector3 RandomAxis(Func<float> R) =>
+        new Vector3(R() - 0.5f, R() - 0.5f, R() - 0.5f).Normalized() is var v && v.LengthSquared() > 0.5f ? v : Vector3.Up;
+
     /// <summary>
     /// A bevelled plate (an eight-sided bar) from <paramref name="a"/> to <paramref name="b"/>,
     /// <paramref name="width"/> across along <paramref name="across"/> and <paramref name="thick"/>

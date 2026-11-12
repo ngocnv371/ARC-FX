@@ -41,7 +41,7 @@ Optional hooks, set once at startup:
 | Hook | What for | Left unset |
 |---|---|---|
 | `Fx.Lighting` (`IFxLighting`) | Pools of light the game's unlit shaders add (fire lights the grass) | Effects still look right, they just don't light the ground |
-| `FxModels.Arrow`, `.Axe`, `.Shield`, `.Hammer`, `.RockSpike` | The props a few looks are built round (the library ships no art) | Built-in props for the shield and hammer (a heater shield, a war maul), plain shapes for the rest; all read the same from the game camera |
+| `FxModels.Arrow`, `.Axe`, `.Shield`, `.Hammer`, `.RockSpike` | The props a few looks are built round (the library ships no art) | Built-in props for the shield, hammer and rock spike (a heater shield, a war maul, a jagged crag), plain shapes for the rest; all read the same from the game camera |
 | `FxTheme.Colors` | Retinting an element | The ARC palette (leave it, for consistency) |
 
 `FxPuffs` (death puffs) and `FxShaft` (a standing column of light) are nodes the game owns and

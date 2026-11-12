@@ -39,8 +39,8 @@ internal sealed class FxExplosions(Node3D parent)
     /// <summary>fx_ground.gdshader's styles for explosions.</summary>
     private const int ShockStyle = 4, NovaStyle = 5, FireStyle = 6, FrostStyle = 7;
 
-    /// <summary>How long a fire or frost globe swells and pops, when in that it starts to pop, and a frost globe's size then as a share of the radius (a fire globe rides its ring out).</summary>
-    private const float GlobeTime = 0.45f, GlobePop = 0.6f, GlobeSize = 0.7f;
+    /// <summary>How long a fire or frost globe swells and pops (riding its ring out), and when in that it starts to pop.</summary>
+    private const float GlobeTime = 0.45f, GlobePop = 0.6f;
     /// <summary>
     /// A lightning globe is quicker: it rides the nova's outer ring out (see <see cref="FxTiming.NovaFront"/>)
     /// and pops as the rings land.
@@ -221,18 +221,12 @@ internal sealed class FxExplosions(Node3D parent)
             return;
         var puff = Mathf.Max(u - pop, 0f) / (1f - pop) * 0.2f;
         var swell = 1f - Mathf.Pow(1f - Mathf.Min(u / pop, 1f), 3f);
-        float size;
-        if (shape is FxBurst.Lightning or FxBurst.Fire)
-        {
-            // Meets the ground where its ring's front is (the nova's outer ring, or the fire
-            // ring, on fx_ground's blast_front, the same ease as the swell), so the two read as
-            // one burst.
-            var front = spark ? FxTiming.NovaFront(age, radius) : radius * swell;
-            var footprint = Mathf.Max(front, radius * 0.15f);
-            size = footprint / Mathf.Sqrt(1f - GlobeLift * GlobeLift) * (1f + puff);
-        }
-        else
-            size = radius * GlobeSize * (0.15f + 0.85f * swell + puff);
+        // Meets the ground where its ring's front is (the nova's outer ring, or the fire or ice
+        // ring, on fx_ground's blast_front, the same ease as the swell), so the two read as one
+        // burst.
+        var front = spark ? FxTiming.NovaFront(age, radius) : radius * swell;
+        var footprint = Mathf.Max(front, radius * 0.15f);
+        var size = footprint / Mathf.Sqrt(1f - GlobeLift * GlobeLift) * (1f + puff);
         // Sunk a little into the ground, as if it burst out of it.
         node.Position = centre + Vector3.Up * size * GlobeLift;
         node.Scale = Vector3.One * size;

@@ -253,6 +253,10 @@ void fragment()
 		vec3 chunks = fx_cells(local * 4.0 + 1.7);
 		float seam = 1.0 - smoothstep(0.0, 0.05, chunks.y);
 		band *= step(smoothstep(0.0, 0.55, wave) * 1.05, chunks.z * 0.95 + 0.02);
+		// Missing chunks, as on its globe (fx_iceball): some pieces are gone from the start, in
+		// clusters, so the ring reads as shattering ice, not a drawn circle.
+		float gaps = fx_fbm(local * 1.8 + 3.7);
+		band *= step(0.4, chunks.z * 0.55 + gaps * 0.45);
 		float ice = band * (0.45 + 0.35 * chunks.z + seam * 0.6);
 
 		// A cold flash where the globe burst.
@@ -260,8 +264,9 @@ void fragment()
 			* (1.0 - smoothstep(BLAST_POP, BLAST_POP + 0.3, age));
 
 		// Hoarfrost over what the front has passed: crystal veins and glints, melting away.
-		float frosted = smoothstep(edge + 0.02, edge - 0.1, d) * smoothstep(1.1, 0.9, d);
 		vec2 bend = vec2(fx_fbm(local * 1.5), fx_fbm(local * 1.5 + 5.1)) - 0.5;
+		// Its outer edge ragged, not a clean circle.
+		float frosted = smoothstep(edge + 0.02, edge - 0.1, d) * smoothstep(1.1, 0.85, d + bend.y * 0.35);
 		vec3 veins = fx_cells((local + bend * 0.5) * 3.0);
 		float vein = 1.0 - smoothstep(0.0, 0.04 + 0.04 * bend.x, veins.y);
 		vec3 dots = fx_cells(local * 9.0);

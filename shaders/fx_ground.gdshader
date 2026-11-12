@@ -196,6 +196,13 @@ void fragment()
 		float ridge = fx_noise3(vec3(dir * 2.5, d * 11.0 + churn * 2.5 - age * 4.0));
 		float streak = pow(1.0 - abs(ridge * 2.0 - 1.0), 7.0) * smoothstep(1.4, 0.0, inside) * band;
 
+		// Tatters, as on its globe (fx_fireball): a drifting noise thins the ring out in gaps so
+		// it reads as rolling flame, not a drawn circle. The streaks survive more of it.
+		float wisp = fx_fbm(local * 2.5 + vec2(TIME * 0.3, -age * 0.6));
+		float cut = 0.37 + min(age / uLife, 1.0) * 0.12;
+		band *= smoothstep(cut, cut + 0.1, wisp);
+		streak *= smoothstep(cut - 0.1, cut, wisp);
+
 		// The core: a flash of flame at the centre that sinks into embers.
 		float hot = 1.0 - smoothstep(0.05, 0.6, age);
 		float core = exp(-pow(d / (0.16 + 0.16 * front), 2.0)) * hot * (0.6 + 0.8 * churn);
@@ -307,6 +314,17 @@ void fragment()
 		float rim = exp(-pow(d / 0.05, 2.0)) * (0.6 + 0.4 * fx_fbm(dir * 6.0 + TIME * 7.0));
 		float haze = exp(-pow((d + band * 0.5) / (band * 0.6), 2.0)) * 0.22;
 		float blue = clamp(arcs + rim + haze, 0.0, 1.2) * settle;
+
+		// Tatters, as on its globe (fx_sparkball): a drifting noise eats gaps in both rings so
+		// they read as bursts of energy, not drawn circles, and more of them as they settle.
+		// The arcs and sparks survive more of it than the rim and haze.
+		vec2 q = local / metres * 3.2 + vec2(TIME * 0.9, -TIME * 0.6);
+		float tear = fx_fbm(q);
+		float cut = 0.37 + u * 0.12;
+		float body = smoothstep(cut, cut + 0.1, tear);
+		float arcBody = smoothstep(cut - 0.1, cut, tear);
+		blue = clamp((arcs * arcBody + (rim + haze) * body), 0.0, 1.2) * settle;
+		gold *= arcBody;
 
 		glow = fx_ramp(vec3(1.0, 0.72, 0.3), 0.55 + gold * 0.45) * gold * 2.4
 			+ fx_ramp(uColor, 0.45 + min(blue, 1.0) * 0.55) * blue * 1.5;

@@ -15,7 +15,7 @@ Fx.Patch(at, 3f, life: 4f, FxElement.Poison);
 Fx.Aura(hero, 3.5f, keep: 1f, FxElement.Frost);     // renew it each time the aura ticks
 Fx.Sigil(hero, FxSigil.Haste, 1.6f, keep: 1f);      // the disc at their feet that says what it does
 Fx.Sigil(hero, FxSigil.Fire, 1.4f, keep: 1f, FxSigilLook.Ring);  // several auras: one ring, a badge each
-Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f);  // a strike from the sky
+Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f, tendrils: 12, thickness: 0.6f);  // a strike from the sky
 Fx.Arc(hero.Position, foe.Position, burst: 1.6f);   // one jump of chain lightning; the next FxTiming.ArcLeap later
 Fx.Slash(hero.Position, facing, 3f, arc: 120f, steel);
 Fx.BladeVortex(hero, stacks, 1.6f, keep: 1f, FxElement.Fire);  // renew each cast; blood for physical

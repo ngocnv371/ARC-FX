@@ -13,7 +13,9 @@ internal sealed class FxLines(FxKit kit)
 {
     /// <summary>How far above each end a line is drawn.</summary>
     public const float Lift = 0.9f;
-    private const int BoltKinks = 4;
+    /// <summary>A bolt bends about once every this many metres, at least BoltKinks and at most MaxKinks times, so a long one (a strike from the sky) is as jagged as a short one rather than a few long rods.</summary>
+    private const int BoltKinks = 4, MaxKinks = 12;
+    private const float KinkSpacing = 1.5f;
     /// <summary>Each decorative tendril off a bolt is a twig of this many pieces.</summary>
     private const int TendrilPieces = 2;
     private const float FlameSpacing = 0.3f;
@@ -48,7 +50,7 @@ internal sealed class FxLines(FxKit kit)
             first[i] = count;
             count += fire
                 ? Mathf.Max(2, Mathf.CeilToInt(FxKit.Flat(segments[i].A).DistanceTo(FxKit.Flat(segments[i].B)) / FlameSpacing) + 1)
-                : BoltKinks + tendrils * TendrilPieces;
+                : KinksOf(segments[i].A, segments[i].B) + tendrils * TendrilPieces;
         }
         var beds = fire ? segments.Length : 0;
         var line = _pool.Find(l => !l.Active && l.Fire == fire && l.Strands.Length == count && l.Beds.Length == beds) ?? Make(count, beds, fire);
@@ -131,17 +133,21 @@ internal sealed class FxLines(FxKit kit)
     /// with every reshape, so they flicker. Their core and sheath are about half the bolt's, so they read as finer
     /// offshoots of it. <paramref name="thickness"/> scales the bolt and twigs, sheaths and all.
     /// </summary>
+    private static int KinksOf(Vector3 a, Vector3 b) =>
+        Math.Clamp(Mathf.CeilToInt(a.DistanceTo(b) / KinkSpacing), BoltKinks, MaxKinks);
+
     private static void ShapeBolt(MeshInstance3D[] strands, int first, Vector3 a, Vector3 b, int tendrils, float thickness)
     {
         var along = b - a;
         var side = Mathf.Abs(along.Normalized().Y) > 0.95f ? Vector3.Right : along.Cross(Vector3.Up).Normalized();
         var lift = Vector3.Up * Lift;
-        Span<Vector3> points = stackalloc Vector3[BoltKinks + 1];
+        var kinks = KinksOf(a, b);
+        Span<Vector3> points = stackalloc Vector3[MaxKinks + 1];
         points[0] = a + lift;
-        for (var k = 1; k <= BoltKinks; k++)
+        for (var k = 1; k <= kinks; k++)
         {
-            var point = a.Lerp(b, (float)k / BoltKinks) + lift;
-            if (k < BoltKinks)
+            var point = a.Lerp(b, (float)k / kinks) + lift;
+            if (k < kinks)
                 point += side * (float)GD.RandRange(-0.35, 0.35) + Vector3.Up * (float)GD.RandRange(-0.2, 0.25);
             FxKit.Lay(strands[first + k - 1], points[k - 1], point, (float)GD.RandRange(0.02, 0.035) * thickness, FxKit.SheathRim * thickness);
             points[k] = point;
@@ -150,7 +156,7 @@ internal sealed class FxLines(FxKit kit)
         var forward = along.Normalized();
         for (var t = 0; t < tendrils; t++)
         {
-            var piece = GD.RandRange(0, BoltKinks - 1);
+            var piece = GD.RandRange(0, kinks - 1);
             var root = points[piece].Lerp(points[piece + 1], GD.Randf());
             // Off to either side, leaning along the bolt a little and mostly drooping.
             var dir = (side * (GD.Randf() < 0.5f ? -1f : 1f) + forward * (float)GD.RandRange(-0.7, 0.7)
@@ -163,7 +169,7 @@ internal sealed class FxLines(FxKit kit)
             var tip = root + dir * reach + FxKit.Jitter(reach * 0.3f);
             var width = (float)GD.RandRange(0.006, 0.012) * thickness;
             var rim = FxKit.SheathRim * 0.6f * thickness;
-            var strand = first + BoltKinks + t * TendrilPieces;
+            var strand = first + kinks + t * TendrilPieces;
             FxKit.Lay(strands[strand], root, kink, width, rim);
             FxKit.Lay(strands[strand + 1], kink, tip, width * 0.7f, rim * 0.7f);
         }

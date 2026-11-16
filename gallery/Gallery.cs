@@ -430,6 +430,7 @@ public partial class Gallery : Node3D
             new("Shot", "Cold wave", "Fx.Shot(FxShotLook.ColdWave)  // shot.Strength(left) widens it", 1.8f, 0.6f, g => g.Fly(FxShotLook.ColdWave, 12f)),
             new("Shot", "Steel wave", "Fx.Shot(FxShotLook.SteelWave)", 1.8f, 0.6f, g => g.Fly(FxShotLook.SteelWave, 12f)),
             new("Shot", "Sky split", "Fx.Shot(FxShotLook.SkySplit)", 1.2f, 0.4f, g => g.Fly(FxShotLook.SkySplit, 18f)),
+            new("Shot", "Bone spear", "Fx.Shot(FxShotLook.BoneSpear)", 1.2f, 0.4f, g => g.Fly(FxShotLook.BoneSpear, 24f)),
             new("Shot", "Thrown axe", "Fx.Shot(FxShotLook.Axe)", 1.8f, 0.55f, g => g.Fly(FxShotLook.Axe, 16f)),
             new("Shot", "Tornado", "Fx.Shot(FxShotLook.Tornado)", 3.5f, 1.5f, g => g.Fly(FxShotLook.Tornado, 5f)),
             new("Shot", "Storm tornado", "Fx.Shot(FxShotLook.StormTornado)  // calls down its own bolts", 3.5f, 1.5f, g => g.Fly(FxShotLook.StormTornado, 5f)),

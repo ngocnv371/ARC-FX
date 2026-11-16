@@ -3,7 +3,7 @@ using Godot;
 namespace Arc.Fx;
 
 /// <summary>What a projectile looks like: an arrow (plain or elemental), a thrown axe, or a spell.</summary>
-public enum FxShotLook { Arrow, FireBolt, Fireball, IceSpear, Spark, Axe, LightningArrow, PoisonArrow, PhantomArrow, FireArrow, IceArrow, ColdWave, Frostbolt, Tornado, SteelWave, StormTornado, FireTornado, IceTornado, SkySplit }
+public enum FxShotLook { Arrow, FireBolt, Fireball, IceSpear, Spark, Axe, LightningArrow, PoisonArrow, PhantomArrow, FireArrow, IceArrow, ColdWave, Frostbolt, Tornado, SteelWave, StormTornado, FireTornado, IceTornado, SkySplit, BoneSpear }
 
 /// <summary>
 /// A projectile's look, placed by the game every frame along its flight. ARC FX turns it to face
@@ -59,7 +59,7 @@ public readonly struct FxShot
 /// head, or the arrow itself as phantasmal light); the axe is a spectral great axe
 /// (<see cref="FxModels.Axe"/>, fx_spectral); spells are fire bolts and fireballs, sparks
 /// (fx_spark), ice spears (fx_shard), frostbolts (fx_orb), cold and steel waves (fx_wave,
-/// fx_steel_wave), Sky Split's upright blade of light (fx_sky_split) and tornados (fx_tornado with whirling debris: dust, a storm struck by
+/// fx_steel_wave), bone spears (fx_shard in bone), Sky Split's upright blade of light (fx_sky_split) and tornados (fx_tornado with whirling debris: dust, a storm struck by
 /// lightning again and again, fire or ice).
 /// </summary>
 internal sealed class FxShots(FxKit kit)
@@ -464,6 +464,12 @@ internal sealed class FxShots(FxKit kit)
                 break;
             case FxShotLook.Fireball:
                 holder.AddChild(Missile(style: 0, FireColor, length: 3f, width: 1.8f, head: 0.15f, radius: 0.32f));
+                break;
+            case FxShotLook.BoneSpear:
+                // A long splinter of old bone, pale at its point, with a thin pale wake.
+                AddShard(holder, 1.0f, 0.34f, 0.1f, new Color(0.5f, 0.44f, 0.34f), new Color(0.93f, 0.9f, 0.8f), Colors.White,
+                    new Color(1f, 0.97f, 0.88f));
+                holder.AddChild(Missile(style: 1, new Color(0.9f, 0.86f, 0.74f), length: 2.2f, width: 0.35f, head: 0.1f, gap: 0.5f));
                 break;
             case FxShotLook.IceSpear:
                 AddShard(holder, 0.85f, 0.28f, 0.11f, new Color(0.12f, 0.38f, 0.75f), new Color(0.7f, 0.92f, 1f), Colors.White,

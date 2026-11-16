@@ -3,7 +3,7 @@ using Godot;
 namespace Arc.Fx;
 
 /// <summary>What a projectile looks like: an arrow (plain or elemental), a thrown axe, or a spell.</summary>
-public enum FxShotLook { Arrow, FireBolt, Fireball, IceSpear, Spark, Axe, LightningArrow, PoisonArrow, PhantomArrow, FireArrow, IceArrow, ColdWave, Frostbolt, Tornado, SteelWave, StormTornado, FireTornado, IceTornado }
+public enum FxShotLook { Arrow, FireBolt, Fireball, IceSpear, Spark, Axe, LightningArrow, PoisonArrow, PhantomArrow, FireArrow, IceArrow, ColdWave, Frostbolt, Tornado, SteelWave, StormTornado, FireTornado, IceTornado, SkySplit }
 
 /// <summary>
 /// A projectile's look, placed by the game every frame along its flight. ARC FX turns it to face
@@ -59,7 +59,7 @@ public readonly struct FxShot
 /// head, or the arrow itself as phantasmal light); the axe is a spectral great axe
 /// (<see cref="FxModels.Axe"/>, fx_spectral); spells are fire bolts and fireballs, sparks
 /// (fx_spark), ice spears (fx_shard), frostbolts (fx_orb), cold and steel waves (fx_wave,
-/// fx_steel_wave) and tornados (fx_tornado with whirling debris: dust, a storm struck by
+/// fx_steel_wave), Sky Split's upright blade of light (fx_sky_split) and tornados (fx_tornado with whirling debris: dust, a storm struck by
 /// lightning again and again, fire or ice).
 /// </summary>
 internal sealed class FxShots(FxKit kit)
@@ -85,6 +85,13 @@ internal sealed class FxShots(FxKit kit)
     /// <summary>A steel wave's quad (fx_steel_wave.gdshader's uSize), wide enough for its horns.</summary>
     private static readonly Vector2 SteelQuad = new(5.6f, 4.6f);
     private const float WaveLead = 0.5f;
+
+    /// <summary>Sky Split's blade: how tall it stands from the ground, how long it is along its flight, and how far its front is ahead of the node.</summary>
+    private const float BladeHeight = 3.6f;
+    private const float BladeLength = 2.2f;
+    private const float BladeLead = 0.6f;
+    /// <summary>The line it scores on the ground: how wide and how long.</summary>
+    private static readonly Vector2 BladeScore = new(0.7f, 3.2f);
 
     /// <summary>A tornado's funnel: its height, and how wide it is at the foot and the top.</summary>
     private const float FunnelHeight = 3.6f;
@@ -226,6 +233,7 @@ internal sealed class FxShots(FxKit kit)
             FxShotLook.IceSpear or FxShotLook.IceArrow or FxShotLook.Frostbolt or FxShotLook.ColdWave => (new Color(0.5f, 0.8f, 1f), 3f, 0.2f),
             FxShotLook.PoisonArrow => (new Color(0.5f, 1f, 0.3f), 2.5f, 0.3f),
             FxShotLook.PhantomArrow => (new Color(0.6f, 0.75f, 1f), 2.5f, 0.3f),
+            FxShotLook.SkySplit => (new Color(0.72f, 0.86f, 1f), 3f, 0.35f),
             FxShotLook.FireTornado => (new Color(1f, 0.5f, 0.15f), 5f, 0.9f),
             FxShotLook.IceTornado => (new Color(0.5f, 0.8f, 1f), 3.5f, 0.25f),
             FxShotLook.StormTornado => (StormGlow, 5f, 0.15f + shot.Flash * 1.6f),
@@ -432,6 +440,15 @@ internal sealed class FxShots(FxKit kit)
                     Position = new Vector3(0f, 0.35f - Height, quad.Y * 0.5f - WaveLead),
                 });
                 break;
+            case FxShotLook.SkySplit:
+                holder.AddChild(new MeshInstance3D
+                {
+                    Name = FadingPart,
+                    Mesh = SkyBlade(),
+                    MaterialOverride = FxKit.Shader("sky_split"),
+                    CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+                });
+                break;
             case FxShotLook.Frostbolt:
                 holder.AddChild(new MeshInstance3D
                 {
@@ -470,6 +487,36 @@ internal sealed class FxShots(FxKit kit)
     /// slate cloud with lightning in its core and dark stones; a fire tornado flame round a
     /// white-hot core, whirling embers; an ice tornado frost and snow, whirling chunks of ice.
     /// </summary>
+    /// <summary>
+    /// Sky Split's mesh, round a node flying toward -Z at <see cref="Height"/>: an upright quad
+    /// along the flight from the ground up (vertex colour 0: UV.x from its front to its back, UV.y
+    /// from its foot to its top) and a quad flat on the ground under it (vertex colour 1: UV.x
+    /// across, UV.y from its front back). fx_sky_split.gdshader draws both.
+    /// </summary>
+    private static ArrayMesh SkyBlade()
+    {
+        var (foot, front) = (-Height, -BladeLead);
+        var ground = foot + 0.06f;
+        var half = BladeScore.X * 0.5f;
+        Vector3[] vertices =
+        [
+            new(0f, foot, front), new(0f, foot, front + BladeLength), new(0f, foot + BladeHeight, front), new(0f, foot + BladeHeight, front + BladeLength),
+            new(-half, ground, front), new(half, ground, front), new(-half, ground, front + BladeScore.Y), new(half, ground, front + BladeScore.Y),
+        ];
+        Vector2[] uvs = [new(0f, 0f), new(1f, 0f), new(0f, 1f), new(1f, 1f), new(0f, 0f), new(1f, 0f), new(0f, 1f), new(1f, 1f)];
+        Color[] colors = [.. Enumerable.Repeat(Colors.Black, 4), .. Enumerable.Repeat(Colors.Red, 4)];
+        int[] indices = [0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6];
+        var arrays = new Godot.Collections.Array();
+        arrays.Resize((int)Mesh.ArrayType.Max);
+        arrays[(int)Mesh.ArrayType.Vertex] = vertices;
+        arrays[(int)Mesh.ArrayType.TexUV] = uvs;
+        arrays[(int)Mesh.ArrayType.Color] = colors;
+        arrays[(int)Mesh.ArrayType.Index] = indices;
+        var mesh = new ArrayMesh();
+        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+        return mesh;
+    }
+
     private static void BuildTornado(Node3D holder, FxShotLook look)
     {
         var shader = FxShaders.Get("tornado");

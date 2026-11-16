@@ -358,6 +358,16 @@ public partial class Gallery : Node3D
                 _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 120f, new Color(0.85f, 0.92f, 1f))),
             new("Melee", "Whirl", "Fx.Slash(at, forward, 3f, arc: 360f, steel);", 1f, 0.1f,
                 _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 360f, new Color(0.85f, 0.92f, 1f))),
+            new("Melee", "Crossing slashes", "Fx.Slash(at, forward, 2.6f, 110f, steel, tilt: 38f);  // and one tilted -38f, reverse: true", 1f, 0.1f,
+                _ =>
+                {
+                    Fx.Slash(Vector3.Zero, Vector3.Back, 2.6f, 110f, new Color(0.85f, 0.92f, 1f), tilt: 38f);
+                    Fx.Slash(Vector3.Zero, Vector3.Back, 2.6f, 110f, new Color(0.85f, 0.92f, 1f), tilt: -38f, reverse: true);
+                }),
+            new("Melee", "Upward slash", "Fx.Slash(at, forward, 3f, 150f, steel, tilt: -72f);  // not quite upright, so it is never edge on", 1f, 0.1f,
+                _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 150f, new Color(0.85f, 0.92f, 1f), tilt: -72f)),
+            new("Melee", "Thrust", "Fx.Thrust(at, forward, 4.5f, 1.2f, steel);", 1f, 0.1f,
+                _ => Fx.Thrust(Vector3.Zero, Vector3.Back, 4.5f, 1.2f, new Color(0.85f, 0.92f, 1f))),
             new("Melee", "Blade vortex", "Fx.BladeVortex(caster, blades: 6, 1.6f, keep: 1f);  // renewed as it ticks", 4f, 1.5f,
                 g => g.Run(new Vortex(g._caster, 6, 6).Step)),
             new("Melee", "Blade vortex stacking", "Fx.BladeVortex(caster, stacks, 1.6f, keep: 1f);  // a blade more each cast, up to Fx.BladeVortexMax", 5f, 3f,
@@ -419,6 +429,7 @@ public partial class Gallery : Node3D
             new("Shot", "Spark", "Fx.Shot(FxShotLook.Spark)", 1.8f, 0.55f, g => g.Fly(FxShotLook.Spark, 12f)),
             new("Shot", "Cold wave", "Fx.Shot(FxShotLook.ColdWave)  // shot.Strength(left) widens it", 1.8f, 0.6f, g => g.Fly(FxShotLook.ColdWave, 12f)),
             new("Shot", "Steel wave", "Fx.Shot(FxShotLook.SteelWave)", 1.8f, 0.6f, g => g.Fly(FxShotLook.SteelWave, 12f)),
+            new("Shot", "Sky split", "Fx.Shot(FxShotLook.SkySplit)", 1.2f, 0.4f, g => g.Fly(FxShotLook.SkySplit, 18f)),
             new("Shot", "Thrown axe", "Fx.Shot(FxShotLook.Axe)", 1.8f, 0.55f, g => g.Fly(FxShotLook.Axe, 16f)),
             new("Shot", "Tornado", "Fx.Shot(FxShotLook.Tornado)", 3.5f, 1.5f, g => g.Fly(FxShotLook.Tornado, 5f)),
             new("Shot", "Storm tornado", "Fx.Shot(FxShotLook.StormTornado)  // calls down its own bolts", 3.5f, 1.5f, g => g.Fly(FxShotLook.StormTornado, 5f)),

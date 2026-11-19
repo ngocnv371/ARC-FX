@@ -3,7 +3,7 @@
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
 lightning, chain lightning arcs and fire walls, slashes, blade vortices, beams, storm orbs, frost bombs, novas, Divine
 Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers,
-twenty hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes),
+seventy hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes, beams),
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
 game's fire is the same fire.
 
@@ -24,7 +24,7 @@ Fx.Nova(hero.Position, 6f);                         // hit with FxTiming.NovaFro
 Fx.Meteor(at, 3f);                                  // lands after FxTiming.MeteorFall
 Fx.Bladefall(at, 4f);                               // spectral swords land over FxTiming.BladefallSpread
 Fx.Skill(FxSkill.CrimsonSlash, hero.Position, facing, 3f);  // lands after FxTiming.SkillHit(skill)
-Fx.Skill(FxSkill.PhantomDash, from, to - from, 1.5f);       // dashes and blinks: facing is the whole way
+Fx.Skill(FxSkill.FrostLance, from, to - from, 3f);         // dashes, throws and beams: facing is the whole way
 var barrier = Fx.Barrier(hero, 1.4f, life: 5f, FxTheme.Of(FxElement.Spirit));
 barrier.Hit(attacker.Position);                     // ripples where the blow lands
 
@@ -70,7 +70,8 @@ it, V switches to a close look, F changes the floor, - and + step the speed down
 back (P pauses) to follow fast things like arrows. `run.cmd --shot=dir` saves a picture of each
 effect as it peaks and quits (`--only=explosion_fire,storm_nova` for a few), in a window that never
 takes focus. The box over the list (/ or Ctrl+F) narrows it to entries holding every word typed;
-`run.cmd --filter=skill` starts that way. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
+`run.cmd --filter=skill` starts that way; each skill is tagged with its theme (blade, earth, fire, frost,
+storm, nature, arcane, holy, shadow, buff), so `--filter=frost` lists the frost ones. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
 
 The gallery is its own Godot project. It sees the library at `res://addons/arc_fx` through a
 junction to this folder that `run.cmd` makes (git can't hold one); the game ignores the gallery

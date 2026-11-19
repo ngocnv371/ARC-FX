@@ -106,7 +106,7 @@ public static class Fx
 
     private const float ArcThickness = 0.5f;
 
-    /// <summary>A wall of flame tongues along each segment, over a strip of burning ground, for <paramref name="life"/> seconds.</summary>
+    /// <summary>A wall of fire along each segment for <paramref name="life"/> seconds: a ragged row of licking flame columns over a strip of burning ground.</summary>
     public static FxHandle FireWall((Vector3 A, Vector3 B)[] segments, float life) =>
         World?.FireWall(segments, life) ?? default;
 
@@ -238,10 +238,11 @@ public static class Fx
     /// A hero's skill at <paramref name="at"/>, facing along <paramref name="facing"/>, in the bold
     /// look of a top-down hero brawler: see <see cref="FxSkill"/> for each. <paramref name="radius"/>
     /// is how far it reaches (about 3 for most; for <see cref="FxSkill.PhantomDash"/> how wide the
-    /// dash is). For the two that travel, <see cref="FxSkill.PhantomDash"/> and
-    /// <see cref="FxSkill.ShadowBlink"/>, <paramref name="facing"/> is the whole way, from
-    /// <paramref name="at"/> to where they end up. With <paramref name="follow"/> it rides on them
-    /// (Whirlwind, LevelUp, Recall and Bloodrage are meant to). It lands
+    /// dash is). For those that go somewhere (dashes, blinks and leaps, and whatever is thrown,
+    /// fired, breathed or sent along a line), <paramref name="facing"/> is the whole way, from
+    /// <paramref name="at"/> to where they end up; a facing under a metre long is taken as a bare
+    /// direction, and they go 3 radii. With <paramref name="follow"/> it rides on them (the ones
+    /// worn by the caster, such as Whirlwind, LevelUp, Recall, Bloodrage and the shields, are meant to). It lands
     /// <see cref="FxTiming.SkillHit"/> after the call; stopping it ends it.
     /// </summary>
     public static FxHandle Skill(FxSkill skill, Vector3 at, Vector3 facing, float radius = 3f, Node3D? follow = null) =>

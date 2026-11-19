@@ -2,7 +2,8 @@
 // recalling): an open cylinder a unit round and tall, standing on its foot. uStyle picks it:
 //   0 light: streaks racing up it, brightest low and thinning out toward the top;
 //   1 flame: tongues of fire licking up it, ragged at their tips, hot at the root;
-//   2 spiral: uTwist turns of bright bands winding up round it.
+//   2 spiral: uTwist turns of bright bands winding up round it;
+//   3 beam: even all along, streaks racing from its foot to its end, its core (as seen) hottest.
 // uProgress above 0 burns it away in holes. Its sides as seen glow brightest, so it reads as
 // a column rather than a disc. Additive.
 shader_type spatial;
@@ -50,10 +51,20 @@ void fragment()
 	{
 		vec3 f = vec3(q.xy * 1.5, h * 2.6 - TIME * uSpeed * 2.6);
 		float n = fx_noise3(f) * 0.65 + fx_noise3(f * 2.3 + 5.0) * 0.35;
-		float body = n * 1.35 - h * 1.15 + 0.15;
-		float flame = smoothstep(0.0, 0.18, body);
-		heat = clamp(body * 1.8 + 0.25 * (1.0 - h), 0.0, 1.0);
-		t = flame * (0.45 + 0.75 * heat) * (0.55 + 0.6 * edge) * smoothstep(0.0, 0.05, h);
+		// Tongues rather than a solid tube: the body only holds where the noise is strong, and the
+		// side facing the camera is fainter than the edges, so it reads as fire round something.
+		float body = n * 1.45 - h * 1.1 - 0.05;
+		float flame = smoothstep(0.0, 0.2, body);
+		heat = clamp(body * 1.8 + 0.15 * (1.0 - h), 0.0, 1.0);
+		t = flame * (0.35 + 0.75 * heat) * (0.3 + 0.9 * edge) * smoothstep(0.0, 0.05, h);
+	}
+	else if (uStyle == 3)
+	{
+		float streak = fx_noise3(vec3(q.xy * 3.0, h * 6.0 - TIME * uSpeed * 8.0));
+		float ends = smoothstep(0.0, 0.04, h) * smoothstep(1.0, 0.96, h);
+		float face = 1.0 - edge;
+		t = (0.35 + 0.8 * streak) * (0.3 + 0.9 * face * face) * ends;
+		heat = 0.45 + 0.55 * face * (0.6 + 0.4 * streak);
 	}
 	else
 	{

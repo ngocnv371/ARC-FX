@@ -64,8 +64,9 @@ public static class FxTiming
     /// When a skill (<see cref="Fx.Skill"/>) lands, in seconds after the call: the second blow of
     /// a cross slash, a dash's arrival, a blink's reappearance, a burst after its gathering, a
     /// pillar after its telegraph, Judgment's strike, Thunder Call's first bolt, a singularity's
-    /// collapse and a recall's flash. Skills that land at once, and those that last
-    /// (Whirlwind, Stasis Dome, Sanctuary, Bloodrage), give 0.
+    /// collapse, a recall's flash, a thrown or fired thing's arrival and the first of a volley's
+    /// landings. Skills that land at once, and those that last (Whirlwind, Stasis Dome, Sanctuary,
+    /// Bloodrage, Blizzard...), give 0.
     /// </summary>
     public static float SkillHit(FxSkill skill) => skill switch
     {
@@ -80,6 +81,26 @@ public static class FxTiming
         FxSkill.ThunderCall => 0.25f,
         FxSkill.ShadowBlink => 0.12f,
         FxSkill.Recall => 2.4f,
+        FxSkill.Execution => 0.1f,
+        FxSkill.Lunge => 0.07f,
+        FxSkill.Grapple => 0.22f,
+        FxSkill.LeapSlam => 0.35f,
+        FxSkill.BoulderToss => 0.5f,
+        FxSkill.DragonBreath => 0.1f,
+        FxSkill.FireRain => 0.4f,
+        FxSkill.BlazingDash => 0.2f,
+        FxSkill.Combustion => 0.55f,
+        FxSkill.EmberMark => 1.5f,
+        FxSkill.FrostLance => 0.32f,
+        FxSkill.Thunderclap => 0.3f,
+        FxSkill.Thornbind => 0.15f,
+        FxSkill.VenomSpit => 0.5f,
+        FxSkill.ArcaneMissiles => 0.4f,
+        FxSkill.RiftBeam => 0.08f,
+        FxSkill.SacredLances => 0.2f,
+        FxSkill.ShadowClaws => 0.05f,
+        FxSkill.DeathCoil => 0.4f,
+        FxSkill.ShadeClones => 0.3f,
         _ => 0f,
     };
 }

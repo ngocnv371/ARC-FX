@@ -48,6 +48,110 @@ public enum FxSkill
     Bloodrage,
     /// <summary>A star flare with spikes radiating out of it, a quick slash and sparks: a critical hit.</summary>
     CriticalStrike,
+
+    // The skills from here on that go somewhere (thrown, fired, dashed or cast along a line) go
+    // facing's length, or 3 radii when facing is a bare direction.
+
+    /// <summary>A flurry of small steel slashes in every direction round a spot in front, ending in a flash.</summary>
+    ThousandCuts,
+    /// <summary>A gilded red cleave chopped straight down in front, cracking the ground with a blast.</summary>
+    Execution,
+    /// <summary>Three jade crescents slashed one after another, each a step further forward.</summary>
+    BladeDance,
+    /// <summary>A golden spear-thrust straight ahead, a ring of air bursting off its point.</summary>
+    Lunge,
+    /// <summary>An upright azure crescent sent skimming along the ground, cracking it as it goes.</summary>
+    GroundWave,
+    /// <summary>A golden arc of parry in front, a flash and sparks bouncing off it.</summary>
+    Riposte,
+    /// <summary>A leap along facing on an arc of dust, landing in a shockwave, cracks and stone spikes.</summary>
+    LeapSlam,
+    /// <summary>An iron chain hurled ahead and yanked back, flashing where it hooks.</summary>
+    Grapple,
+    /// <summary>A wall of rock spikes thrusting up across the way in front.</summary>
+    EarthenWall,
+    /// <summary>A glowing fissure of magma tearing open along facing, flames spitting from it.</summary>
+    MagmaFissure,
+    /// <summary>Three shockwaves, each wider, over cracks that spread with them.</summary>
+    Quake,
+    /// <summary>A boulder heaved along facing, smashing into a cloud of dust and rubble.</summary>
+    BoulderToss,
+    /// <summary>Rocks orbiting the caster, flung out at the end (follows them).</summary>
+    StoneArmor,
+    /// <summary>A ring of flame columns round the edge over burning ground.</summary>
+    InfernoRing,
+    /// <summary>A cone of billowing flame breathed along facing, scorching the ground.</summary>
+    DragonBreath,
+    /// <summary>Fireballs raining across the area, each landing as a fire blast.</summary>
+    FireRain,
+    /// <summary>A dash along facing leaving burning ground behind, bursting into flame where it ends.</summary>
+    BlazingDash,
+    /// <summary>A fire orb swelling over a rune circle, then exploding with flame columns round it.</summary>
+    Combustion,
+    /// <summary>A burning mark over the head pulsing three times, then exploding.</summary>
+    EmberMark,
+    /// <summary>Ice shards hailing down over a swirl of snow and hoarfrost.</summary>
+    Blizzard,
+    /// <summary>Ice spikes leaning in round a spot under a dome of frost: a cage.</summary>
+    IcePrison,
+    /// <summary>An ice spear thrown along facing, bursting into a frost blast.</summary>
+    FrostLance,
+    /// <summary>A path of hoarfrost and ice spikes spreading along facing.</summary>
+    GlacierPath,
+    /// <summary>A slow orb of ice drifting along facing, spitting shards all round, bursting at the end.</summary>
+    FrozenOrb,
+    /// <summary>Lightning leaping from target to target along facing, a burst at each.</summary>
+    ChainLightning,
+    /// <summary>A dome of crackling hexagons, bolts snapping across it.</summary>
+    StaticField,
+    /// <summary>A ball of lightning drifting along facing, striking the ground under it.</summary>
+    BallLightning,
+    /// <summary>Light gathering, then one huge bolt from the sky and a nova.</summary>
+    Thunderclap,
+    /// <summary>A tornado whirling on the spot over a swirl of dust and leaves.</summary>
+    Tempest,
+    /// <summary>Thorny vines spiralling up out of cracked ground round a spot.</summary>
+    Thornbind,
+    /// <summary>A gob of venom spat along facing, splashing into a bubbling pool.</summary>
+    VenomSpit,
+    /// <summary>A cloud of plague with motes rising and flies buzzing through it.</summary>
+    PlagueCloud,
+    /// <summary>Leaves spiralling up round the caster, a green ring rolling out (follows them).</summary>
+    Regrowth,
+    /// <summary>A buzzing swarm surging along facing.</summary>
+    Swarm,
+    /// <summary>Five arcane missiles curving in along facing, popping one after another.</summary>
+    ArcaneMissiles,
+    /// <summary>A dome of arcane hexagons round the caster, motes orbiting (follows them).</summary>
+    ManaShield,
+    /// <summary>A beam of arcane light fired along facing from an upright rune circle.</summary>
+    RiftBeam,
+    /// <summary>Rings closing in over a swirling disc, motes dragged down into it.</summary>
+    GravityWell,
+    /// <summary>Two upright portals, here and along facing, motes streaming from one to the other.</summary>
+    Portal,
+    /// <summary>A cone of streaks in every colour sprayed along facing.</summary>
+    PrismaticSpray,
+    /// <summary>A golden dome of hexagons round the caster, light rising inside (follows them).</summary>
+    DivineShield,
+    /// <summary>Holy ground: a rune circle, rays of light rising all through it.</summary>
+    Consecration,
+    /// <summary>Golden rings and healing motes bursting out from a column of light.</summary>
+    HolyNova,
+    /// <summary>Wings of golden light spreading and beating behind the caster (follows them).</summary>
+    SeraphWings,
+    /// <summary>Spears of light falling from the sky across the area.</summary>
+    SacredLances,
+    /// <summary>Three parallel violet claw marks raked across in front.</summary>
+    ShadowClaws,
+    /// <summary>A shadow tether along facing, motes of life flowing back to the caster.</summary>
+    SoulDrain,
+    /// <summary>A coil of darkness hurled along facing, bursting where it lands.</summary>
+    DeathCoil,
+    /// <summary>Three shades of the caster dashing out and slashing.</summary>
+    ShadeClones,
+    /// <summary>A crimson-violet rune circle under a dark sigil, darkness dripping round it.</summary>
+    Curse,
 }
 
 /// <summary>
@@ -57,8 +161,10 @@ public enum FxSkill
 /// other effects (blasts, patches, spikes, lightning) as it unfolds. Each piece shows over its
 /// own window of the skill's life and is posed every frame from how far through that it is.
 /// </summary>
-internal sealed class FxSkills(FxKit kit, FxWorld world)
+internal sealed partial class FxSkills(FxKit kit, FxWorld world)
 {
+    private FxKit Kit => kit;
+    private FxWorld Stage => world;
     private const float Gravity = 14f;
     private const float Lift = FxKit.GroundLift;
 
@@ -110,6 +216,7 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
         public readonly List<Piece> Pieces = [];
         public readonly List<(float At, Action Do)> Cues = [];
         public readonly List<Action<float>> Each = [];
+        public readonly List<Action> OnEnd = [];
         public int NextCue;
         public Node3D? Follow;
     }
@@ -119,6 +226,9 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
     private readonly Dictionary<int, ArrayMesh> _fans = [];
     private readonly CylinderMesh _tube = new() { TopRadius = 1f, BottomRadius = 1f, Height = 1f, RadialSegments = 32, Rings = 4, CapTop = false, CapBottom = false };
     private readonly CapsuleMesh _ghost = new() { Radius = 0.32f, Height = 1.7f, RadialSegments = 16, Rings = 6 };
+    // A boulder: a sphere cut coarse enough that fx_crystal's facets read as rock.
+    private readonly SphereMesh _rock = new() { Radius = 1f, Height = 2f, RadialSegments = 7, Rings = 4 };
+    private readonly ShaderMaterial _stone = FxKit.Crystal(new Color(0.44f, 0.38f, 0.32f), new Color(0.7f, 0.6f, 0.48f), rim: 0.25f, glow: 0f);
 
     public FxHandle Spawn(FxSkill skill, Vector3 at, Vector3 facing, float radius, Node3D? follow)
     {
@@ -129,6 +239,8 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
         kit.Parent.AddChild(root);
         var cast = new Cast { Root = root, Follow = follow };
         radius = Mathf.Max(radius, 0.2f);
+        // How far the skills that go somewhere go: facing's length, or 3 radii for a bare direction.
+        var range = reach > 1f ? reach : radius * 3f;
         switch (skill)
         {
             case FxSkill.CrimsonSlash: CrimsonSlash(cast, radius); break;
@@ -150,7 +262,8 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
             case FxSkill.LevelUp: LevelUp(cast, radius); break;
             case FxSkill.Recall: Recall(cast, radius); break;
             case FxSkill.Bloodrage: Bloodrage(cast, radius); break;
-            default: CriticalStrike(cast, radius); break;
+            case FxSkill.CriticalStrike: CriticalStrike(cast, radius); break;
+            default: More(skill, cast, radius, range); break;
         }
         cast.Cues.Sort((a, b) => a.At.CompareTo(b.At));
         var life = 0f;
@@ -172,6 +285,8 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
             if (!Tick(cast, dt))
             {
                 cast.Active = false;
+                foreach (var end in cast.OnEnd)
+                    end();
                 cast.Root.QueueFree();
                 _casts.RemoveAt(i);
             }
@@ -409,7 +524,8 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
             at.Y = Rand(0.3f, r * 0.6f);
             var drift = FxKit.RandomDirection() * 0.08f;
             var phase = Rand(0f, Mathf.Tau);
-            Flare(c, Rand(0.1f, 0.4f), Life - 0.45f, i % 3 == 0 ? Star : Mote, Chrono, k => at + drift * k, k => i % 3 == 0 ? 0.7f : 0.22f,
+            var star = i % 3 == 0;
+            Flare(c, Rand(0.1f, 0.4f), Life - 0.45f, star ? Star : Mote, Chrono, k => at + drift * k, k => star ? 0.7f : 0.22f,
                 k => Fade(k, 0.1f, 0.1f) * (0.6f + 0.4f * Mathf.Sin(k * 20f + phase)));
         }
         Shine(c, Vector3.Up, r * 1.3f, Chrono.Main, age => 0.5f * Fade(age / Life, 0.05f, 0.1f));
@@ -588,9 +704,10 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
             var at = Around(Rand(0f, Mathf.Tau)) * r * 0.95f * Mathf.Sqrt(Rand(0f, 1f));
             var rise = Rand(1.8f, 3f);
             var sway = Rand(0f, Mathf.Tau);
-            Flare(c, Rand(0f, Life - 1.3f), Rand(0.9f, 1.3f), i % 4 == 0 ? Star : Mote, Verdant,
+            var star = i % 4 == 0;
+            Flare(c, Rand(0f, Life - 1.3f), Rand(0.9f, 1.3f), star ? Star : Mote, Verdant,
                 k => at + Vector3.Up * (0.1f + rise * k) + new Vector3(Mathf.Sin(sway + k * 6f), 0f, Mathf.Cos(sway + k * 6f)) * 0.15f,
-                k => i % 4 == 0 ? 0.55f : 0.22f, k => Fade(k, 0.2f, 0.4f));
+                k => star ? 0.55f : 0.22f, k => Fade(k, 0.2f, 0.4f));
         }
         Shine(c, Vector3.Up, r * 1.3f, Verdant.Main, age => 0.6f * Fade(age / Life, 0.05f, 0.1f));
     }
@@ -675,14 +792,76 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
     // ---- Pieces.
 
     /// <summary>A crescent sweeping over its window: a fan of <paramref name="arc"/> degrees and <paramref name="radius"/>, its hub and plane placed by <paramref name="place"/>.</summary>
-    private void Crescent(Cast c, float start, float life, Transform3D place, float radius, float arc, Tone tone, float thick, float sweep, float gain = 1f)
+    private void Crescent(Cast c, float start, float life, Transform3D place, float radius, float arc, Tone tone, float thick, float sweep, float gain = 1f) =>
+        Crescent(c, start, life, _ => place, radius, arc, tone, thick, sweep, gain);
+
+    /// <summary>A crescent whose hub and plane move over its window.</summary>
+    private void Crescent(Cast c, float start, float life, Func<float, Transform3D> place, float radius, float arc, Tone tone, float thick, float sweep, float gain = 1f)
     {
         var material = Material("crescent", 0, tone, gain, ("uThick", thick), ("uSweep", sweep));
-        var placed = new Transform3D(place.Basis * Basis.FromScale(Vector3.One * radius), place.Origin);
+        var scale = Basis.FromScale(Vector3.One * radius);
         Add(c, Fan(Mathf.RoundToInt(Mathf.Min(arc, 360f))), material, start, life, (n, k, _) =>
         {
-            n.Transform = placed;
+            var p = place(k);
+            n.Transform = new Transform3D(p.Basis * scale, p.Origin);
             Look(n, 1f, k);
+        });
+    }
+
+    /// <summary>A column (fx_column) laid from one end to the other: a beam, a chain, a tether.</summary>
+    private void Tube(Cast c, float start, float life, int style, Tone tone, Func<float, (Vector3 From, Vector3 To)> ends, Func<float, float> radius,
+        Func<float, float> alpha, float twist = 1f, float speed = 1f, float gain = 1f)
+    {
+        var material = Material("column", style, tone, gain, ("uTwist", twist), ("uSpeed", speed));
+        Add(c, _tube, material, start, life, (n, k, _) =>
+        {
+            var (a, b) = ends(k);
+            n.Transform = new Transform3D(Along(b - a, Mathf.Max(radius(k), 1e-3f), 1e-3f), (a + b) * 0.5f);
+            Look(n, alpha(k), 0f);
+        });
+    }
+
+    /// <summary>A solid thing (a boulder) placed every frame.</summary>
+    private void Prop(Cast c, float start, float life, Mesh mesh, Material material, Func<float, Transform3D> place) =>
+        Add(c, mesh, material, start, life, (n, k, _) => n.Transform = place(k));
+
+    /// <summary>
+    /// One of the library's projectiles (<see cref="FxShotLook"/>) flown along <paramref name="at"/>
+    /// over its window, facing the way it goes, and released at the end (or when the skill ends).
+    /// </summary>
+    private void Fly(Cast c, float start, float life, FxShotLook look, Func<float, Vector3> at, float size = 1f, Func<float, float>? grow = null)
+    {
+        FxShot shot = default;
+        var live = false;
+        void Place(float k)
+        {
+            const float E = 0.02f;
+            var from = Mathf.Min(k, 1f - E);
+            var velocity = c.Root.Basis * ((at(from + E) - at(from)) / (E * life));
+            shot.Place(At(c, at(k)), velocity, size, grow?.Invoke(k) ?? 1f);
+        }
+        Cue(c, start, () =>
+        {
+            shot = world.Shot(look);
+            live = true;
+            Place(0f);
+        });
+        Cue(c, start + life, () =>
+        {
+            if (live)
+                shot.Release();
+            live = false;
+        });
+        c.Each.Add(age =>
+        {
+            if (live)
+                Place(Mathf.Clamp((age - start) / life, 0f, 1f));
+        });
+        c.OnEnd.Add(() =>
+        {
+            if (live)
+                shot.Release();
+            live = false;
         });
     }
 
@@ -775,7 +954,7 @@ internal sealed class FxSkills(FxKit kit, FxWorld world)
     /// <summary>A point in the skill's root space, in the space every effect's parent shares.</summary>
     private static Vector3 At(Cast c, Vector3 local) => c.Root.Transform * local;
 
-    private static void Add(Cast c, Mesh mesh, ShaderMaterial material, float start, float life, Pose pose)
+    private static void Add(Cast c, Mesh mesh, Material material, float start, float life, Pose pose)
     {
         var node = new MeshInstance3D
         {

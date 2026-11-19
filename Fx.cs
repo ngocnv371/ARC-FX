@@ -112,10 +112,21 @@ public static class Fx
     /// <summary>
     /// A streak through the air at chest height: a fan <paramref name="radius"/> across and
     /// <paramref name="arc"/> degrees wide round <paramref name="forward"/>, swept right to left.
-    /// It rides on <paramref name="follow"/> if given.
+    /// It rides on <paramref name="follow"/> if given. <paramref name="tilt"/> rolls it that many
+    /// degrees about <paramref name="forward"/>, lifting the side the swing starts from (a diagonal
+    /// cut; 90 stands it upright, cutting down, and -90 cutting up); <paramref name="reverse"/>
+    /// sweeps it left to right. Two tilted opposite ways, one reversed, cross.
     /// </summary>
-    public static FxHandle Slash(Vector3 centre, Vector3 forward, float radius, float arc, Color color, Node3D? follow = null) =>
-        World?.Slash(centre, forward, radius, arc, color, follow) ?? default;
+    public static FxHandle Slash(Vector3 centre, Vector3 forward, float radius, float arc, Color color, Node3D? follow = null, float tilt = 0f, bool reverse = false) =>
+        World?.Slash(centre, forward, radius, arc, color, follow, tilt, reverse) ?? default;
+
+    /// <summary>
+    /// A thrust at chest height: a lance of light stabbing out from <paramref name="from"/> along
+    /// <paramref name="forward"/>, <paramref name="length"/> long and <paramref name="width"/>
+    /// across where it is widest, near its point. It rides on <paramref name="follow"/> if given.
+    /// </summary>
+    public static FxHandle Thrust(Vector3 from, Vector3 forward, float length, float width, Color color, Node3D? follow = null) =>
+        World?.Thrust(from, forward, length, width, color, follow) ?? default;
 
     /// <summary>
     /// A blade vortex round <paramref name="follow"/> for <paramref name="keep"/> more seconds:

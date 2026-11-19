@@ -59,4 +59,27 @@ public static class FxTiming
 
     /// <summary>A rupture's spikes race along the ground at this many metres a second.</summary>
     public const float RuptureSpeed = 26f;
+
+    /// <summary>
+    /// When a skill (<see cref="Fx.Skill"/>) lands, in seconds after the call: the second blow of
+    /// a cross slash, a dash's arrival, a blink's reappearance, a burst after its gathering, a
+    /// pillar after its telegraph, Judgment's strike, Thunder Call's first bolt, a singularity's
+    /// collapse and a recall's flash. Skills that land at once, and those that last
+    /// (Whirlwind, Stasis Dome, Sanctuary, Bloodrage), give 0.
+    /// </summary>
+    public static float SkillHit(FxSkill skill) => skill switch
+    {
+        FxSkill.CrimsonSlash => 0.05f,
+        FxSkill.CrossSlash => 0.17f,
+        FxSkill.RisingCleave => 0.06f,
+        FxSkill.PhantomDash => 0.18f,
+        FxSkill.ArcaneBurst => 0.45f,
+        FxSkill.Singularity => 2.3f,
+        FxSkill.FlamePillar => 0.5f,
+        FxSkill.Judgment => 0.6f,
+        FxSkill.ThunderCall => 0.25f,
+        FxSkill.ShadowBlink => 0.12f,
+        FxSkill.Recall => 2.4f,
+        _ => 0f,
+    };
 }

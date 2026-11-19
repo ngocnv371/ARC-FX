@@ -7,7 +7,9 @@ namespace Arc.Fx.Gallery;
 /// use, replaying every few seconds, with the call that makes it written underneath. Up and
 /// Down (or the list) pick one, Space plays it again, V switches between the game camera and a
 /// close look, F the floor, - and + slow it down or speed it back up, P pauses, Esc quits.
-/// Options: <c>--effect=name</c> starts on one; <c>--view=close</c>; <c>--speed=0.25</c>;
+/// The box over the list (/ or Ctrl+F to type in it) narrows the list to entries whose group and
+/// name hold every word typed; Enter or Esc leaves it.
+/// Options: <c>--effect=name</c> starts on one; <c>--filter=words</c> starts with the list narrowed; <c>--view=close</c>; <c>--speed=0.25</c>;
 /// <c>--shot=dir</c> plays each in turn and saves dir/name.png as it peaks, then quits
 /// (<c>--only=a,b</c> limits that to a few).
 /// </summary>
@@ -39,6 +41,9 @@ public partial class Gallery : Node3D
     private readonly Node3D _caster = new() { Name = "Caster" };
     private readonly List<Func<float, bool>> _runners = [];
     private readonly ItemList _list = new();
+    private readonly LineEdit _filter = new() { PlaceholderText = "Filter: skill, fire, slash...", ClearButtonEnabled = true };
+    // The entries the list shows, in order: indices into _entries.
+    private readonly List<int> _shown = [];
     private readonly Label _code = new();
     private readonly Label _hint = new();
     private FxWorld _world = null!;
@@ -85,6 +90,13 @@ public partial class Gallery : Node3D
             ApplySpeed();
         if (_options.TryGetValue("effect", out var start))
             _selected = Math.Max(0, _entries.FindIndex(e => NameOf(e).Equals(start, StringComparison.OrdinalIgnoreCase)));
+        if (_options.TryGetValue("filter", out var filter))
+        {
+            _filter.Text = filter.Replace(',', ' ');
+            ApplyFilter();
+            if (_shown.Count > 0 && !_shown.Contains(_selected))
+                _selected = _shown[0];
+        }
         if (_options.TryGetValue("shot", out var dir))
             _ = Bake(dir);
         else
@@ -116,11 +128,17 @@ public partial class Gallery : Node3D
             case Key.Escape:
                 GetTree().Quit();
                 break;
+            case Key.Slash:
+            case Key.F when key.CtrlPressed:
+                _filter.GrabFocus();
+                _filter.SelectAll();
+                GetViewport().SetInputAsHandled();
+                break;
             case Key.Down:
-                Select((_selected + 1) % _entries.Count);
+                Step(1);
                 break;
             case Key.Up:
-                Select((_selected + _entries.Count - 1) % _entries.Count);
+                Step(-1);
                 break;
             case Key.Space:
                 Play();
@@ -148,11 +166,50 @@ public partial class Gallery : Node3D
         }
     }
 
+    /// <summary>Moves to the next (or previous) entry the list shows, wrapping round.</summary>
+    private void Step(int by)
+    {
+        if (_shown.Count == 0)
+            return;
+        var at = _shown.IndexOf(_selected);
+        at = at < 0 ? (by > 0 ? 0 : _shown.Count - 1) : (at + by + _shown.Count) % _shown.Count;
+        Select(_shown[at]);
+    }
+
+    /// <summary>Highlights entry <paramref name="index"/> in the list, if the filter lets it show.</summary>
+    private void Mark(int index)
+    {
+        var at = _shown.IndexOf(index);
+        if (at < 0)
+        {
+            _list.DeselectAll();
+            return;
+        }
+        _list.Select(at);
+        _list.EnsureCurrentIsVisible();
+    }
+
+    /// <summary>Fills the list with the entries whose group and name hold every word in the filter.</summary>
+    private void ApplyFilter()
+    {
+        var words = _filter.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        _shown.Clear();
+        _list.Clear();
+        for (var i = 0; i < _entries.Count; i++)
+        {
+            var text = $"{_entries[i].Group} {_entries[i].Name} {NameOf(_entries[i])}";
+            if (!words.All(w => text.Contains(w, StringComparison.OrdinalIgnoreCase)))
+                continue;
+            _shown.Add(i);
+            _list.AddItem($"{_entries[i].Group} · {_entries[i].Name}");
+        }
+        Mark(_selected);
+    }
+
     private void Select(int index)
     {
         _selected = index;
-        _list.Select(index);
-        _list.EnsureCurrentIsVisible();
+        Mark(index);
         var entry = _entries[index];
         _code.Text = entry.Code;
         Play();
@@ -205,7 +262,7 @@ public partial class Gallery : Node3D
     }
 
     private void UpdateHint() =>
-        _hint.Text = $"↑↓ effect   Space replay   V view: {Views[_view].Name}   F floor: {Floors[_floorIndex].Name}   " +
+        _hint.Text = $"↑↓ effect   / filter   Space replay   V view: {Views[_view].Name}   F floor: {Floors[_floorIndex].Name}   " +
             $"−/+ speed: {Speeds[_speed]:0.##}×{(_paused ? " (paused)" : "")}   P pause   Esc quit";
 
     private void BuildUi()
@@ -219,10 +276,35 @@ public partial class Gallery : Node3D
         panel.OffsetBottom = -120f;
         panel.OffsetRight = 296f;
         ui.AddChild(panel);
-        foreach (var entry in _entries)
-            _list.AddItem($"{entry.Group} · {entry.Name}");
-        _list.ItemSelected += index => Select((int)index);
-        panel.AddChild(_list);
+        var column = new VBoxContainer();
+        panel.AddChild(column);
+        column.AddChild(_filter);
+        _list.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        _list.ItemSelected += at => Select(_shown[(int)at]);
+        column.AddChild(_list);
+        _filter.TextChanged += _ =>
+        {
+            ApplyFilter();
+            // Show the first match straight away, unless what is playing still matches.
+            if (_shown.Count > 0 && !_shown.Contains(_selected))
+                Select(_shown[0]);
+        };
+        // Enter or Esc hands the keys back to the gallery (Up and Down, Space, V...).
+        _filter.TextSubmitted += _ => _filter.ReleaseFocus();
+        _filter.GuiInput += e =>
+        {
+            if (e is InputEventKey { Pressed: true, Keycode: Key.Escape })
+            {
+                _filter.ReleaseFocus();
+                _filter.AcceptEvent();
+            }
+            else if (e is InputEventKey { Pressed: true, Keycode: Key.Down or Key.Up } arrow)
+            {
+                Step(arrow.Keycode == Key.Down ? 1 : -1);
+                _filter.AcceptEvent();
+            }
+        };
+        ApplyFilter();
 
         var bottom = new VBoxContainer();
         bottom.SetAnchorsPreset(Control.LayoutPreset.BottomWide);
@@ -247,6 +329,9 @@ public partial class Gallery : Node3D
         var cwd = System.Environment.GetEnvironmentVariable("GALLERY_CWD") ?? ".";
         var root = System.IO.Path.IsPathRooted(dir) ? dir : System.IO.Path.Combine(cwd, dir);
         System.IO.Directory.CreateDirectory(root);
+        // A few frames first, so the window has drawn once and the first picture isn't black.
+        for (var i = 0; i < 5; i++)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         for (var i = 0; i < _entries.Count; i++)
         {
             var entry = _entries[i];
@@ -254,7 +339,12 @@ public partial class Gallery : Node3D
                 continue;
             _selected = i;
             _code.Text = entry.Code;
-            _list.Select(i);
+            Mark(i);
+            // Once untimed first: the first frame that draws a new shader stalls while it compiles,
+            // and a long frame would carry the effect past its peak before the picture is taken.
+            Play();
+            for (var f = 0; f < 3; f++)
+                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Play();
             var waited = 0f;
             while (waited < entry.Peak)
@@ -395,6 +485,8 @@ public partial class Gallery : Node3D
             new("Cast", "Barrier", "var barrier = Fx.Barrier(target, 1.4f, life: 3f, spirit);  // barrier.Hit(from), barrier.Break()", 3.2f, 1f,
                 g => g.Run(new Barrier(Fx.Barrier(g._caster, 1.4f, 3f, FxTheme.Of(FxElement.Spirit))).Step)),
 
+            .. Enum.GetValues<FxSkill>().Select(SkillEntry),
+
             new("Earth", "Stone slam", "Fx.Slam(at, 3f, FxSpike.Stone);", 2f, 0.2f, _ => Fx.Slam(Vector3.Zero, 3f, FxSpike.Stone)),
             new("Earth", "Ice slam", "Fx.Slam(at, 3f, FxSpike.Ice);", 2f, 0.2f, _ => Fx.Slam(Vector3.Zero, 3f, FxSpike.Ice)),
             new("Earth", "Rupture", "Fx.Rupture(from, forward, 12f, width: 2f);", 2f, 0.45f, _ => Fx.Rupture(new Vector3(-6f, 0f, 0f), Vector3.Right, 12f, 2f)),
@@ -430,6 +522,67 @@ public partial class Gallery : Node3D
             new("Death", "Elite puff", "puffs.Burst(feet, size: 2f, body, accent, big: true);", 1.8f, 0.35f,
                 g => g._puffs.Burst(Vector3.Zero, 2f, new Color(0.8f, 0.3f, 0.25f), new Color(1f, 0.8f, 0.3f), big: true)),
         ];
+    }
+
+    /// <summary>A skill's entry: how often it replays, when it peaks, and how the gallery casts it.</summary>
+    private static Entry SkillEntry(FxSkill skill)
+    {
+        var (every, peak) = skill switch
+        {
+            FxSkill.CrimsonSlash => (1.2f, 0.09f),
+            FxSkill.CrossSlash => (1.2f, 0.2f),
+            FxSkill.RisingCleave => (1.2f, 0.1f),
+            FxSkill.Whirlwind => (2.4f, 0.5f),
+            FxSkill.PhantomDash => (1.6f, 0.21f),
+            FxSkill.Shockwave => (2f, 0.18f),
+            FxSkill.ArcaneBurst => (1.8f, 0.5f),
+            FxSkill.Singularity => (3.2f, 1.5f),
+            FxSkill.StasisDome => (3.6f, 1.2f),
+            FxSkill.GlacialBurst => (2.5f, 0.4f),
+            FxSkill.FlamePillar => (2.2f, 0.65f),
+            FxSkill.Judgment => (2.2f, 0.68f),
+            FxSkill.ThunderCall => (2.2f, 0.62f),
+            FxSkill.ToxicNova => (2f, 0.3f),
+            FxSkill.ShadowBlink => (1.5f, 0.15f),
+            FxSkill.Sanctuary => (3.8f, 1.5f),
+            FxSkill.LevelUp => (2f, 0.3f),
+            FxSkill.Recall => (3.2f, 2.44f),
+            FxSkill.Bloodrage => (3f, 1f),
+            _ => (1f, 0.06f),
+        };
+        var name = string.Concat(skill.ToString().Select((ch, i) => i > 0 && char.IsUpper(ch) ? " " + char.ToLowerInvariant(ch) : ch.ToString()));
+        var call = $"Fx.Skill(FxSkill.{skill}";
+        return skill switch
+        {
+            FxSkill.PhantomDash => new("Skill", name, $"{call}, from, to - from, width: 1.5f);  // arrives after FxTiming.SkillHit", every, peak,
+                g => g.Travel(skill, 1.5f, FxTiming.SkillHit(skill), smooth: true)),
+            FxSkill.ShadowBlink => new("Skill", name, $"{call}, from, to - from);  // reappears after FxTiming.SkillHit", every, peak,
+                g => g.Travel(skill, 3f, FxTiming.SkillHit(skill), smooth: false)),
+            FxSkill.Whirlwind or FxSkill.LevelUp or FxSkill.Recall or FxSkill.Bloodrage =>
+                new("Skill", name, $"{call}, caster.Position, facing, 3f, follow: caster);", every, peak,
+                    g => Fx.Skill(skill, g._caster.Position, Vector3.Back, 3f, g._caster)),
+            // Upright along its facing, so it is cast across the camera's view.
+            FxSkill.RisingCleave => new("Skill", name, $"{call}, at, facing, 3f);", every, peak, _ => Fx.Skill(skill, Vector3.Zero, Vector3.Right, 3f)),
+            _ => new("Skill", name, $"{call}, at, facing, 3f);" + (FxTiming.SkillHit(skill) > 0f ? "  // lands after FxTiming.SkillHit" : ""), every, peak,
+                _ => Fx.Skill(skill, Vector3.Zero, Vector3.Back, 3f)),
+        };
+    }
+
+    /// <summary>A dash or blink across the stage: the caster runs (or jumps, at <paramref name="arrive"/>) from left to right.</summary>
+    private void Travel(FxSkill skill, float radius, float arrive, bool smooth)
+    {
+        var from = new Vector3(-4f, 0f, 1f);
+        var to = new Vector3(4f, 0f, 1f);
+        var age = 0f;
+        _caster.Position = from;
+        Fx.Skill(skill, from, to - from, radius);
+        Run(dt =>
+        {
+            age += dt;
+            var k = Mathf.Min(age / arrive, 1f);
+            _caster.Position = smooth ? from.Lerp(to, k) : k < 1f ? from : to;
+            return age <= arrive + 0.5f;
+        });
     }
 
     /// <summary>A shield charge or rolling stone, run across the stage by the caster.</summary>

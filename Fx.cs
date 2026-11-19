@@ -235,6 +235,19 @@ public static class Fx
         World?.Bladefall(at, radius, color) ?? default;
 
     /// <summary>
+    /// A hero's skill at <paramref name="at"/>, facing along <paramref name="facing"/>, in the bold
+    /// look of a top-down hero brawler: see <see cref="FxSkill"/> for each. <paramref name="radius"/>
+    /// is how far it reaches (about 3 for most; for <see cref="FxSkill.PhantomDash"/> how wide the
+    /// dash is). For the two that travel, <see cref="FxSkill.PhantomDash"/> and
+    /// <see cref="FxSkill.ShadowBlink"/>, <paramref name="facing"/> is the whole way, from
+    /// <paramref name="at"/> to where they end up. With <paramref name="follow"/> it rides on them
+    /// (Whirlwind, LevelUp, Recall and Bloodrage are meant to). It lands
+    /// <see cref="FxTiming.SkillHit"/> after the call; stopping it ends it.
+    /// </summary>
+    public static FxHandle Skill(FxSkill skill, Vector3 at, Vector3 facing, float radius = 3f, Node3D? follow = null) =>
+        World?.Skill(skill, at, facing, radius, follow) ?? default;
+
+    /// <summary>
     /// A heal on <paramref name="target"/>: motes of light spiral up round them through a band
     /// of light washing up their body, over a glow at their feet. <paramref name="size"/> scales
     /// it to whoever is healed.

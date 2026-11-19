@@ -2,6 +2,7 @@
 setlocal
 rem Opens ARC FX Gallery. Options go after the script name, e.g. run.cmd --effect=explosion_fire
 rem   --view=close             start on the close look instead of the game camera
+rem   --filter=skill           start with the list narrowed (commas for several words)
 rem   --speed=0.25             start slowed down (1, 0.5, 0.25, 0.1, 0.05; - and + change it)
 rem   --shot=dir [--only=a,b]  save dir\<effect>.png for each effect (or just those) and quit;
 rem                            the window opens minimised and never takes focus

@@ -3,6 +3,7 @@
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
 lightning, chain lightning arcs and fire walls, slashes, blade vortices, beams, storm orbs, frost bombs, novas, Divine
 Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers,
+twenty hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes),
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
 game's fire is the same fire.
 
@@ -22,6 +23,8 @@ Fx.BladeVortex(hero, stacks, 1.6f, keep: 1f, FxElement.Fire);  // renew each cas
 Fx.Nova(hero.Position, 6f);                         // hit with FxTiming.NovaFront(age, 6f)
 Fx.Meteor(at, 3f);                                  // lands after FxTiming.MeteorFall
 Fx.Bladefall(at, 4f);                               // spectral swords land over FxTiming.BladefallSpread
+Fx.Skill(FxSkill.CrimsonSlash, hero.Position, facing, 3f);  // lands after FxTiming.SkillHit(skill)
+Fx.Skill(FxSkill.PhantomDash, from, to - from, 1.5f);       // dashes and blinks: facing is the whole way
 var barrier = Fx.Barrier(hero, 1.4f, life: 5f, FxTheme.Of(FxElement.Spirit));
 barrier.Hit(attacker.Position);                     // ripples where the blow lands
 
@@ -53,7 +56,7 @@ places itself.
 |---|---|
 | `Fx.cs` | The front door: every effect as one static call |
 | `FxWorld.cs` | The node that holds and ticks effects |
-| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, an arc's leap, smite fall, meteor fall, bladefall, rupture speed) |
+| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, an arc's leap, smite fall, meteor fall, bladefall, rupture speed, when each skill lands) |
 | `FxElement.cs`, `FxLighting.cs`, `FxModels.cs` | Elements and their palette, the lighting and model hooks |
 | `Fx*.cs` | The effects, one family per file; `FxKit.cs` holds what they share and `FxHandle`, the handle most calls return |
 | `shaders/` | The `fx_*` shaders; `fx_common.gdshaderinc` and `fx_noise.gdshaderinc` are their shared pieces |
@@ -66,7 +69,8 @@ replaying every few seconds, with its call written underneath. Up and Down pick 
 it, V switches to a close look, F changes the floor, - and + step the speed down to 0.05× and
 back (P pauses) to follow fast things like arrows. `run.cmd --shot=dir` saves a picture of each
 effect as it peaks and quits (`--only=explosion_fire,storm_nova` for a few), in a window that never
-takes focus. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
+takes focus. The box over the list (/ or Ctrl+F) narrows it to entries holding every word typed;
+`run.cmd --filter=skill` starts that way. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
 
 The gallery is its own Godot project. It sees the library at `res://addons/arc_fx` through a
 junction to this folder that `run.cmd` makes (git can't hold one); the game ignores the gallery

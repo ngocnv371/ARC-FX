@@ -442,7 +442,6 @@ public partial class Gallery : Node3D
                 g => g.Run(new Chain([new(0f, 0f, 4f), new(-2.5f, 0f, -1f), new(1f, 0f, -3.5f), new(3.5f, 0f, -0.5f)], 0f).Step)),
             new("Line", "Arc with blasts", "Fx.Arc(from, to, burst: 1.6f);  // a lightning blast where each jump lands", 1.5f, 0.2f,
                 g => g.Run(new Chain([new(0f, 0f, 4f), new(-2.5f, 0f, -1f), new(1f, 0f, -3.5f), new(3.5f, 0f, -0.5f)], 1.6f).Step)),
-            new("Line", "Fire wall", "Fx.FireWall([(a, b)], 3f);", 3.5f, 1f, _ => Fx.FireWall([(new Vector3(-4f, 0f, 0f), new Vector3(4f, 0f, 0f))], 3f)),
 
             new("Melee", "Slash", "Fx.Slash(at, forward, 3f, arc: 120f, steel);", 1f, 0.1f,
                 _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 120f, new Color(0.85f, 0.92f, 1f))),

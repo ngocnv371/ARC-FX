@@ -1,7 +1,7 @@
 # ARC FX
 
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
-lightning, chain lightning arcs and fire walls, slashes, blade vortices, beams, storm orbs, frost bombs, novas, Divine
+lightning and chain lightning arcs, slashes, blade vortices, beams, storm orbs, frost bombs, novas, Divine
 Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers,
 seventy hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes, beams),
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every

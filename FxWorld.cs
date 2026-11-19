@@ -102,10 +102,7 @@ public partial class FxWorld : Node3D
 
     /// <inheritdoc cref="Fx.Lightning"/>
     public FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0, float thickness = 1f) =>
-        Lines.Spawn(segments, life, fire: false, tendrils, thickness);
-
-    /// <inheritdoc cref="Fx.FireWall"/>
-    public FxHandle FireWall((Vector3 A, Vector3 B)[] segments, float life) => Lines.Spawn(segments, life, fire: true, 0);
+        Lines.Spawn(segments, life, tendrils, thickness);
 
     /// <inheritdoc cref="Fx.Slash"/>
     public FxHandle Slash(Vector3 centre, Vector3 forward, float radius, float arc, Color color, Node3D? follow = null) =>

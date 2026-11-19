@@ -1,6 +1,6 @@
 // Effects lying on the ground: burning ground, poison pools, the frost aura, Righteous Fire's ring, the shockwave a
 // blast leaves, a fire blast's ring of flame and scorch, a frost blast's ring of ice and
-// hoarfrost, the bed of a fire wall, Shock Nova's two rings and a monster's warning. Drawn on a flat plane (2x2 before scaling) with
+// hoarfrost, Shock Nova's two rings and a monster's warning. Drawn on a flat plane (2x2 before scaling) with
 // premultiplied alpha, so one pass can both darken the ground (soot, murk) and add light
 // (embers, glow). The noise runs in world space, so overlapping patches join up seamlessly.
 shader_type spatial;
@@ -37,7 +37,7 @@ uniform int uStyle = 0;
 uniform vec3 uColor = vec3(1.0);
 uniform float uAge = 0.0;
 uniform float uLife = 1.0;
-// Half the plane's size in metres. Wider than tall makes a capsule (a fire wall's bed);
+// Half the plane's size in metres. Wider than tall makes a capsule;
 // equal makes a disc of that radius.
 uniform vec2 uExtent = vec2(1.0);
 // The nova's inner ring, outer ring and the outer ring's band, in radii, and how long they take to spread.

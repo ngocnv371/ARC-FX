@@ -106,10 +106,6 @@ public static class Fx
 
     private const float ArcThickness = 0.5f;
 
-    /// <summary>A wall of fire along each segment for <paramref name="life"/> seconds: a ragged row of licking flame columns over a strip of burning ground.</summary>
-    public static FxHandle FireWall((Vector3 A, Vector3 B)[] segments, float life) =>
-        World?.FireWall(segments, life) ?? default;
-
     /// <summary>How far above their ends lightning is drawn.</summary>
     public const float LineLift = FxLines.Lift;
 

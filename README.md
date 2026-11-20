@@ -70,9 +70,17 @@ replaying every few seconds, with its call written underneath. Up and Down pick 
 it, V switches to a close look, F changes the floor, - and + step the speed down to 0.05× and
 back (P pauses) to follow fast things like arrows. `run.cmd --shot=dir` saves a picture of each
 effect as it peaks and quits (`--only=explosion_fire,storm_nova` for a few), in a window that never
-takes focus. The box over the list (/ or Ctrl+F) narrows it to entries holding every word typed;
-`run.cmd --filter=skill` starts that way; each skill is tagged with its theme (blade, earth, fire, frost,
-storm, nature, arcane, holy, shadow, buff), so `--filter=frost` lists the frost ones. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
+takes focus. Every effect carries tags (what it is made of, its shape, what it is for, the weapon
+in it) and a line saying what it looks like, shown over its call; both live in
+`gallery/GalleryMeta.cs`, and the gallery warns on start about an entry without them. The box over
+the list (/ or Ctrl+F) narrows it to entries matching every word typed, in their name, group, tags
+or description, best matches first: synonyms count (`ice` finds frost, `sword` finds blade), as
+do plurals, `#melee` must be a tag and `-skill` leaves skills out. `run.cmd --filter=sword,-skill`
+starts that way. Under the box, premade filters are a click away: one row of elements, one of
+kinds (melee, projectile, area, buff, movement...) and one of sources (skills or not, shrines,
+sigils). One from each row combines; clicking a lit one takes it off. The selected effect's card
+along the bottom shows its name, description, tags (click one to filter by it) and call. Each skill shows its theme (blade, earth, fire, frost, storm, nature, arcane,
+holy, shadow, buff) beside its name. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
 
 The gallery is its own Godot project. It sees the library at `res://addons/arc_fx` through a
 junction to this folder that `run.cmd` makes (git can't hold one); the game ignores the gallery

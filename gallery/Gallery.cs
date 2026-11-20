@@ -7,15 +7,27 @@ namespace Arc.Fx.Gallery;
 /// use, replaying every few seconds, with the call that makes it written underneath. Up and
 /// Down (or the list) pick one, Space plays it again, V switches between the game camera and a
 /// close look, F the floor, - and + slow it down or speed it back up, P pauses, Esc quits.
-/// The box over the list (/ or Ctrl+F to type in it) narrows the list to entries whose group and
-/// name hold every word typed; Enter or Esc leaves it.
+/// The box over the list (/ or Ctrl+F to type in it) narrows the list to entries matching every
+/// word typed, in their name, group, tags (<see cref="Meta"/>, and their <see cref="Synonyms"/>)
+/// or description, best matches first; <c>#word</c> must be a tag and <c>-word</c> leaves out what
+/// matches it. Enter or Esc leaves it. Under it, <see cref="Presets"/> put common filters a click
+/// away. The selected entry's card along the bottom shows its name, description, tags (click one
+/// to filter by it) and call.
 /// Options: <c>--effect=name</c> starts on one; <c>--filter=words</c> starts with the list narrowed; <c>--view=close</c>; <c>--speed=0.25</c>;
 /// <c>--shot=dir</c> plays each in turn and saves dir/name.png as it peaks, then quits
 /// (<c>--only=a,b</c> limits that to a few).
 /// </summary>
 public partial class Gallery : Node3D
 {
-    private sealed record Entry(string Group, string Name, string Code, float Every, float Peak, Action<Gallery> Play, string Tags = "");
+    /// <summary>
+    /// One effect in the list. <paramref name="Badge"/> shows beside its name (a skill's theme);
+    /// <see cref="Tags"/> and <see cref="Look"/> come from <see cref="Meta"/>, the badge among the tags.
+    /// </summary>
+    private sealed record Entry(string Group, string Name, string Code, float Every, float Peak, Action<Gallery> Play, string Badge = "")
+    {
+        public string[] Tags { get; init; } = [];
+        public string Look { get; init; } = "";
+    }
 
     private static readonly (string Name, Vector3 Eye, Vector3 Target)[] Views =
     [
@@ -44,6 +56,11 @@ public partial class Gallery : Node3D
     private readonly LineEdit _filter = new() { PlaceholderText = "Filter: skill, fire, slash...", ClearButtonEnabled = true };
     // The entries the list shows, in order: indices into _entries.
     private readonly List<int> _shown = [];
+    private readonly Label _count = new();
+    private readonly Label _title = new();
+    private readonly Label _look = new();
+    private readonly HFlowContainer _tags = new();
+    private readonly List<(Button Chip, string Words)> _presetChips = [];
     private readonly Label _code = new();
     private readonly Label _hint = new();
     private FxWorld _world = null!;
@@ -60,7 +77,7 @@ public partial class Gallery : Node3D
     public override void _Ready()
     {
         _options = ParseOptions();
-        _entries = BuildEntries();
+        _entries = WithMeta(BuildEntries());
         AddChild(_camera);
         _floor.MaterialOverride = _floorMaterial;
         AddChild(_floor);
@@ -189,30 +206,166 @@ public partial class Gallery : Node3D
         _list.EnsureCurrentIsVisible();
     }
 
-    /// <summary>Fills the list with the entries whose group and name hold every word in the filter.</summary>
+    /// <summary>
+    /// Fills the list with the entries matching every word in the filter, best first (see
+    /// <see cref="Score"/>); with no words, every entry in order.
+    /// </summary>
     private void ApplyFilter()
     {
-        var words = _filter.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var words = _filter.Text.ToLowerInvariant().Split([' ', ','], StringSplitOptions.RemoveEmptyEntries);
         _shown.Clear();
         _list.Clear();
+        var ranked = new List<(int Index, int Score)>();
         for (var i = 0; i < _entries.Count; i++)
         {
-            var text = $"{_entries[i].Group} {_entries[i].Name} {NameOf(_entries[i])} {_entries[i].Tags}";
-            if (!words.All(w => text.Contains(w, StringComparison.OrdinalIgnoreCase)))
-                continue;
-            _shown.Add(i);
-            _list.AddItem(_entries[i].Tags == "" ? $"{_entries[i].Group} · {_entries[i].Name}" : $"{_entries[i].Group} · {_entries[i].Name}  ({_entries[i].Tags})");
+            if (Score(_entries[i], words) is { } score)
+                ranked.Add((i, score));
         }
+        // Stable: equal scores keep the list's own order.
+        foreach (var (i, _) in ranked.OrderByDescending(r => r.Score).ThenBy(r => r.Index))
+        {
+            var entry = _entries[i];
+            _shown.Add(i);
+            _list.AddItem(entry.Badge == "" ? $"{entry.Group} · {entry.Name}" : $"{entry.Group} · {entry.Name}  ({entry.Badge})");
+            _list.SetItemTooltip(_list.ItemCount - 1, $"{entry.Look}\n{string.Join("  ", entry.Tags.Select(t => "#" + t))}");
+        }
+        _count.Text = words.Length == 0 ? $"{_entries.Count} effects" : $"{_shown.Count} of {_entries.Count} match";
+        foreach (var (chip, chipWords) in _presetChips)
+            chip.SetPressedNoSignal(words.Contains(chipWords.ToLowerInvariant()));
         Mark(_selected);
+    }
+
+    /// <summary>
+    /// How well <paramref name="entry"/> matches the filter's <paramref name="words"/>, or null if
+    /// it doesn't: every plain word must turn up somewhere (its best place counts: the name, then
+    /// the group, its tags, a synonym's tag, the description, the call), a <c>#word</c> must be
+    /// one of its tags or a synonym of one, and a <c>-word</c> must turn up nowhere.
+    /// </summary>
+    private static int? Score(Entry entry, string[] words)
+    {
+        var name = Words(entry.Name);
+        var group = Words(entry.Group);
+        var look = Words(entry.Look);
+        var code = $"{NameOf(entry)} {entry.Code}".ToLowerInvariant();
+        var total = 0;
+        foreach (var raw in words)
+        {
+            if (raw.StartsWith('-'))
+            {
+                var not = raw[1..];
+                if (not.Length > 0 && Best(not) > 0)
+                    return null;
+                continue;
+            }
+            if (raw.StartsWith('#'))
+            {
+                var tag = raw[1..];
+                if (tag.Length == 0)
+                    continue;
+                var hit = entry.Tags.Any(t => Same(t, tag)) ? 50 : entry.Tags.Any(t => Alike(t, tag)) ? 40 : 0;
+                if (hit == 0)
+                    return null;
+                total += hit;
+                continue;
+            }
+            var best = Best(raw);
+            if (best == 0)
+                return null;
+            total += best;
+        }
+        return total;
+
+        int Best(string w)
+        {
+            if (name.Any(n => Same(n, w)))
+                return 100;
+            if (name.Any(n => n.StartsWith(w)))
+                return 70;
+            if (group.Any(g => Same(g, w)))
+                return 60;
+            if (entry.Tags.Any(t => Same(t, w)))
+                return 50;
+            if (entry.Tags.Any(t => Alike(t, w)))
+                return 40;
+            if (entry.Tags.Any(t => t.StartsWith(w)) || group.Any(g => g.StartsWith(w)))
+                return 30;
+            if (look.Any(l => Same(l, w)))
+                return 15;
+            if (look.Any(l => l.StartsWith(w)))
+                return 10;
+            return code.Contains(w) ? 5 : 0;
+        }
+    }
+
+    /// <summary>Lower-case words in <paramref name="text"/>.</summary>
+    private static string[] Words(string text) =>
+        text.ToLowerInvariant().Split(text.Where(c => !char.IsLetterOrDigit(c)).Distinct().ToArray(), StringSplitOptions.RemoveEmptyEntries);
+
+    /// <summary>The same word, give or take a plural (slash, slashes; spike, spikes).</summary>
+    private static bool Same(string a, string b) => a == b || Singular(a) == Singular(b);
+
+    private static string Singular(string w)
+    {
+        if (w.EndsWith("es") && w.Length > 4 && (w.EndsWith("ses") || w.EndsWith("xes") || w.EndsWith("zes") || w.EndsWith("ches") || w.EndsWith("shes")))
+            return w[..^2];
+        return w.EndsWith('s') && !w.EndsWith("ss") && w.Length > 3 ? w[..^1] : w;
+    }
+
+    /// <summary>Whether <paramref name="tag"/> is a synonym of <paramref name="word"/> (see <see cref="Synonyms"/>).</summary>
+    private static bool Alike(string tag, string word) =>
+        Synonyms.Any(set => set.Any(s => Same(s, tag)) && set.Any(s => Same(s, word)));
+
+    /// <summary>
+    /// The entries with their tags and description from <see cref="Meta"/>, the badge (a skill's
+    /// theme) among the tags. Warns about any entry without meta, and any meta with no entry.
+    /// </summary>
+    private static List<Entry> WithMeta(List<Entry> entries)
+    {
+        var names = entries.Select(NameOf).ToHashSet();
+        var missing = names.Where(n => !Meta.ContainsKey(n)).ToArray();
+        if (missing.Length > 0)
+            GD.PushWarning($"Gallery: no tags or description (Meta) for {string.Join(", ", missing)}");
+        var stale = Meta.Keys.Where(k => !names.Contains(k)).ToArray();
+        if (stale.Length > 0)
+            GD.PushWarning($"Gallery: Meta for entries that aren't there: {string.Join(", ", stale)}");
+        return entries.Select(e =>
+        {
+            var (tags, look) = Meta.GetValueOrDefault(NameOf(e), ("", ""));
+            return e with
+            {
+                Tags = $"{e.Badge} {tags}".Split(' ', StringSplitOptions.RemoveEmptyEntries).Distinct().ToArray(),
+                Look = look,
+            };
+        }).ToList();
     }
 
     private void Select(int index)
     {
         _selected = index;
         Mark(index);
-        var entry = _entries[index];
-        _code.Text = entry.Code;
+        Describe(_entries[index]);
         Play();
+    }
+
+    /// <summary>Writes an entry's description, tags and call under the picture.</summary>
+    private void Describe(Entry entry)
+    {
+        _title.Text = entry.Badge == "" ? $"{entry.Group} · {entry.Name}" : $"{entry.Group} · {entry.Name}  ({entry.Badge})";
+        _look.Text = entry.Look;
+        foreach (var old in _tags.GetChildren())
+        {
+            _tags.RemoveChild(old);
+            old.QueueFree();
+        }
+        foreach (var tag in entry.Tags)
+        {
+            var chip = Chip("#" + tag, () => Toggle("#" + tag, []));
+            chip.Flat = true;
+            chip.AddThemeColorOverride("font_color", new Color(0.55f, 0.8f, 1f));
+            chip.TooltipText = $"Filter by #{tag}";
+            _tags.AddChild(chip);
+        }
+        _code.Text = entry.Code;
     }
 
     /// <summary>Clears the stage and plays the selected effect from the start.</summary>
@@ -273,22 +426,22 @@ public partial class Gallery : Node3D
         panel.SetAnchorsPreset(Control.LayoutPreset.LeftWide);
         panel.OffsetLeft = 16f;
         panel.OffsetTop = 16f;
-        panel.OffsetBottom = -120f;
+        panel.OffsetBottom = -16f;
         panel.OffsetRight = 296f;
         ui.AddChild(panel);
         var column = new VBoxContainer();
         panel.AddChild(column);
         column.AddChild(_filter);
+        _filter.TooltipText = "Every word must match: name, group, tags (and their synonyms) or description. #tag: a tag only. -word: leave out.";
+        for (var row = 0; row < Presets.Length; row++)
+            column.AddChild(PresetRow(row));
+        _count.AddThemeColorOverride("font_color", new Color(0.65f, 0.65f, 0.7f));
+        _count.AddThemeFontSizeOverride("font_size", 13);
+        column.AddChild(_count);
         _list.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         _list.ItemSelected += at => Select(_shown[(int)at]);
         column.AddChild(_list);
-        _filter.TextChanged += _ =>
-        {
-            ApplyFilter();
-            // Show the first match straight away, unless what is playing still matches.
-            if (_shown.Count > 0 && !_shown.Contains(_selected))
-                Select(_shown[0]);
-        };
+        _filter.TextChanged += _ => FilterChanged();
         // Enter or Esc hands the keys back to the gallery (Up and Down, Space, V...).
         _filter.TextSubmitted += _ => _filter.ReleaseFocus();
         _filter.GuiInput += e =>
@@ -306,20 +459,116 @@ public partial class Gallery : Node3D
         };
         ApplyFilter();
 
+        // The selected effect's card, right of the list along the bottom, growing up to fit: its
+        // name, what it looks like, its tags (click one to filter by it), its call, then the keys.
+        var card = new PanelContainer();
+        card.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        {
+            BgColor = new Color(0.07f, 0.08f, 0.1f, 0.86f),
+            CornerRadiusTopLeft = 6, CornerRadiusTopRight = 6, CornerRadiusBottomLeft = 6, CornerRadiusBottomRight = 6,
+            ContentMarginLeft = 14f, ContentMarginRight = 14f, ContentMarginTop = 10f, ContentMarginBottom = 10f,
+        });
+        card.SetAnchorsPreset(Control.LayoutPreset.BottomWide);
+        card.OffsetLeft = 312f;
+        card.OffsetRight = -16f;
+        card.OffsetTop = -16f;
+        card.OffsetBottom = -16f;
+        card.GrowVertical = Control.GrowDirection.Begin;
+        ui.AddChild(card);
         var bottom = new VBoxContainer();
-        bottom.SetAnchorsPreset(Control.LayoutPreset.BottomWide);
-        bottom.OffsetLeft = 16f;
-        bottom.OffsetTop = -100f;
-        bottom.OffsetRight = -16f;
-        bottom.OffsetBottom = -16f;
-        ui.AddChild(bottom);
-        _code.AddThemeFontSizeOverride("font_size", 20);
+        bottom.AddThemeConstantOverride("separation", 6);
+        card.AddChild(bottom);
+        _title.AddThemeFontSizeOverride("font_size", 22);
+        _title.AddThemeColorOverride("font_color", Colors.White);
+        bottom.AddChild(_title);
+        _look.AddThemeFontSizeOverride("font_size", 17);
+        _look.AddThemeColorOverride("font_color", new Color(0.86f, 0.88f, 0.93f));
+        _look.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        bottom.AddChild(_look);
+        _tags.AddThemeConstantOverride("h_separation", 4);
+        _tags.AddThemeConstantOverride("v_separation", 4);
+        bottom.AddChild(_tags);
+        _code.AddThemeFontSizeOverride("font_size", 18);
         _code.AddThemeColorOverride("font_color", new Color(1f, 0.92f, 0.7f));
         _code.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         bottom.AddChild(_code);
-        _hint.AddThemeColorOverride("font_color", new Color(0.75f, 0.75f, 0.8f));
+        _hint.AddThemeFontSizeOverride("font_size", 13);
+        _hint.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.66f));
         bottom.AddChild(_hint);
         UpdateHint();
+    }
+
+    /// <summary>
+    /// The premade filters over the list, a row each: one click puts its words in the filter box,
+    /// replacing any other from the same row (so an element and a kind combine, two elements
+    /// don't); clicking a lit one takes it out again. Typing the same words lights them too.
+    /// </summary>
+    private static readonly (string Row, (string Label, string Words)[] Chips)[] Presets =
+    [
+        ("Element", [("Fire", "#fire"), ("Frost", "#frost"), ("Lightning", "#lightning"), ("Poison", "#poison"),
+            ("Holy", "#holy"), ("Arcane", "#arcane"), ("Shadow", "#shadow"), ("Physical", "#physical")]),
+        ("Kind", [("Melee", "#melee"), ("Projectile", "#projectile"), ("Area", "#aoe"), ("Ground", "#ground"),
+            ("From the sky", "#sky"), ("Buff", "#buff"), ("Defense", "#defense"), ("Movement", "#movement")]),
+        ("Source", [("Skills", "skill"), ("Not skills", "-skill"), ("Shrines", "#shrine"), ("Sigils", "#sigil")]),
+    ];
+
+    private HFlowContainer PresetRow(int row)
+    {
+        var flow = new HFlowContainer();
+        flow.AddThemeConstantOverride("h_separation", 3);
+        flow.AddThemeConstantOverride("v_separation", 3);
+        foreach (var (label, words) in Presets[row].Chips)
+        {
+            var chip = Chip(label, () => Toggle(words, Presets[row].Chips.Select(c => c.Words)));
+            chip.ToggleMode = true;
+            // Lit while its words are in the filter.
+            var lit = new StyleBoxFlat
+            {
+                BgColor = new Color(0.95f, 0.75f, 0.35f),
+                CornerRadiusTopLeft = 3, CornerRadiusTopRight = 3, CornerRadiusBottomLeft = 3, CornerRadiusBottomRight = 3,
+                ContentMarginLeft = 4f, ContentMarginRight = 4f, ContentMarginTop = 2f, ContentMarginBottom = 2f,
+            };
+            chip.AddThemeStyleboxOverride("pressed", lit);
+            chip.AddThemeStyleboxOverride("hover_pressed", lit);
+            chip.AddThemeColorOverride("font_pressed_color", new Color(0.1f, 0.08f, 0.05f));
+            chip.AddThemeColorOverride("font_hover_pressed_color", new Color(0.1f, 0.08f, 0.05f));
+            chip.TooltipText = $"{Presets[row].Row}: {words}";
+            _presetChips.Add((chip, words));
+            flow.AddChild(chip);
+        }
+        return flow;
+    }
+
+    /// <summary>A small button that never takes the keys (Space, Up and Down stay the gallery's).</summary>
+    private static Button Chip(string text, Action pressed)
+    {
+        var chip = new Button { Text = text, FocusMode = Control.FocusModeEnum.None };
+        chip.AddThemeFontSizeOverride("font_size", 13);
+        chip.Pressed += pressed;
+        return chip;
+    }
+
+    /// <summary>Puts <paramref name="words"/> in the filter, taking out any of <paramref name="rivals"/>; takes it out if it was already in.</summary>
+    private void Toggle(string words, IEnumerable<string> rivals)
+    {
+        var typed = _filter.Text.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries).ToList();
+        var had = typed.Contains(words, StringComparer.OrdinalIgnoreCase);
+        var others = rivals.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        others.Add(words);
+        typed.RemoveAll(others.Contains);
+        if (!had)
+            typed.Add(words);
+        _filter.Text = string.Join(' ', typed);
+        _filter.CaretColumn = _filter.Text.Length;
+        FilterChanged();
+    }
+
+    /// <summary>Refilters the list, and shows its first match straight away unless what is playing still matches.</summary>
+    private void FilterChanged()
+    {
+        ApplyFilter();
+        if (_shown.Count > 0 && !_shown.Contains(_selected))
+            Select(_shown[0]);
     }
 
     /// <summary>Plays every effect in turn (or the --only ones), saving dir/name.png as each peaks, then quits.</summary>
@@ -338,7 +587,7 @@ public partial class Gallery : Node3D
             if (only != null && !only.Contains(NameOf(entry), StringComparer.OrdinalIgnoreCase))
                 continue;
             _selected = i;
-            _code.Text = entry.Code;
+            Describe(entry);
             Mark(i);
             // Once untimed first: the first frame that draws a new shader stalls while it compiles,
             // and a long frame would carry the effect past its peak before the picture is taken.
@@ -482,9 +731,9 @@ public partial class Gallery : Node3D
 
             .. Enum.GetValues<FxSigil>().Select(sigil => new Entry("Shrine", sigil.ToString(),
                 $"var shrine = Fx.Shrine(at, FxSigil.{sigil});  // shrine.Take(hero, boon: 4f) when they reach it", 4.5f, 1.2f,
-                g => g.Run(new Visit(g._caster, sigil).Step), "shrine")),
+                g => g.Run(new Visit(g._caster, sigil).Step))),
             new("Shrine", "Taken", "shrine.Take(hero, boon: 4f);  // its light reaches them FxTiming.ShrineReach later: give the boon then", 4.5f, 1.8f,
-                g => g.Run(new Visit(g._caster, FxSigil.Haste).Step), "shrine"),
+                g => g.Run(new Visit(g._caster, FxSigil.Haste).Step)),
 
             .. Enum.GetValues<FxSkill>().OrderBy(skill => Array.IndexOf(Themes, SkillLook(skill).Theme)).Select(SkillEntry),
 

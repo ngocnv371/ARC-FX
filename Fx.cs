@@ -273,6 +273,21 @@ public static class Fx
         World?.Barrier(target, radius, life, color) ?? default;
 
     /// <summary>
+    /// A shrine at <paramref name="at"/>, standing until stopped: a stone pillar about two metres
+    /// tall (times <paramref name="size"/>) whose prongs cradle a gem of <see cref="FxTheme.Of(FxSigil)"/>'s
+    /// colour, turning in a column of light with motes drifting up round it, over the sigil of
+    /// what it gives. <see cref="FxShrine.Take"/> spends it: the gem breaks in a burst and its
+    /// light streams into the taker, reaching them <see cref="FxTiming.ShrineReach"/> later, and
+    /// the stone stands dark. Who may take it, and the boon itself, are the game's.
+    /// </summary>
+    public static FxShrine Shrine(Vector3 at, FxSigil sigil, float size = 1f) =>
+        World?.Shrine(at, sigil, FxTheme.Of(sigil), size) ?? default;
+
+    /// <summary>A shrine in any colour.</summary>
+    public static FxShrine Shrine(Vector3 at, FxSigil sigil, Color color, float size = 1f) =>
+        World?.Shrine(at, sigil, color, size) ?? default;
+
+    /// <summary>
     /// A projectile's look, shown until released: the game flies it and calls
     /// <see cref="FxShot.Place"/> every frame. Shots fly <see cref="ShotHeight"/> above the ground.
     /// </summary>

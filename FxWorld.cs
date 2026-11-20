@@ -27,6 +27,7 @@ public partial class FxWorld : Node3D
     private FxVortices? _vortices;
     private FxBladefalls? _bladefalls;
     private FxSkills? _skills;
+    private FxShrines? _shrines;
 
     /// <summary>Advance in <c>_Process</c>; false: the game calls <see cref="Tick"/>.</summary>
     public bool AutoTick { get; set; } = true;
@@ -48,6 +49,7 @@ public partial class FxWorld : Node3D
     private FxVortices Vortices => _vortices ??= new FxVortices(Kit);
     private FxBladefalls Bladefalls => _bladefalls ??= new FxBladefalls(Kit, this);
     private FxSkills Skills => _skills ??= new FxSkills(Kit, this);
+    private FxShrines Shrines => _shrines ??= new FxShrines(Kit, this);
 
     public override void _EnterTree() => Fx.World = this;
 
@@ -68,7 +70,8 @@ public partial class FxWorld : Node3D
     public void Tick(float dt)
     {
         // Things that spawn others (a storm's crackles, a smite's blast, a bomb's burst, a ram's
-        // dust, a meteor's flame and blast, a bladefall's glows, a skill's cues) go first, so what they spawn starts this frame.
+        // dust, a meteor's flame and blast, a bladefall's glows, a skill's cues, a shrine's sigil, burst and heal) go first, so what they spawn starts this frame.
+        _shrines?.Tick(dt);
         _casts?.Tick(dt);
         _skills?.Tick(dt);
         _bladefalls?.Tick(dt);
@@ -174,6 +177,9 @@ public partial class FxWorld : Node3D
     /// <inheritdoc cref="Fx.Barrier"/>
     public FxBarrier Barrier(Node3D target, float radius, float life, Color color) =>
         Casts.SpawnBarrier(target, target.Position, radius, life, color);
+
+    /// <inheritdoc cref="Fx.Shrine(Vector3, FxSigil, Color, float)"/>
+    public FxShrine Shrine(Vector3 at, FxSigil sigil, Color color, float size = 1f) => Shrines.Spawn(at, sigil, color, size);
 
     /// <inheritdoc cref="Fx.Shot"/>
     public FxShot Shot(FxShotLook look) => Shots.Spawn(look);

@@ -2,7 +2,7 @@
 
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
 lightning and chain lightning arcs, slashes and thrusts, blade vortices, beams, storm orbs, frost bombs, novas, Divine
-Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers,
+Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers, shrines,
 seventy hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes, beams),
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
 game's fire is the same fire.
@@ -27,6 +27,8 @@ Fx.Meteor(at, 3f);                                  // lands after FxTiming.Mete
 Fx.Bladefall(at, 4f);                               // spectral swords land over FxTiming.BladefallSpread
 Fx.Skill(FxSkill.CrimsonSlash, hero.Position, facing, 3f);  // lands after FxTiming.SkillHit(skill)
 Fx.Skill(FxSkill.FrostLance, from, to - from, 3f);         // dashes, throws and beams: facing is the whole way
+var shrine = Fx.Shrine(at, FxSigil.Haste);          // stands, glowing, until taken or stopped
+shrine.Take(hero, boon: 10f);                       // its light reaches them after FxTiming.ShrineReach
 var barrier = Fx.Barrier(hero, 1.4f, life: 5f, FxTheme.Of(FxElement.Spirit));
 barrier.Hit(attacker.Position);                     // ripples where the blow lands
 
@@ -58,7 +60,7 @@ places itself.
 |---|---|
 | `Fx.cs` | The front door: every effect as one static call |
 | `FxWorld.cs` | The node that holds and ticks effects |
-| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, an arc's leap, smite fall, meteor fall, bladefall, rupture speed, when each skill lands) |
+| `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, an arc's leap, smite fall, meteor fall, bladefall, a shrine's light reaching its taker, rupture speed, when each skill lands) |
 | `FxElement.cs`, `FxLighting.cs`, `FxModels.cs` | Elements and their palette, the lighting and model hooks |
 | `Fx*.cs` | The effects, one family per file; `FxKit.cs` holds what they share and `FxHandle`, the handle most calls return |
 | `shaders/` | The `fx_*` shaders; `fx_common.gdshaderinc` and `fx_noise.gdshaderinc` are their shared pieces |

@@ -331,6 +331,56 @@ internal static class FxProps
         }
     }
 
+    /// <summary>Where a shrine's stone (<see cref="Shrine"/>) cradles its gem: the gem's centre, in metres above the foot.</summary>
+    public const float ShrineCradle = 1.72f;
+
+    /// <summary>
+    /// A shrine's stone, its foot on the origin, about 1.9 metres tall: a broad eight-sided dais
+    /// of two steps, a tapering pillar banded twice, a flared capital, and three prongs curling up
+    /// out of its rim and in again to cradle a gem at <see cref="ShrineCradle"/>; a little rubble
+    /// lies round the foot.
+    /// </summary>
+    public static ArrayMesh Shrine()
+    {
+        var st = Begin();
+        // The dais: two steps.
+        Append(st, new CylinderMesh { TopRadius = 0.74f, BottomRadius = 0.78f, Height = 0.12f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 0.06f);
+        Append(st, new CylinderMesh { TopRadius = 0.54f, BottomRadius = 0.58f, Height = 0.12f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 0.18f);
+        // The pillar, a plinth at its foot and two bands up it.
+        Append(st, new CylinderMesh { TopRadius = 0.36f, BottomRadius = 0.4f, Height = 0.1f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 0.29f);
+        Append(st, new CylinderMesh { TopRadius = 0.21f, BottomRadius = 0.29f, Height = 0.86f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 0.77f);
+        var band = new CylinderMesh { TopRadius = 1f, BottomRadius = 1f, Height = 0.05f, RadialSegments = 8, Rings = 1 };
+        Append(st, band, new Transform3D(Basis.FromScale(new Vector3(0.3f, 1f, 0.3f)), Vector3.Up * 0.5f));
+        Append(st, band, new Transform3D(Basis.FromScale(new Vector3(0.25f, 1f, 0.25f)), Vector3.Up * 1.0f));
+        // The capital, flaring out to a rim.
+        Append(st, new CylinderMesh { TopRadius = 0.38f, BottomRadius = 0.22f, Height = 0.16f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 1.28f);
+        Append(st, new CylinderMesh { TopRadius = 0.34f, BottomRadius = 0.38f, Height = 0.05f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 1.385f);
+        // Three prongs curling up and in round the gem, each tipped with a point.
+        for (var i = 0; i < 3; i++)
+        {
+            var angle = i * Mathf.Tau / 3f + Mathf.Pi / 6f;
+            var outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            var across = Vector3.Up.Cross(outward);
+            var root = outward * 0.3f + Vector3.Up * 1.4f;
+            var elbow = outward * 0.44f + Vector3.Up * 1.68f;
+            var hook = outward * 0.34f + Vector3.Up * 1.98f;
+            var tip = outward * 0.2f + Vector3.Up * 2.1f;
+            Bar(st, root, elbow, 0.11f, 0.08f, across);
+            Bar(st, elbow, hook, 0.09f, 0.07f, across);
+            Append(st, new CylinderMesh { TopRadius = 0f, BottomRadius = 0.045f, Height = (tip - hook).Length(), RadialSegments = 5, Rings = 1 },
+                new Transform3D(Toward(tip - hook), (hook + tip) * 0.5f));
+        }
+        // Rubble round the foot.
+        var chunk = new SphereMesh { Radius = 1f, Height = 2f, RadialSegments = 5, Rings = 3 };
+        var rubble = new (float Angle, float Reach, Vector3 Size)[]
+        {
+            (0.6f, 0.92f, new(0.09f, 0.06f, 0.07f)), (2.5f, 0.88f, new(0.06f, 0.04f, 0.08f)), (4.3f, 0.95f, new(0.08f, 0.05f, 0.06f)),
+        };
+        foreach (var (angle, reach, size) in rubble)
+            Append(st, chunk, new Transform3D(new Basis(Vector3.Up, angle * 2f) * Basis.FromScale(size), new Vector3(Mathf.Cos(angle), 0.02f, Mathf.Sin(angle)) * reach));
+        return End(st);
+    }
+
     private static Vector3 RandomAxis(Func<float> R) =>
         new Vector3(R() - 0.5f, R() - 0.5f, R() - 0.5f).Normalized() is var v && v.LengthSquared() > 0.5f ? v : Vector3.Up;
 

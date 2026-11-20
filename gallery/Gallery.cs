@@ -494,6 +494,12 @@ public partial class Gallery : Node3D
             new("Cast", "Barrier", "var barrier = Fx.Barrier(target, 1.4f, life: 3f, spirit);  // barrier.Hit(from), barrier.Break()", 3.2f, 1f,
                 g => g.Run(new Barrier(Fx.Barrier(g._caster, 1.4f, 3f, FxTheme.Of(FxElement.Spirit))).Step)),
 
+            .. Enum.GetValues<FxSigil>().Select(sigil => new Entry("Shrine", sigil.ToString(),
+                $"var shrine = Fx.Shrine(at, FxSigil.{sigil});  // shrine.Take(hero, boon: 4f) when they reach it", 4.5f, 1.2f,
+                g => g.Run(new Visit(g._caster, sigil).Step), "shrine")),
+            new("Shrine", "Taken", "shrine.Take(hero, boon: 4f);  // its light reaches them FxTiming.ShrineReach later: give the boon then", 4.5f, 1.8f,
+                g => g.Run(new Visit(g._caster, FxSigil.Haste).Step), "shrine"),
+
             .. Enum.GetValues<FxSkill>().OrderBy(skill => Array.IndexOf(Themes, SkillLook(skill).Theme)).Select(SkillEntry),
 
             new("Earth", "Stone slam", "Fx.Slam(at, 3f, FxSpike.Stone);", 2f, 0.2f, _ => Fx.Slam(Vector3.Zero, 3f, FxSpike.Stone)),
@@ -781,6 +787,33 @@ public partial class Gallery : Node3D
             var from = Vector3.Back.Rotated(Vector3.Up, (float)GD.RandRange(-1.3, 1.3)) * 4f + Vector3.Up * (float)GD.RandRange(0.4, 1.6);
             barrier.Hit(from);
             return true;
+        }
+    }
+
+    /// <summary>A shrine the caster walks up to and takes, wearing its sigil for a while after.</summary>
+    private sealed class Visit
+    {
+        private static readonly Vector3 From = new(3.2f, 0f, 1.6f);
+        private static readonly Vector3 To = new(0.5f, 0f, 0.6f);
+        private readonly Node3D _caster;
+        private readonly FxShrine _shrine;
+        private float _age;
+
+        public Visit(Node3D caster, FxSigil sigil)
+        {
+            _caster = caster;
+            _caster.Position = From;
+            _shrine = Fx.Shrine(new Vector3(-1.3f, 0f, -0.6f), sigil);
+        }
+
+        public bool Step(float dt)
+        {
+            _age += dt;
+            var k = Mathf.Clamp((_age - 0.2f) / 1.1f, 0f, 1f);
+            _caster.Position = From.Lerp(To, k * k * (3f - 2f * k));
+            if (_age >= 1.5f && !_shrine.Taken)
+                _shrine.Take(_caster, boon: 2.5f);
+            return _age < 4.5f;
         }
     }
 

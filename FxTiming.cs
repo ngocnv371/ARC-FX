@@ -57,6 +57,9 @@ public static class FxTiming
     public const float BladefallDrop = 0.22f;
     public const float BladefallSpread = 0.7f;
 
+    /// <summary>A taken shrine's light reaches whoever took it this long after <see cref="FxShrine.Take"/>: the moment to give the boon.</summary>
+    public const float ShrineReach = 0.55f;
+
     /// <summary>A rupture's spikes race along the ground at this many metres a second.</summary>
     public const float RuptureSpeed = 26f;
 

@@ -280,6 +280,66 @@ public enum FxSkill
     UmbralWard,
     /// <summary>Dark tethers to points round the spot, brightening, then snapping in bursts.</summary>
     SoulFetters,
+    /// <summary>A pale crescent swept from overhead down into the ground in front, cutting a line into it.</summary>
+    MoonfallCut,
+    /// <summary>Spectral swords falling one after another round the spot over a rune circle, each stabbing in.</summary>
+    BladeRain,
+    /// <summary>Two rings of steel and gold spun out at waist height round the caster (follows them).</summary>
+    HaloCut,
+    /// <summary>A swirling pit of sand, streams of grit spiralling down into it.</summary>
+    SandVortex,
+    /// <summary>A warning ring, then a great crag thrusting up out of it, stone spikes round it.</summary>
+    Monolith,
+    /// <summary>A cone of rocks flung out in front, each landing in a puff of dust.</summary>
+    StoneshotFan,
+    /// <summary>A warning ring, then a burning meteor plunging from the sky into a great fire blast.</summary>
+    SkyfireMeteor,
+    /// <summary>A serpent of fire slithering along facing on a ribbon of flame, rearing up in a burst at the end.</summary>
+    FlameSerpent,
+    /// <summary>Three fireballs fanned out along facing, each bursting where it lands.</summary>
+    EmberVolley,
+    /// <summary>A flask lobbed along facing that shatters into a spreading pool of fire.</summary>
+    NapalmFlask,
+    /// <summary>A volley of icicles shot along facing, shattering where they strike.</summary>
+    IcicleBarrage,
+    /// <summary>A great ice crystal plunging from the sky, ice spikes and shards bursting out where it lands.</summary>
+    GlacialComet,
+    /// <summary>Ice spikes erupting outward along three spiral arms over a swirl of frost.</summary>
+    PermafrostSpiral,
+    /// <summary>A charge, then a lance of lightning thrown along facing, the bolt leaping on to three more.</summary>
+    StormLance,
+    /// <summary>An orb of lightning on a stalk over a rune circle, zapping the ground round it.</summary>
+    TeslaCoil,
+    /// <summary>Four tornadoes circling the caster, lightning leaping between them (follows them).</summary>
+    EyeOfTheStorm,
+    /// <summary>A wall of water rising and rolling along facing, crashing down in spray at the end.</summary>
+    TidalWave,
+    /// <summary>Bubbling in a ring, then a spout of water bursting high, spray raining down.</summary>
+    Geyser,
+    /// <summary>A swirling whirlpool, rings and streams of foam drawn into its middle.</summary>
+    Whirlpool,
+    /// <summary>A wobbling bubble of water round the spot, popping in a splash.</summary>
+    BubblePrison,
+    /// <summary>Petals swirling up round the spot over a rune circle, then bursting outward.</summary>
+    PetalStorm,
+    /// <summary>Roots creeping out across the ground to points round the spot, coiling up where they reach.</summary>
+    CreepingRoots,
+    /// <summary>A volley of thorns lobbed up and raining down into the area in front, left stuck in the ground.</summary>
+    ThornVolley,
+    /// <summary>A flash, then four shimmering copies of the caster sliding out round them and shattering (follows them).</summary>
+    MirrorImages,
+    /// <summary>Three upright rune circles over the caster, each firing a beam into one spot in front.</summary>
+    AstralSigils,
+    /// <summary>A tear in the air in front, motes drawn into it, snapping shut in a blast.</summary>
+    RiftTear,
+    /// <summary>A beam of light on the caster, a halo over their head and feathers drifting down (follows them).</summary>
+    Benediction,
+    /// <summary>Six pillars of light round the spot joined into a hexagram, then a flash of light.</summary>
+    SealOfLight,
+    /// <summary>Dark tendrils rising out of a pool of shadow in front, lashing.</summary>
+    ShadowTendrils,
+    /// <summary>A sweep of a green scythe round the caster, then souls drawn in from all round.</summary>
+    SoulHarvest,
 }
 
 /// <summary>

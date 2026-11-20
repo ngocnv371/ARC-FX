@@ -777,10 +777,10 @@ public partial class Gallery : Node3D
     }
 
     /// <summary>The skill themes, in the order the list shows them.</summary>
-    private static readonly string[] Themes = ["blade", "earth", "fire", "frost", "storm", "nature", "arcane", "holy", "shadow", "buff"];
+    private static readonly string[] Themes = ["blade", "earth", "fire", "frost", "storm", "water", "nature", "arcane", "holy", "shadow", "buff"];
 
-    /// <summary>How the gallery casts a skill: in front, side on, a step beside the caster, on the caster, along a line, or travelling.</summary>
-    private enum Cast { Front, Side, Aside, Follow, Line, Dash, Blink }
+    /// <summary>How the gallery casts a skill: in front, side on, a step beside the caster, away from the camera, on the caster, along a line, or travelling.</summary>
+    private enum Cast { Front, Side, Aside, Away, Follow, Line, Dash, Blink }
 
     /// <summary>A skill's theme (shown in the list and matched by the filter), how often it replays, when it peaks, and how it is cast.</summary>
     private static (string Theme, float Every, float Peak, Cast How) SkillLook(FxSkill skill) => skill switch
@@ -917,6 +917,36 @@ public partial class Gallery : Node3D
             FxSkill.BlightPool => ("shadow", 3.6f, 1.2f, Cast.Front),
             FxSkill.UmbralWard => ("shadow", 3f, 1f, Cast.Follow),
             FxSkill.SoulFetters => ("shadow", 3f, 1.8f, Cast.Front),
+            FxSkill.MoonfallCut => ("blade", 1.6f, 0.1f, Cast.Front),
+            FxSkill.BladeRain => ("blade", 2.4f, 0.6f, Cast.Front),
+            FxSkill.HaloCut => ("blade", 1.4f, 0.15f, Cast.Follow),
+            FxSkill.SandVortex => ("earth", 3.4f, 1.2f, Cast.Front),
+            FxSkill.Monolith => ("earth", 3.2f, 0.6f, Cast.Front),
+            FxSkill.StoneshotFan => ("earth", 1.8f, 0.4f, Cast.Front),
+            FxSkill.SkyfireMeteor => ("fire", 3.0f, 1.1f, Cast.Front),
+            FxSkill.FlameSerpent => ("fire", 2.2f, 0.6f, Cast.Line),
+            FxSkill.EmberVolley => ("fire", 1.8f, 0.5f, Cast.Line),
+            FxSkill.NapalmFlask => ("fire", 3.6f, 1.0f, Cast.Line),
+            FxSkill.IcicleBarrage => ("frost", 1.8f, 0.5f, Cast.Line),
+            FxSkill.GlacialComet => ("frost", 3.0f, 0.9f, Cast.Front),
+            FxSkill.PermafrostSpiral => ("frost", 2.6f, 0.6f, Cast.Front),
+            FxSkill.StormLance => ("storm", 1.8f, 0.5f, Cast.Line),
+            FxSkill.TeslaCoil => ("storm", 3.6f, 1.2f, Cast.Front),
+            FxSkill.EyeOfTheStorm => ("storm", 3.6f, 1.5f, Cast.Follow),
+            FxSkill.TidalWave => ("water", 2.0f, 0.6f, Cast.Away),
+            FxSkill.Geyser => ("water", 2.6f, 0.9f, Cast.Front),
+            FxSkill.Whirlpool => ("water", 3.4f, 1.5f, Cast.Front),
+            FxSkill.BubblePrison => ("water", 2.8f, 1.2f, Cast.Front),
+            FxSkill.PetalStorm => ("nature", 2.6f, 1.7f, Cast.Front),
+            FxSkill.CreepingRoots => ("nature", 2.6f, 1.0f, Cast.Front),
+            FxSkill.ThornVolley => ("nature", 2.0f, 0.8f, Cast.Front),
+            FxSkill.MirrorImages => ("arcane", 2.4f, 0.8f, Cast.Follow),
+            FxSkill.AstralSigils => ("arcane", 2.0f, 0.6f, Cast.Front),
+            FxSkill.RiftTear => ("arcane", 2.6f, 1.0f, Cast.Front),
+            FxSkill.Benediction => ("holy", 3.0f, 1.0f, Cast.Follow),
+            FxSkill.SealOfLight => ("holy", 2.6f, 1.3f, Cast.Front),
+            FxSkill.ShadowTendrils => ("shadow", 2.6f, 0.9f, Cast.Front),
+            FxSkill.SoulHarvest => ("shadow", 2.4f, 0.65f, Cast.Front),
         _ => ("shadow", 2f, 0.5f, Cast.Front),
     };
 
@@ -946,6 +976,8 @@ public partial class Gallery : Node3D
             Cast.Aside => new("Skill", name, $"{call}, at, facing, 3f);{lands}", every, peak, _ => Fx.Skill(skill, new Vector3(1.8f, 0f, 0.6f), Vector3.Back, 3f), theme),
             // Upright along its facing, so it is cast across the camera's view.
             Cast.Side => new("Skill", name, $"{call}, at, facing, 3f);{lands}", every, peak, _ => Fx.Skill(skill, Vector3.Zero, Vector3.Right, 3f), theme),
+            // Something broad that rolls on: from nearer the camera, away from it, so its face shows.
+            Cast.Away => new("Skill", name, $"{call}, at, facing, 3f);{lands}", every, peak, _ => Fx.Skill(skill, new Vector3(0f, 0f, 2.5f), Vector3.Forward * 6f, 3f), theme),
             _ => new("Skill", name, $"{call}, at, facing, 3f);{lands}", every, peak, _ => Fx.Skill(skill, Vector3.Zero, Vector3.Back, 3f), theme),
         };
     }

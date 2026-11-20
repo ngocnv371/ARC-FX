@@ -124,7 +124,8 @@ internal sealed partial class FxSkills
             case FxSkill.UmbralBind: UmbralBind(c, range); break;
             case FxSkill.BlightPool: BlightPool(c, r); break;
             case FxSkill.UmbralWard: UmbralWard(c); break;
-            default: SoulFetters(c, r); break;
+            case FxSkill.SoulFetters: SoulFetters(c, r); break;
+            default: Extra(skill, c, r, range); break;
         }
     }
 

@@ -443,20 +443,6 @@ public partial class Gallery : Node3D
             new("Line", "Arc with blasts", "Fx.Arc(from, to, burst: 1.6f);  // a lightning blast where each jump lands", 1.5f, 0.2f,
                 g => g.Run(new Chain([new(0f, 0f, 4f), new(-2.5f, 0f, -1f), new(1f, 0f, -3.5f), new(3.5f, 0f, -0.5f)], 1.6f).Step)),
 
-            new("Melee", "Slash", "Fx.Slash(at, forward, 3f, arc: 120f, steel);", 1f, 0.1f,
-                _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 120f, new Color(0.85f, 0.92f, 1f))),
-            new("Melee", "Whirl", "Fx.Slash(at, forward, 3f, arc: 360f, steel);", 1f, 0.1f,
-                _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 360f, new Color(0.85f, 0.92f, 1f))),
-            new("Melee", "Crossing slashes", "Fx.Slash(at, forward, 2.6f, 110f, steel, tilt: 38f);  // and one tilted -38f, reverse: true", 1f, 0.1f,
-                _ =>
-                {
-                    Fx.Slash(Vector3.Zero, Vector3.Back, 2.6f, 110f, new Color(0.85f, 0.92f, 1f), tilt: 38f);
-                    Fx.Slash(Vector3.Zero, Vector3.Back, 2.6f, 110f, new Color(0.85f, 0.92f, 1f), tilt: -38f, reverse: true);
-                }),
-            new("Melee", "Upward slash", "Fx.Slash(at, forward, 3f, 150f, steel, tilt: -72f);  // not quite upright, so it is never edge on", 1f, 0.1f,
-                _ => Fx.Slash(Vector3.Zero, Vector3.Back, 3f, 150f, new Color(0.85f, 0.92f, 1f), tilt: -72f)),
-            new("Melee", "Thrust", "Fx.Thrust(at, forward, 4.5f, 1.2f, steel);", 1f, 0.1f,
-                _ => Fx.Thrust(Vector3.Zero, Vector3.Back, 4.5f, 1.2f, new Color(0.85f, 0.92f, 1f))),
             new("Melee", "Blade vortex", "Fx.BladeVortex(caster, blades: 6, 1.6f, keep: 1f);  // renewed as it ticks", 4f, 1.5f,
                 g => g.Run(new Vortex(g._caster, 6, 6).Step)),
             new("Melee", "Blade vortex stacking", "Fx.BladeVortex(caster, stacks, 1.6f, keep: 1f);  // a blade more each cast, up to Fx.BladeVortexMax", 5f, 3f,

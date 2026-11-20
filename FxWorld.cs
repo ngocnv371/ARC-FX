@@ -14,8 +14,6 @@ public partial class FxWorld : Node3D
     private FxExplosions? _explosions;
     private FxPatches? _patches;
     private FxLines? _lines;
-    private FxSlashes? _slashes;
-    private FxThrusts? _thrusts;
     private FxBeams? _beams;
     private FxStorms? _storms;
     private FxIres? _ires;
@@ -36,8 +34,6 @@ public partial class FxWorld : Node3D
     private FxExplosions Explosions => _explosions ??= new FxExplosions(this);
     private FxPatches Patches => _patches ??= new FxPatches(this);
     private FxLines Lines => _lines ??= new FxLines(Kit);
-    private FxSlashes Slashes => _slashes ??= new FxSlashes(Kit);
-    private FxThrusts Thrusts => _thrusts ??= new FxThrusts(Kit);
     private FxBeams Beams => _beams ??= new FxBeams(Kit);
     private FxStorms Storms => _storms ??= new FxStorms(Kit, this);
     private FxIres Ires => _ires ??= new FxIres(Kit);
@@ -81,8 +77,6 @@ public partial class FxWorld : Node3D
         _slams?.Tick(dt);
         _rams?.Tick(dt);
         _beams?.Tick(dt);
-        _slashes?.Tick(dt);
-        _thrusts?.Tick(dt);
         _vortices?.Tick(dt);
         _lines?.Tick(dt);
         _patches?.Tick(dt);
@@ -109,14 +103,6 @@ public partial class FxWorld : Node3D
     /// <inheritdoc cref="Fx.Lightning"/>
     public FxHandle Lightning((Vector3 A, Vector3 B)[] segments, float life, int tendrils = 0, float thickness = 1f) =>
         Lines.Spawn(segments, life, tendrils, thickness);
-
-    /// <inheritdoc cref="Fx.Slash"/>
-    public FxHandle Slash(Vector3 centre, Vector3 forward, float radius, float arc, Color color, Node3D? follow = null, float tilt = 0f, bool reverse = false) =>
-        Slashes.Spawn(centre, forward, radius, arc, color, follow, tilt, reverse);
-
-    /// <inheritdoc cref="Fx.Thrust"/>
-    public FxHandle Thrust(Vector3 from, Vector3 forward, float length, float width, Color color, Node3D? follow = null) =>
-        Thrusts.Spawn(from, forward, length, width, color, follow);
 
     /// <inheritdoc cref="Fx.BladeVortex(Node3D, int, float, float, FxVortexLook)"/>
     public FxHandle BladeVortex(Node3D follow, int blades, float radius, float keep, FxVortexLook look = FxVortexLook.Steel) =>

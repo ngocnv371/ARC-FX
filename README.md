@@ -1,7 +1,7 @@
 # ARC FX
 
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
-lightning and chain lightning arcs, slashes and thrusts, blade vortices, beams, storm orbs, frost bombs, novas, Divine
+lightning and chain lightning arcs, blade vortices, beams, storm orbs, frost bombs, novas, Divine
 Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers, shrines,
 seventy hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes, beams),
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
@@ -18,9 +18,6 @@ Fx.Sigil(hero, FxSigil.Haste, 1.6f, keep: 1f);      // the disc at their feet th
 Fx.Sigil(hero, FxSigil.Fire, 1.4f, keep: 1f, FxSigilLook.Ring);  // several auras: one ring, a badge each
 Fx.Lightning([(at + Vector3.Up * 12f, at)], 0.2f, tendrils: 12, thickness: 0.6f);  // a strike from the sky
 Fx.Arc(hero.Position, foe.Position, burst: 1.6f);   // one jump of chain lightning; the next FxTiming.ArcLeap later
-Fx.Slash(hero.Position, facing, 3f, arc: 120f, steel);
-Fx.Slash(hero.Position, facing, 3f, arc: 110f, steel, tilt: 38f);  // a diagonal cut; one more at -38f, reverse: true, crosses it
-Fx.Thrust(hero.Position, facing, 4.5f, 1.2f, steel); // a lance of light stabbing out
 Fx.BladeVortex(hero, stacks, 1.6f, keep: 1f, FxElement.Fire);  // renew each cast; blood for physical
 Fx.Nova(hero.Position, 6f);                         // hit with FxTiming.NovaFront(age, 6f)
 Fx.Meteor(at, 3f);                                  // lands after FxTiming.MeteorFall

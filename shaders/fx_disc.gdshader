@@ -7,7 +7,10 @@
 //   2 cracks: a web of glowing cracks round the middle, cooling as uProgress goes to 1;
 //   3 a soft glow;
 //   4 a swirl: spiral arms winding into the middle, turning at uSpin;
-//   5 a telegraph: a faint disc with a bright rim, filling from the middle to uProgress.
+//   5 a telegraph: a faint disc with a bright rim, filling from the middle to uProgress;
+//   6 a cone: a wedge uCone either side of the plane's +Z, filling out to uProgress, its sides
+//     and front bright (a breath's or a blast's hit area);
+//   7 a band: one clean glowing ring near the rim, rippling (a binding round someone).
 // Additive.
 shader_type spatial;
 render_mode unshaded, fog_disabled, shadows_disabled, blend_add, cull_disabled, depth_draw_never;
@@ -24,6 +27,8 @@ uniform float uGain = 1.0;
 uniform float uBand = 0.12;
 // How fast a swirl turns.
 uniform float uSpin = 3.0;
+// A cone's half-angle, in radians.
+uniform float uCone = 0.5;
 
 instance uniform float uProgress = 0.0;
 instance uniform float uAlpha = 1.0;
@@ -137,6 +142,26 @@ void fragment()
 		float mask = smoothstep(1.0, 0.55, r) * smoothstep(0.02, 0.2, r);
 		t = arm * mask * (0.5 + 0.8 * n) + exp(-pow((r - 0.14) / 0.05, 2.0)) * 0.6 + mask * 0.1;
 		heat = 0.35 + 0.6 * arm * (1.0 - r);
+	}
+	else if (uStyle == 6)
+	{
+		// UV.y runs toward the plane's +Z, the way the cone faces.
+		float off = abs(atan(p.x, p.y));
+		float inside = 1.0 - smoothstep(uCone - 0.03, uCone, off);
+		float reach = u;
+		float filled = inside * step(r, reach);
+		float front = exp(-abs(r - reach) / 0.03) * inside * step(r, reach + 0.03);
+		float sides = (1.0 - smoothstep(0.0, 0.025, abs(off - uCone) * r)) * step(r, reach);
+		float n = fx_fbm(p * 3.0 + seed + vec2(0.0, -TIME * 0.8));
+		t = filled * (0.2 + 0.4 * n) * (0.4 + 0.6 * r) + front * 0.9 + sides * 0.55;
+		heat = 0.4 + 0.5 * front + 0.25 * n;
+	}
+	else if (uStyle == 7)
+	{
+		float ring = exp(-pow((r - 0.85) / 0.06, 2.0));
+		float n = fx_noise(vec2(a * 4.0 + TIME * 3.0, 1.0) + seed) * 0.5 + 0.5;
+		t = ring * (0.55 + 0.6 * n) + exp(-pow((r - 0.85) / 0.015, 2.0)) * 0.6;
+		heat = 0.45 + 0.5 * ring;
 	}
 	else
 	{

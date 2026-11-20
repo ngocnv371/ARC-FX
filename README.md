@@ -3,7 +3,7 @@
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
 lightning and chain lightning arcs, blade vortices, beams, storm orbs, frost bombs, novas, Divine
 Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers, shrines,
-seventy hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes, beams),
+132 hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes, beams, walls),
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
 game's fire is the same fire.
 
@@ -62,6 +62,7 @@ places itself.
 | `Fx*.cs` | The effects, one family per file; `FxKit.cs` holds what they share and `FxHandle`, the handle most calls return |
 | `shaders/` | The `fx_*` shaders; `fx_common.gdshaderinc` and `fx_noise.gdshaderinc` are their shared pieces |
 | `gallery/` | ARC FX Gallery, a Godot app that plays every effect with the call that makes it |
+| `docs/hero-case-study.md` | The case study behind 62 of the skills: twenty classic hero kits, what makes each skill read, and our version of it |
 
 ## The gallery
 

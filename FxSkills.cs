@@ -152,6 +152,134 @@ public enum FxSkill
     ShadeClones,
     /// <summary>A crimson-violet rune circle under a dark sigil, darkness dripping round it.</summary>
     Curse,
+
+    // The case-study set (docs/hero-case-study.md): our own versions of the mechanics of classic
+    // hero kits. Skills that reach several things spread their own points over the radius.
+
+    /// <summary>A front of flame sweeping out along a widening cone, scorching it.</summary>
+    CinderWave,
+    /// <summary>A tight warning ring, then a squat eruption of fire inside it.</summary>
+    PyreStrike,
+    /// <summary>A thick, jagged red-and-black bolt from the hand, a hard flash where it lands.</summary>
+    CrimsonVerdict,
+    /// <summary>A burst of frost with a snowflake rune left in the hoarfrost.</summary>
+    RimeBloom,
+    /// <summary>Ice crystals growing round a spot, holding, then shattering.</summary>
+    RimeShackle,
+    /// <summary>A snowstorm round the caster, frost bursting at random inside it (follows them).</summary>
+    FrozenExpanse,
+    /// <summary>A cloud swirling overhead, then a single bolt from it.</summary>
+    Skybolt,
+    /// <summary>A charge-up round the caster, then bolts from the sky on several points at once.</summary>
+    HeavensWrath,
+    /// <summary>A faint gold ring narrowing for a second and a half, then a needle of sunlight.</summary>
+    SolarBrand,
+    /// <summary>A burning boulder dropping in, then rolling on along facing, leaving fire behind.</summary>
+    RollingCinderstone,
+    /// <summary>A broad pale wave of force rolling out along facing, kicking up dust.</summary>
+    ConcussiveWave,
+    /// <summary>A rampart of ice blocks thrusting up across the way in front.</summary>
+    RimeRampart,
+    /// <summary>A whirling column of steel round the caster, sparks flung off it (follows them).</summary>
+    SteelCyclone,
+    /// <summary>A spectral totem rising out of the ground, green pulses rolling out of it.</summary>
+    MendingTotem,
+    /// <summary>A string of blinks between points round the spot, a slash and a shade at each.</summary>
+    ThousandSteps,
+    /// <summary>A dash along facing with a trail of shades and clock marks at both ends.</summary>
+    RewindStep,
+    /// <summary>A flash, then a clock ring standing still round the spot.</summary>
+    StilledMoment,
+    /// <summary>A wide dome over a clock face whose hands turn, motes stopped mid-air inside.</summary>
+    StoppedHour,
+    /// <summary>A ridge of rock tearing up along facing, standing, then crumbling.</summary>
+    RivenRidge,
+    /// <summary>A quick ring of dust and cracks at the feet.</summary>
+    TremorRing,
+    /// <summary>A slam, then echoes racing out to points round it, each ringing out again.</summary>
+    ResoundingSlam,
+    /// <summary>A slow pastel orb drifting along facing on a long glittering trail.</summary>
+    DriftingMote,
+    /// <summary>A blink along facing in pastel sparkles, a hush ring at each end.</summary>
+    FeyRift,
+    /// <summary>A coil at the spot, tethered to points round it, the tethers snapping at the end.</summary>
+    Dreamtether,
+    /// <summary>A line of stone spikes erupting one after another along facing, growing as they go.</summary>
+    Thornline,
+    /// <summary>A puff of pastel smoke and sparkles.</summary>
+    PolymorphPuff,
+    /// <summary>A forked dark-green beam from the hand, spectral claws closing where it lands.</summary>
+    SunderingFinger,
+    /// <summary>A swooping dive out along facing and back, leaving a ribbon of fire.</summary>
+    FirewingDive,
+    /// <summary>Four fire wisps orbiting the caster, launched one by one along facing.</summary>
+    EmberWisps,
+    /// <summary>A long held beam of sunlight along facing, sweeping a little as it burns.</summary>
+    SolarLance,
+    /// <summary>A sun swelling over the spot, rings turning round it, then a great fire blast.</summary>
+    RebornStar,
+    /// <summary>A thrust of wind along facing that sends a tornado on.</summary>
+    GaleThrust,
+    /// <summary>A curved wall of streaming wind standing in front.</summary>
+    GaleBarrier,
+    /// <summary>A short dash along facing on a ribbon of wind.</summary>
+    GaleStep,
+    /// <summary>A gust lifting from the spot, a flurry of slashes overhead, a cut down to finish.</summary>
+    SkywardCut,
+    /// <summary>An orb thrown along facing and back again, blue going out and white coming back.</summary>
+    ReturningOrb,
+    /// <summary>Three wisps orbiting the caster, then darting off ahead (follows them).</summary>
+    SpiritWisps,
+    /// <summary>A rose-pink orb with a ring glyph sent along facing, bursting where it lands.</summary>
+    BeguilingMote,
+    /// <summary>Three short dashes along facing, bolts fired from each stop.</summary>
+    SpiritSteps,
+    /// <summary>An orb of light along facing, then rings of light closing round where it lands.</summary>
+    BindOfDawn,
+    /// <summary>A spinning prism thrown along facing and back, a shield flashing at its turn.</summary>
+    PrismWard,
+    /// <summary>A star thrown along facing, glowing in a pulsing ring, then bursting.</summary>
+    LingeringStar,
+    /// <summary>A thin aiming line along facing, then a huge beam of white-gold light.</summary>
+    RadiantLance,
+    /// <summary>A charge at the hand, then a crackling cyan line shot along facing.</summary>
+    ShockLine,
+    /// <summary>Three traps tossed along facing, snapping shut in bursts of fire.</summary>
+    SnapTraps,
+    /// <summary>A rocket flying along facing on smoke and fire, landing in a great blast.</summary>
+    GrandRocket,
+    /// <summary>A ghostly green chain hurled along facing, hooking and pulled back.</summary>
+    ReapingHook,
+    /// <summary>A lantern tossed along facing, landing aglow.</summary>
+    LanternToss,
+    /// <summary>A green lash arcing across in front.</summary>
+    ChainSweep,
+    /// <summary>A pentagon of spectral green walls standing round the spot.</summary>
+    SpectralCage,
+    /// <summary>A quick gold bolt along facing.</summary>
+    ArcaneBolt,
+    /// <summary>A blink along facing, then a bolt fired on from where it lands.</summary>
+    ShiftShot,
+    /// <summary>A charge, then a wide band of golden light rolling a long way along facing.</summary>
+    LongshotBarrage,
+    /// <summary>A charge along facing in the form of a rolling boulder, erupting into stone where it ends.</summary>
+    LandslideCharge,
+    /// <summary>A burst of fire in a cone in front, the wedge left scorched.</summary>
+    FlareFan,
+    /// <summary>Ribbons of fire swirling round the caster (follows them).</summary>
+    EmberShroud,
+    /// <summary>Something heavy falling from the sky into a fire blast over a rune circle.</summary>
+    GuardiansFall,
+    /// <summary>A giant spectral sword falling into the spot, a pillar of gold where it lands.</summary>
+    SwordOfVerdict,
+    /// <summary>A dark orb along facing, then dark chains wrapping where it lands.</summary>
+    UmbralBind,
+    /// <summary>A dark violet pool, spirits drifting over it.</summary>
+    BlightPool,
+    /// <summary>A dark dome of runes round the caster (follows them).</summary>
+    UmbralWard,
+    /// <summary>Dark tethers to points round the spot, brightening, then snapping in bursts.</summary>
+    SoulFetters,
 }
 
 /// <summary>
@@ -193,8 +321,8 @@ internal sealed partial class FxSkills(FxKit kit, FxWorld world)
     private static readonly Tone Crit = new(new(1f, 0.5f, 0.12f), new(1f, 0.97f, 0.82f), new(0.5f, 0.07f, 0f));
 
     // fx_disc, fx_column, fx_energy and fx_streak styles.
-    private const int Shock = 0, Runes = 1, Cracks = 2, Glow = 3, Swirl = 4, Telegraph = 5;
-    private const int Light = 0, Fire = 1, Spiral = 2;
+    private const int Shock = 0, Runes = 1, Cracks = 2, Glow = 3, Swirl = 4, Telegraph = 5, Cone = 6, Band = 7;
+    private const int Light = 0, Fire = 1, Spiral = 2, Beam = 3;
     private const int Orb = 0, Hexes = 1, Shell = 2;
     private const int Streak = 0, Mote = 1, Star = 2;
     private const float ShockFront = 0.8f;
@@ -880,6 +1008,104 @@ internal sealed partial class FxSkills(FxKit kit, FxWorld world)
             n.Transform = new Transform3D(turn * Basis.FromScale(scale * s), at + lift);
             Look(n, alpha(k), style == Shock ? ShockFront : progress?.Invoke(k) ?? k);
         });
+    }
+
+    /// <summary>A disc (fx_disc) placed every frame: <paramref name="place"/>'s basis turns and sizes it (a unit of scale is a metre of radius).</summary>
+    private void Disc(Cast c, float start, float life, int style, Tone tone, Func<float, Transform3D> place, Func<float, float> alpha,
+        Func<float, float>? progress = null, float band = 0.12f, float spin = 3f, float cone = 0.5f, float gain = 1f)
+    {
+        var material = Material("disc", style, tone, gain, ("uBand", band), ("uSpin", spin), ("uCone", cone));
+        Add(c, kit.Ground, material, start, life, (n, k, _) =>
+        {
+            n.Transform = place(k);
+            Look(n, alpha(k), progress?.Invoke(k) ?? k);
+        });
+    }
+
+    /// <summary>
+    /// A wall (fx_wall) standing on the ground from <paramref name="a"/> to <paramref name="b"/>,
+    /// <paramref name="height"/> tall; <paramref name="crumble"/> above 0 breaks it away.
+    /// </summary>
+    private void Wall(Cast c, float start, float life, int style, Tone tone, Vector3 a, Vector3 b, Func<float, float> height, Func<float, float> alpha,
+        Func<float, float>? crumble = null, float speed = 1f, float gain = 1f)
+    {
+        var material = Material("wall", style, tone, gain, ("uSpeed", speed));
+        var along = FxKit.Flat(b - a);
+        var length = Mathf.Max(along.Length(), 0.05f);
+        var x = along / length;
+        var foot = FxKit.Flat((a + b) * 0.5f);
+        Add(c, kit.Quad, material, start, life, (n, k, _) =>
+        {
+            var h = Mathf.Max(height(k), 1e-3f);
+            n.Transform = new Transform3D(new Basis(x * length, Vector3.Up * h, x.Cross(Vector3.Up)), foot + Vector3.Up * h * 0.5f);
+            Look(n, alpha(k), crumble?.Invoke(k) ?? 0f);
+            n.SetInstanceShaderParameter("uAspect", length / h);
+        });
+    }
+
+    /// <summary>
+    /// A ribbon (fx_ribbon) drawn along <paramref name="path"/> from <paramref name="span"/>'s
+    /// tail to its head (in the path's own units), <paramref name="width"/> wide at the head and
+    /// narrowing to its tail, lying across the way it goes.
+    /// </summary>
+    private void Ribbon(Cast c, float start, float life, int style, Tone tone, Func<float, Vector3> path, Func<float, (float Tail, float Head)> span,
+        float width, Func<float, float> alpha, float gain = 1f)
+    {
+        var material = Material("ribbon", style, tone, gain);
+        var mesh = new ImmediateMesh();
+        Add(c, mesh, material, start, life, (n, k, _) =>
+        {
+            mesh.ClearSurfaces();
+            var (tail, head) = span(k);
+            if (head - tail < 1e-4f)
+                return;
+            const int Steps = 28;
+            var e = (head - tail) / Steps * 0.5f;
+            mesh.SurfaceBegin(Mesh.PrimitiveType.TriangleStrip);
+            for (var i = 0; i <= Steps; i++)
+            {
+                var u = (float)i / Steps;
+                var s = tail + (head - tail) * u;
+                var at = path(s);
+                var side = (path(s + e) - path(s - e)).Cross(Vector3.Up);
+                side = side.LengthSquared() < 1e-8f ? Vector3.Right : side.Normalized();
+                side *= width * 0.5f * (0.25f + 0.75f * u);
+                mesh.SurfaceSetUV(new Vector2(u, 0f));
+                mesh.SurfaceAddVertex(at - side);
+                mesh.SurfaceSetUV(new Vector2(u, 1f));
+                mesh.SurfaceAddVertex(at + side);
+            }
+            mesh.SurfaceEnd();
+            Look(n, alpha(k), k);
+        });
+    }
+
+    /// <summary>
+    /// A jagged bolt from <paramref name="a"/> to <paramref name="b"/> drawn with streaks in any
+    /// colour (Fx.Lightning is always blue-white): three shapes, flicking from one to the next.
+    /// </summary>
+    private void Bolt(Cast c, float start, float life, Tone tone, Vector3 a, Vector3 b, float width, int kinks = 8, float jag = 0.3f)
+    {
+        const int Shapes = 3;
+        var side = (b - a).Cross(Vector3.Up);
+        side = side.LengthSquared() < 1e-4f ? Vector3.Right : side.Normalized();
+        for (var v = 0; v < Shapes; v++)
+        {
+            var points = new Vector3[kinks + 1];
+            for (var k = 0; k <= kinks; k++)
+            {
+                points[k] = a.Lerp(b, (float)k / kinks);
+                if (k > 0 && k < kinks)
+                    points[k] += side * Rand(-jag, jag) + Vector3.Up * Rand(-jag, jag) * 0.6f;
+            }
+            var shape = v;
+            for (var j = 0; j < kinks; j++)
+            {
+                var (p, q) = (points[j], points[j + 1]);
+                Line(c, start, life, tone, k => (p + q) * 0.5f, k => (q - p) * 1.15f, width,
+                    k => (int)(k * life * 30f) % Shapes == shape ? Fade(k, 0f, 0.35f) : 0f);
+            }
+        }
     }
 
     /// <summary>A column (fx_column) standing on <paramref name="foot"/>, <paramref name="size"/> giving its radius and height.</summary>

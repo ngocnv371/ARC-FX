@@ -509,7 +509,7 @@ public partial class Gallery : Node3D
             ("Holy", "#holy"), ("Arcane", "#arcane"), ("Shadow", "#shadow"), ("Physical", "#physical")]),
         ("Kind", [("Melee", "#melee"), ("Projectile", "#projectile"), ("Area", "#aoe"), ("Ground", "#ground"),
             ("From the sky", "#sky"), ("Buff", "#buff"), ("Defense", "#defense"), ("Movement", "#movement")]),
-        ("Source", [("Skills", "skill"), ("Not skills", "-skill"), ("Shrines", "#shrine"), ("Sigils", "#sigil")]),
+        ("Source", [("Skills", "skill"), ("Case study", "#study"), ("Not skills", "-skill"), ("Shrines", "#shrine"), ("Sigils", "#sigil")]),
     ];
 
     private HFlowContainer PresetRow(int row)
@@ -779,8 +779,8 @@ public partial class Gallery : Node3D
     /// <summary>The skill themes, in the order the list shows them.</summary>
     private static readonly string[] Themes = ["blade", "earth", "fire", "frost", "storm", "nature", "arcane", "holy", "shadow", "buff"];
 
-    /// <summary>How the gallery casts a skill: in front, side on, on the caster, along a line, or travelling.</summary>
-    private enum Cast { Front, Side, Follow, Line, Dash, Blink }
+    /// <summary>How the gallery casts a skill: in front, side on, a step beside the caster, on the caster, along a line, or travelling.</summary>
+    private enum Cast { Front, Side, Aside, Follow, Line, Dash, Blink }
 
     /// <summary>A skill's theme (shown in the list and matched by the filter), how often it replays, when it peaks, and how it is cast.</summary>
     private static (string Theme, float Every, float Peak, Cast How) SkillLook(FxSkill skill) => skill switch
@@ -855,6 +855,68 @@ public partial class Gallery : Node3D
             FxSkill.DeathCoil => ("shadow", 1.6f, 0.42f, Cast.Line),
             FxSkill.ShadeClones => ("shadow", 1.4f, 0.35f, Cast.Front),
             FxSkill.Curse => ("shadow", 2.6f, 1f, Cast.Front),
+            FxSkill.CinderWave => ("fire", 1.6f, 0.35f, Cast.Line),
+            FxSkill.PyreStrike => ("fire", 1.6f, 0.42f, Cast.Front),
+            FxSkill.CrimsonVerdict => ("fire", 1.4f, 0.22f, Cast.Line),
+            FxSkill.RimeBloom => ("frost", 2.2f, 0.25f, Cast.Front),
+            FxSkill.RimeShackle => ("frost", 2.4f, 0.6f, Cast.Front),
+            FxSkill.FrozenExpanse => ("frost", 3.6f, 1.5f, Cast.Follow),
+            FxSkill.Skybolt => ("storm", 1.4f, 0.38f, Cast.Front),
+            FxSkill.HeavensWrath => ("storm", 2.2f, 0.66f, Cast.Front),
+            FxSkill.SolarBrand => ("holy", 2.4f, 1.46f, Cast.Front),
+            FxSkill.RollingCinderstone => ("fire", 2.8f, 1.2f, Cast.Line),
+            FxSkill.ConcussiveWave => ("arcane", 1.6f, 0.35f, Cast.Line),
+            FxSkill.RimeRampart => ("frost", 3.6f, 0.6f, Cast.Front),
+            FxSkill.SteelCyclone => ("blade", 3f, 1f, Cast.Follow),
+            FxSkill.MendingTotem => ("nature", 4.2f, 1.6f, Cast.Aside),
+            FxSkill.ThousandSteps => ("blade", 1.6f, 0.55f, Cast.Front),
+            FxSkill.RewindStep => ("arcane", 1.6f, 0.24f, Cast.Dash),
+            FxSkill.StilledMoment => ("arcane", 2f, 0.4f, Cast.Front),
+            FxSkill.StoppedHour => ("arcane", 4f, 1.5f, Cast.Front),
+            FxSkill.RivenRidge => ("earth", 3.6f, 0.6f, Cast.Line),
+            FxSkill.TremorRing => ("earth", 1f, 0.1f, Cast.Front),
+            FxSkill.ResoundingSlam => ("earth", 2f, 0.4f, Cast.Front),
+            FxSkill.DriftingMote => ("arcane", 2.4f, 1f, Cast.Line),
+            FxSkill.FeyRift => ("arcane", 1.4f, 0.14f, Cast.Blink),
+            FxSkill.Dreamtether => ("arcane", 2.8f, 1.2f, Cast.Front),
+            FxSkill.Thornline => ("earth", 1.8f, 0.45f, Cast.Line),
+            FxSkill.PolymorphPuff => ("arcane", 1.4f, 0.2f, Cast.Front),
+            FxSkill.SunderingFinger => ("shadow", 1.6f, 0.26f, Cast.Line),
+            FxSkill.FirewingDive => ("fire", 1.8f, 0.55f, Cast.Line),
+            FxSkill.EmberWisps => ("fire", 2.6f, 1.45f, Cast.Line),
+            FxSkill.SolarLance => ("fire", 2.8f, 1.2f, Cast.Line),
+            FxSkill.RebornStar => ("fire", 3f, 1.8f, Cast.Front),
+            FxSkill.GaleThrust => ("blade", 1.6f, 0.4f, Cast.Line),
+            FxSkill.GaleBarrier => ("storm", 3.6f, 1f, Cast.Front),
+            FxSkill.GaleStep => ("blade", 1.4f, 0.2f, Cast.Dash),
+            FxSkill.SkywardCut => ("blade", 1.6f, 0.5f, Cast.Front),
+            FxSkill.ReturningOrb => ("arcane", 1.8f, 0.75f, Cast.Line),
+            FxSkill.SpiritWisps => ("arcane", 2.2f, 0.6f, Cast.Follow),
+            FxSkill.BeguilingMote => ("arcane", 1.4f, 0.5f, Cast.Line),
+            FxSkill.SpiritSteps => ("arcane", 1.8f, 0.6f, Cast.Dash),
+            FxSkill.BindOfDawn => ("holy", 2.2f, 0.7f, Cast.Line),
+            FxSkill.PrismWard => ("holy", 1.8f, 0.55f, Cast.Line),
+            FxSkill.LingeringStar => ("holy", 2.8f, 1.2f, Cast.Line),
+            FxSkill.RadiantLance => ("holy", 2.2f, 1.2f, Cast.Line),
+            FxSkill.ShockLine => ("storm", 1.4f, 0.42f, Cast.Line),
+            FxSkill.SnapTraps => ("fire", 2.4f, 0.8f, Cast.Line),
+            FxSkill.GrandRocket => ("fire", 2f, 0.7f, Cast.Line),
+            FxSkill.ReapingHook => ("shadow", 1.2f, 0.22f, Cast.Line),
+            FxSkill.LanternToss => ("shadow", 3.6f, 1f, Cast.Line),
+            FxSkill.ChainSweep => ("shadow", 1.2f, 0.1f, Cast.Front),
+            FxSkill.SpectralCage => ("shadow", 3.8f, 1f, Cast.Front),
+            FxSkill.ArcaneBolt => ("arcane", 1f, 0.15f, Cast.Line),
+            FxSkill.ShiftShot => ("arcane", 1.4f, 0.25f, Cast.Blink),
+            FxSkill.LongshotBarrage => ("holy", 2.2f, 1.1f, Cast.Line),
+            FxSkill.LandslideCharge => ("earth", 1.8f, 0.66f, Cast.Dash),
+            FxSkill.FlareFan => ("fire", 1.2f, 0.15f, Cast.Front),
+            FxSkill.EmberShroud => ("fire", 3f, 1f, Cast.Follow),
+            FxSkill.GuardiansFall => ("fire", 2f, 0.55f, Cast.Front),
+            FxSkill.SwordOfVerdict => ("holy", 2.2f, 0.5f, Cast.Front),
+            FxSkill.UmbralBind => ("shadow", 2.2f, 0.8f, Cast.Line),
+            FxSkill.BlightPool => ("shadow", 3.6f, 1.2f, Cast.Front),
+            FxSkill.UmbralWard => ("shadow", 3f, 1f, Cast.Follow),
+            FxSkill.SoulFetters => ("shadow", 3f, 1.8f, Cast.Front),
         _ => ("shadow", 2f, 0.5f, Cast.Front),
     };
 
@@ -862,15 +924,16 @@ public partial class Gallery : Node3D
     private static Entry SkillEntry(FxSkill skill)
     {
         var (theme, every, peak, how) = SkillLook(skill);
+        var arrive = skill == FxSkill.SpiritSteps ? 0.82f : FxTiming.SkillHit(skill);
         var name = string.Concat(skill.ToString().Select((ch, i) => i > 0 && char.IsUpper(ch) ? " " + char.ToLowerInvariant(ch) : ch.ToString()));
         var call = $"Fx.Skill(FxSkill.{skill}";
         var lands = FxTiming.SkillHit(skill) > 0f ? "  // lands after FxTiming.SkillHit" : "";
         return how switch
         {
             Cast.Dash => new("Skill", name, $"{call}, from, to - from, 1.5f);{lands}", every, peak,
-                g => g.Travel(skill, skill == FxSkill.LeapSlam ? 3f : 1.5f, FxTiming.SkillHit(skill), smooth: true), theme),
+                g => g.Travel(skill, skill == FxSkill.LeapSlam || skill == FxSkill.LandslideCharge ? 3f : 1.5f, arrive, smooth: true), theme),
             Cast.Blink => new("Skill", name, $"{call}, from, to - from);{lands}", every, peak,
-                g => g.Travel(skill, 3f, FxTiming.SkillHit(skill), smooth: false), theme),
+                g => g.Travel(skill, 3f, arrive, smooth: false), theme),
             Cast.Follow => new("Skill", name, $"{call}, caster.Position, facing, 3f, follow: caster);", every, peak,
                 g => Fx.Skill(skill, g._caster.Position, Vector3.Back, 3f, g._caster), theme),
             Cast.Line => new("Skill", name, $"{call}, caster.Position, target - caster.Position, 3f);{lands}", every, peak,
@@ -879,6 +942,8 @@ public partial class Gallery : Node3D
                     g._caster.Position = new Vector3(-3.5f, 0f, 1f);
                     Fx.Skill(skill, g._caster.Position, Vector3.Right * 7f, 3f);
                 }, theme),
+            // Something planted: a step to the side, so the caster doesn't stand in it.
+            Cast.Aside => new("Skill", name, $"{call}, at, facing, 3f);{lands}", every, peak, _ => Fx.Skill(skill, new Vector3(1.8f, 0f, 0.6f), Vector3.Back, 3f), theme),
             // Upright along its facing, so it is cast across the camera's view.
             Cast.Side => new("Skill", name, $"{call}, at, facing, 3f);{lands}", every, peak, _ => Fx.Skill(skill, Vector3.Zero, Vector3.Right, 3f), theme),
             _ => new("Skill", name, $"{call}, at, facing, 3f);{lands}", every, peak, _ => Fx.Skill(skill, Vector3.Zero, Vector3.Back, 3f), theme),

@@ -75,7 +75,8 @@ internal sealed partial class FxSkills
             case FxSkill.SoulDrain: SoulDrain(c, range); break;
             case FxSkill.DeathCoil: DeathCoil(c, range); break;
             case FxSkill.ShadeClones: ShadeClones(c); break;
-            default: Curse(c); break;
+            case FxSkill.Curse: Curse(c); break;
+            default: Study(skill, c, r, range); break;
         }
     }
 

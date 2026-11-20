@@ -455,6 +455,67 @@ internal static class FxProps
             Tri(st, centre, top[i], top[(i + 1) % 8], Vector3.Up);
     }
 
+    /// <summary>A small ward totem a metre tall on the origin: a tapering post, a crossbar with a knob at each end, an orb on top.</summary>
+    public static ArrayMesh Totem()
+    {
+        var st = Begin();
+        Append(st, new CylinderMesh { TopRadius = 0.08f, BottomRadius = 0.13f, Height = 0.8f, RadialSegments = 6, Rings = 1 }, Vector3.Up * 0.4f);
+        Append(st, new BoxMesh { Size = new Vector3(0.5f, 0.07f, 0.07f) }, Vector3.Up * 0.66f);
+        foreach (var side in new[] { -1f, 1f })
+            Append(st, new SphereMesh { Radius = 0.06f, Height = 0.12f, RadialSegments = 6, Rings = 3 }, new Vector3(side * 0.26f, 0.66f, 0f));
+        Append(st, new CylinderMesh { TopRadius = 0.18f, BottomRadius = 0.18f, Height = 0.04f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 0.02f);
+        Append(st, new SphereMesh { Radius = 0.12f, Height = 0.24f, RadialSegments = 8, Rings = 4 }, Vector3.Up * 0.9f);
+        return End(st);
+    }
+
+    /// <summary>A jaw trap lying open on the origin, 0.6 across: a flat disc ringed by eight teeth leaning out.</summary>
+    public static ArrayMesh Trap()
+    {
+        var st = Begin();
+        Append(st, new CylinderMesh { TopRadius = 0.3f, BottomRadius = 0.32f, Height = 0.06f, RadialSegments = 10, Rings = 1 }, Vector3.Up * 0.03f);
+        Append(st, new CylinderMesh { TopRadius = 0.08f, BottomRadius = 0.08f, Height = 0.08f, RadialSegments = 6, Rings = 1 }, Vector3.Up * 0.08f);
+        for (var i = 0; i < 8; i++)
+        {
+            var angle = i * Mathf.Tau / 8f;
+            var way = new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle));
+            var lean = new Basis(Vector3.Up.Cross(way).Normalized(), -0.5f);
+            Append(st, new CylinderMesh { TopRadius = 0f, BottomRadius = 0.04f, Height = 0.18f, RadialSegments = 4, Rings = 1 },
+                new Transform3D(lean, way * 0.27f + Vector3.Up * 0.12f));
+        }
+        return End(st);
+    }
+
+    /// <summary>A rocket a metre and a half long along +Y, its tail on the origin: a body, a pointed nose, three fins.</summary>
+    public static ArrayMesh Rocket()
+    {
+        var st = Begin();
+        Append(st, new CylinderMesh { TopRadius = 0.16f, BottomRadius = 0.16f, Height = 1f, RadialSegments = 10, Rings = 1 }, Vector3.Up * 0.5f);
+        Append(st, new CylinderMesh { TopRadius = 0f, BottomRadius = 0.16f, Height = 0.45f, RadialSegments = 10, Rings = 1 }, Vector3.Up * 1.225f);
+        Append(st, new CylinderMesh { TopRadius = 0.12f, BottomRadius = 0.09f, Height = 0.12f, RadialSegments = 8, Rings = 1 }, Vector3.Up * -0.06f);
+        for (var i = 0; i < 3; i++)
+        {
+            var turn = new Basis(Vector3.Up, i * Mathf.Tau / 3f);
+            Append(st, new BoxMesh { Size = new Vector3(0.03f, 0.35f, 0.26f) }, new Transform3D(turn, turn * new Vector3(0f, 0.15f, 0.2f)));
+        }
+        return End(st);
+    }
+
+    /// <summary>A lantern half a metre tall on the origin: a foot, a cage of four bars round its glass, a cap and a ring to hold it by.</summary>
+    public static ArrayMesh Lantern()
+    {
+        var st = Begin();
+        Append(st, new CylinderMesh { TopRadius = 0.14f, BottomRadius = 0.17f, Height = 0.06f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 0.03f);
+        for (var i = 0; i < 4; i++)
+        {
+            var angle = i * Mathf.Tau / 4f + Mathf.Pi / 4f;
+            Append(st, new BoxMesh { Size = new Vector3(0.03f, 0.3f, 0.03f) }, new Vector3(Mathf.Sin(angle) * 0.13f, 0.21f, Mathf.Cos(angle) * 0.13f));
+        }
+        Append(st, new CylinderMesh { TopRadius = 0.04f, BottomRadius = 0.17f, Height = 0.1f, RadialSegments = 8, Rings = 1 }, Vector3.Up * 0.41f);
+        Append(st, new TorusMesh { InnerRadius = 0.04f, OuterRadius = 0.07f, Rings = 8, RingSegments = 4 },
+            new Transform3D(new Basis(Vector3.Right, Mathf.Pi / 2f), Vector3.Up * 0.52f));
+        return End(st);
+    }
+
     private static SurfaceTool Begin()
     {
         var st = new SurfaceTool();

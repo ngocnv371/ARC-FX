@@ -340,11 +340,211 @@ public enum FxSkill
     ShadowTendrils,
     /// <summary>A sweep of a green scythe round the caster, then souls drawn in from all round.</summary>
     SoulHarvest,
+    /// <summary>Five ghosts rising out of seals in a row and gliding forward to cut at what is ahead.</summary>
+    GhostLegion,
+    /// <summary>Three burning skulls bursting from the caster, hanging a moment, then diving screaming at foes ahead.</summary>
+    RagingSpirits,
+    /// <summary>A raging aura of spirits: ghostly fire round the caster, howling faces whirling up it under a skull (follows them).</summary>
+    WrathAura,
+    /// <summary>Five green skulls fired one after another down the line, weaving, each bursting.</summary>
+    SkullBarrage,
+    /// <summary>Three graves cracking open in front, a ghost standing up out of each in a pillar of light.</summary>
+    GraveCall,
+    /// <summary>Four ghostly skulls circling the caster with fire streaming off them, flung outward at the end (follows them).</summary>
+    SpiritGuard,
+    /// <summary>A rank of ghosts sweeping forward together through a veil of mist.</summary>
+    PhantomHost,
+    /// <summary>A flock of spectral crows bursting from the caster in a cone, feathers falling behind them.</summary>
+    CrowMurder,
+    /// <summary>A haunted circle: a skull mark in a ring of filigree, ghosts pacing round it, wisps rising.</summary>
+    HauntedGround,
+    /// <summary>A great wraith rearing up and screaming: rings of sound rolling out along a cone.</summary>
+    BansheeWail,
+    /// <summary>A ghost rising, rushing at a spot ahead as it swells and flickers, and blowing up in a skull of light.</summary>
+    SoulBomber,
+    /// <summary>A skull mark drawn in front, then a huge skull heaving up out of it and snapping shut.</summary>
+    DeathsJaw,
+    /// <summary>A towering shade looming behind the caster and sweeping a scythe round, souls drawn up to it.</summary>
+    ReaperShade,
+    /// <summary>Skulls falling one after another onto a skull mark, each trailing fire and cracking the ground.</summary>
+    SkullRain,
+    /// <summary>A wraith flying into a foe ahead, who then burns with ghostly fire under a staring eye.</summary>
+    Possession,
+    /// <summary>A gate of filigree and shadow standing open at the caster, skulls and wraiths pouring out of it.</summary>
+    NetherGate,
+    /// <summary>Six quick pink and white cuts over a lotus drawn on the ground, petals flying, then the lotus flaring.</summary>
+    LotusFlurry,
+    /// <summary>A wide golden crescent that leaves stars hanging along its arc over a field of them.</summary>
+    StarlitCrescent,
+    /// <summary>Three turning rings of violet and rose round the caster, butterflies spiralling up out of them (follows them).</summary>
+    ButterflyWaltz,
+    /// <summary>Two pale crescents crossed in front under a sickle moon, a small moon left where each ends.</summary>
+    TwinMoons,
+    /// <summary>Nine golden feathers thrown in a fan, each sticking in the ground where it lands.</summary>
+    FeatherFan,
+    /// <summary>One hairline cut across everything in front, a beat of stillness, then blossom bursting all along it.</summary>
+    IaidoBloom,
+    /// <summary>Three silk ribbons of rose, violet and gold winding round the caster, sparkling (follows them).</summary>
+    RibbonDance,
+    /// <summary>Six crescents in the colours of the rainbow fanned one after another in front.</summary>
+    PrismaticEdge,
+    /// <summary>A thrust of steel light, gems flashing along it and rings opening round it, bursting at its tip.</summary>
+    DiamondLance,
+    /// <summary>Petals drifting down over a great lotus on the ground, ripples where they settle.</summary>
+    BlossomRain,
+    /// <summary>A stream of butterflies in four colours flying out at what is ahead, leaving sparkles.</summary>
+    ButterflySwarm,
+    /// <summary>A ring of small lights, each a flame over a tiny lotus, fairies looping round it trailing dust.</summary>
+    FairyRing,
+    /// <summary>Leaves of green and gold spiralling up round the caster in the wind (follows them).</summary>
+    LeafCyclone,
+    /// <summary>Three wisps circling the caster, each firing motes at a marked spot in front.</summary>
+    WispCompanions,
+    /// <summary>A puff of dandelion seeds, each a tiny star on a hair, floating up and away on the wind.</summary>
+    DandelionDrift,
+    /// <summary>A crown of thorns thrusting up and outward round the spot, rose petals thrown from it.</summary>
+    ThornCrown,
+    /// <summary>A giant flower opening on the ground: two rings of petals round a heart of light, pollen rising.</summary>
+    SpiritBloom,
+    /// <summary>A seed lobbed at a spot, vines winding out from it, a flower opening at the end of each.</summary>
+    BloomBurst,
+    /// <summary>A halo of filigree turning as it comes down out of the sky onto a spot, landing in a pillar of light.</summary>
+    HaloDescent,
+    /// <summary>A whirl of golden feathers round the spot, glints striking through it.</summary>
+    FeatherStorm,
+    /// <summary>Shafts of dawn light slanting down one after another onto a great sun on the ground.</summary>
+    DawnRays,
+    /// <summary>A golden lotus on the ground, smaller ones rising above it through a pillar of light.</summary>
+    SacredLotus,
+    /// <summary>A star falling onto an eight-pointed star drawn on the ground, breaking into eight.</summary>
+    StarOfGrace,
+    /// <summary>A dozen lanterns lifting off the ground one after another and floating up.</summary>
+    LanternsOfHope,
+    /// <summary>Halos lifting off the ground round the caster one after another, widening as they rise (follows them).</summary>
+    ChoirOfRings,
+    /// <summary>A tall winged spirit of light standing behind the caster under a halo, a shell of light round them (follows them).</summary>
+    GuardianSpirit,
+    /// <summary>Hearts rising round the caster under one large beating heart (follows them).</summary>
+    HeartSurge,
+    /// <summary>Five stars circling up round the caster over a field of stars, more falling (follows them).</summary>
+    StarBlessing,
+    /// <summary>Mint butterflies spiralling up round the caster (follows them).</summary>
+    ButterflyRenewal,
+    /// <summary>A sickle moon over the caster, a pale veil round them and a corona at their feet (follows them).</summary>
+    MoonlitVeil,
+    /// <summary>Six cut gems circling the caster inside a dome of hexagons (follows them).</summary>
+    CrystalAegis,
+    /// <summary>A phoenix rising out of an eruption: wings of flame opening as it climbs, feathers falling.</summary>
+    PhoenixRise,
+    /// <summary>A small sun swelling in a flickering corona and bursting in rays.</summary>
+    SunFlare,
+    /// <summary>Nine candle flames lit one after another in a ring, all flaring up into pillars together.</summary>
+    CandleVigil,
+    /// <summary>A swarm of burning butterflies flying ahead, each going out in a small pop of flame.</summary>
+    EmberButterflies,
+    /// <summary>Five rockets climbing and bursting into balls of coloured stars.</summary>
+    FireworkBloom,
+    /// <summary>A lotus of molten petals opening on the ground, then erupting from every petal tip.</summary>
+    LavaLotus,
+    /// <summary>Three small comets circling the caster, fire streaming off them (follows them).</summary>
+    CometDance,
+    /// <summary>Two ribbons of fire twisting round each other down a line through opening rings, bursting at the end.</summary>
+    DragonSpiral,
+    /// <summary>Glowing cinders drifting down over a smouldering circle, small flames catching where they land.</summary>
+    CinderFall,
+    /// <summary>Snowflakes falling over a great snowflake drawn on the ground, frost glinting.</summary>
+    SnowfallSanctum,
+    /// <summary>A lotus of frost drawn on the ground, ice thrusting up along every petal.</summary>
+    FrostLotus,
+    /// <summary>Icicles growing down from a ring in the air, glinting, then dropping and shattering.</summary>
+    ChandelierDrop,
+    /// <summary>Three curtains of aurora waving across in green, violet and mint.</summary>
+    AuroraVeil,
+    /// <summary>A glittering cloud of ice dust, gems and snowflakes turning round the caster (follows them).</summary>
+    DiamondDust,
+    /// <summary>Six mirrors of ice round a spot, light thrown between them and then through the middle.</summary>
+    MirrorShards,
+    /// <summary>Two ribbons of snow winding round the caster, each led by a snowflake (follows them).</summary>
+    WinterWaltz,
+    /// <summary>A huge snowflake forming in the air, then dropping flat onto the spot and bursting into ice.</summary>
+    FrozenStar,
+    /// <summary>A heart of ice beating inside a dome of hexagons, gems circling it, then bursting.</summary>
+    FrostHeart,
+    /// <summary>Stars falling one after another onto marked spots across a field of stars.</summary>
+    StarCall,
+    /// <summary>Two tilted rings of lightning turning round the caster, bolts leaping out from them (follows them).</summary>
+    ThunderHalo,
+    /// <summary>A honeycomb of light with seven glowing nodes, lightning jumping between them.</summary>
+    VoltLattice,
+    /// <summary>Wings of storm light unfurling behind the caster, bolts striking down from their tips (follows them).</summary>
+    StormWings,
+    /// <summary>A ball of plasma swelling over a lotus, arcs reaching to every petal, then bursting.</summary>
+    PlasmaBloom,
+    /// <summary>Three balls of lightning rolling forward side by side, arcs jumping between them.</summary>
+    BallLightningTrio,
+    /// <summary>Four ribbons of wind winding up round the caster, leaves riding on them (follows them).</summary>
+    ZephyrRibbons,
+    /// <summary>Six bolts striking round a hexagram one after another, then one great bolt in the middle.</summary>
+    TempestCrown,
+    /// <summary>A pond of shifting light with lotuses opening on it, ripples spreading.</summary>
+    LotusPond,
+    /// <summary>Slanting rain over a circle, a ripple where each drop lands.</summary>
+    RainDance,
+    /// <summary>Two koi of light swimming a circle round the caster, ripples in their wake (follows them).</summary>
+    KoiStream,
+    /// <summary>Seven pearls lobbed ahead in bubbles, each bursting in a splash and a ring.</summary>
+    PearlBarrage,
+    /// <summary>A bank of mist rolling slowly over a circle, glints in it.</summary>
+    MistVeil,
+    /// <summary>A sickle moon overhead drawing the tide in to the middle, then a wave rolling back out.</summary>
+    MoonTide,
+    /// <summary>A stream of bubbles blown ahead, each popping in a glint.</summary>
+    BubbleStream,
+    /// <summary>A fountain: a spout in the middle, eight arcs of water falling from it to the rim.</summary>
+    FountainOfLife,
+    /// <summary>Violet crystals growing out of the ground, the tallest in the middle, glinting.</summary>
+    CrystalGarden,
+    /// <summary>A boulder shaking as light breaks through it, then splitting in a burst of cut gems.</summary>
+    GeodeBurst,
+    /// <summary>Five pillars of jade rising in a ring, tied to each other by threads of light.</summary>
+    JadePillars,
+    /// <summary>A seam of gold running ahead through the ground, light and coins thrown up along it.</summary>
+    GoldenFissure,
+    /// <summary>A dune of sand rolling forward, grit flying from its crest.</summary>
+    DuneRoller,
+    /// <summary>Eight stones circling the caster at three heights, flung outward at the end (follows them).</summary>
+    PebbleOrbit,
+    /// <summary>Drops of resin flying in and setting into a block of amber round a spot, then cracking apart.</summary>
+    AmberTomb,
+    /// <summary>A constellation lit star by star over the ground and joined by threads, then every star falling.</summary>
+    StarMap,
+    /// <summary>Clock faces spinning backwards under and behind the caster, echoes of them stepping back in (follows them).</summary>
+    ClockworkRewind,
+    /// <summary>A white ray through a gem, split into six colours braiding down the line.</summary>
+    PrismRay,
+    /// <summary>Rings of bent light closing on a dark heart, everything spiralling in, then flung back out.</summary>
+    GravityLens,
+    /// <summary>A great eye opening overhead, its gaze sweeping the circle and marking what it finds.</summary>
+    EyeOfInsight,
+    /// <summary>A blown heart flying down the line, leaving the one it reaches under a turning heart.</summary>
+    CharmHeart,
+    /// <summary>A tower of rune circles stacking upward, each smaller, then a beam down through all of them.</summary>
+    RuneCascade,
+    /// <summary>Clouds of coloured gas and stars drawing together round a point, then a nova.</summary>
+    NebulaBurst,
+    /// <summary>A moon sliding across a sun overhead, darkness, then light bursting back from its edge.</summary>
+    UmbralEclipse,
+    /// <summary>A dial ticking round a spot, a white standstill, then everything breaking like glass.</summary>
+    TimeShatter,
+    /// <summary>Stars lifting off the ground and gathering overhead, then bursting and raining down as light.</summary>
+    WishingStars,
+    /// <summary>Great wings of light unfurling behind the caster under a halo, feathers falling (follows them).</summary>
+    WingsOfDawn,
 }
 
 /// <summary>
 /// Skills: each a short script of pieces (crescents, ground marks, columns, spheres and sparks
-/// drawn by fx_crescent, fx_disc, fx_column, fx_energy, fx_void and fx_streak) under one root
+/// drawn by fx_crescent, fx_disc, fx_column, fx_energy, fx_void, fx_streak, fx_mark and fx_glyph) under one root
 /// node standing where it is cast and facing the way it goes, with cues that call the library's
 /// other effects (blasts, patches, spikes, lightning) as it unfolds. Each piece shows over its
 /// own window of the skill's life and is posed every frame from how far through that it is.

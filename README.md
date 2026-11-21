@@ -3,7 +3,7 @@
 The shared effects library for the ARC games: explosions, burning ground and auras, aura sigils,
 lightning and chain lightning arcs, blade vortices, beams, storm orbs, frost bombs, novas, Divine
 Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, bladefalls, heals and barriers, shrines,
-162 hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes, beams, walls, waves),
+262 hero skills in the bold look of a top-down hero brawler (slashes, dashes, novas, pillars, domes, beams, walls, waves),
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
 game's fire is the same fire.
 

@@ -65,7 +65,8 @@ internal sealed partial class FxSkills
             case FxSkill.Benediction: Benediction(c, r); break;
             case FxSkill.SealOfLight: SealOfLight(c, r); break;
             case FxSkill.ShadowTendrils: ShadowTendrils(c, r); break;
-            default: SoulHarvest(c, r); break;
+            case FxSkill.SoulHarvest: SoulHarvest(c, r); break;
+            default: Grand(skill, c, r, range); break;
         }
     }
 

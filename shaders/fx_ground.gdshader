@@ -43,6 +43,8 @@ uniform vec2 uExtent = vec2(1.0);
 // The nova's inner ring, outer ring and the outer ring's band, in radii, and how long they take to spread.
 uniform vec3 uRings = vec3(0.45, 0.8, 0.2);
 uniform float uSpread = 0.25;
+// How strongly the patch shows: scales its light and its darkening alike (FxPatch.Strength).
+uniform float uStrength = 1.0;
 
 varying vec2 vWorld;
 
@@ -157,10 +159,18 @@ void fragment()
 	}
 	else if (uStyle == WARNING)
 	{
-		// A monster's blow on its way: a hard pulsing rim, and a fill swelling out from the
-		// centre that meets it as the blow lands.
-		float rim = smoothstep(0.05, 0.0, abs(r - 0.86));
-		float fill = (1.0 - smoothstep(u - 0.03, u + 0.03, r)) * step(r, 0.86);
+		// A monster's blow on its way: a thin hard pulsing rim, and a hollow ring growing out from
+		// the centre that meets it as the blow lands. How loud it is overall is the patch's strength
+		// (uStrength): a game turns it down so it reads without shouting over the fight.
+		// Both lines keep at least a pixel or so wide, so a small disc's don't break up.
+		float line = max(0.025, fwidth(r) * 1.5);
+		float rim = smoothstep(line, 0.0, abs(r - 0.86));
+		// The inner ring is a wide band (twenty lines across), its edges crisp, kept inside the rim.
+		float band = 0.25;
+		float aa = max(fwidth(r), 0.005);
+		// It grows 20% faster than the wind-up, reaching the rim at about five sixths of it and holding there.
+		float grow = min(u * 1.2, 1.0);
+		float fill = smoothstep(band + aa, band, abs(r - grow * 0.86)) * step(0.02, u) * step(r, 0.86);
 		float pulse = 0.75 + 0.25 * sin(TIME * 14.0);
 		float t = clamp(rim * pulse + fill * 0.4 + 0.1, 0.0, 1.0);
 		glow = uColor * t * 1.3;
@@ -378,7 +388,7 @@ void fragment()
 	}
 
 	// Whatever the noise does, nothing reaches the plane's edge.
-	fade *= smoothstep(1.0, 0.85, r);
+	fade *= smoothstep(1.0, 0.85, r) * uStrength;
 	ALBEDO = fx_out(glow) * fade;
 	ALPHA = clamp(cover * fade, 0.0, 1.0);
 }

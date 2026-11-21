@@ -13,7 +13,7 @@ public enum FxGround
     Poison = 2,
     /// <summary>Hoarfrost.</summary>
     Frost = 3,
-    /// <summary>A blow about to land: a filling red disc.</summary>
+    /// <summary>A blow about to land: a thin red rim, and a ring growing out to meet it.</summary>
     Warning = 8,
     /// <summary>A ring of flame under a slowly turning bubble of fire.</summary>
     Inferno = 9,
@@ -62,6 +62,23 @@ public readonly struct FxPatch
         }
     }
 
+    /// <summary>
+    /// How strongly it shows, 1 by default: scales its glow, its darkening of the ground and the
+    /// light it casts alike (a game's warnings, say, turned down so they don't shout over the fight).
+    /// </summary>
+    public float Strength
+    {
+        get => Live?.Strength ?? 0f;
+        set
+        {
+            if (Live is { } p)
+            {
+                p.Strength = Mathf.Max(0f, value);
+                p.GroundMaterial.SetShaderParameter("uStrength", p.Strength);
+            }
+        }
+    }
+
     /// <summary>Shows for <paramref name="seconds"/> more from now.</summary>
     public void Keep(float seconds)
     {
@@ -100,6 +117,7 @@ internal sealed class FxPatches(Node3D parent)
         public float Radius;
         public float Age;
         public float Life;
+        public float Strength = 1f;
         public Color Color;
         public FxGround Look;
         public int Generation;
@@ -147,6 +165,8 @@ internal sealed class FxPatches(Node3D parent)
         patch.Life = life;
         patch.Look = look;
         patch.Color = color;
+        patch.Strength = 1f;
+        patch.GroundMaterial.SetShaderParameter("uStrength", 1f);
         // A Miasma's ground is the poison pool; the vapour is its dome.
         patch.GroundMaterial.SetShaderParameter("uStyle", (int)(look == FxGround.Miasma ? FxGround.Poison : look));
         patch.GroundMaterial.SetShaderParameter("uColor", FxWorld.Rgb(color));
@@ -262,6 +282,6 @@ internal sealed class FxPatches(Node3D parent)
         };
         if (patch.Look is FxGround.Fire or FxGround.Inferno)
             strength *= 0.85f + 0.15f * Mathf.Sin(patch.Age * 13f + patch.Position.X * 3f) * Mathf.Sin(patch.Age * 7.3f);
-        Fx.Light(patch.Position + Vector3.Up * 0.8f, patch.Radius * reach + 0.5f, patch.Color, strength * fade);
+        Fx.Light(patch.Position + Vector3.Up * 0.8f, patch.Radius * reach + 0.5f, patch.Color, strength * fade * patch.Strength);
     }
 }

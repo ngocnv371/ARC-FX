@@ -51,6 +51,9 @@ instance uniform float uAlpha = 1.0;
 instance uniform float uPhase = 0.0;
 // A ring's turn in radians, set by FxSigils so its badges turn with it.
 instance uniform float uTurn = 0.0;
+// How strongly a ring's runes show (FxSigils fades them on wide rings, where they would stand
+// as tall as the people inside).
+instance uniform float uRunes = 1.0;
 
 varying vec2 vLocal;
 
@@ -313,7 +316,7 @@ float ring(vec2 p, float r, float t)
 {
 	vec2 keep = tatter(p, t);
 	float frame = (line(r - 0.965, 0.003) + line(r - 0.8, 0.0025) * 0.8) * keep.x;
-	frame += runes(p, 0.83, 0.94, uTurn) * 0.85 * keep.y;
+	frame += runes(p, 0.83, 0.94, uTurn) * 0.85 * keep.y * uRunes;
 	float rim = smoothstep(0.45, 0.8, r) * (1.0 - step(0.8, r)) * 0.18;
 	return frame + rim;
 }

@@ -60,6 +60,18 @@ internal sealed class FxSigils(FxKit kit)
     /// <summary>A badge's radius as a share of the ring's, and how far out from the ring's edge its centre sits, in badge radii.</summary>
     private const float BadgeShare = 0.27f;
     private const float BadgeOut = 1.1f;
+    /// <summary>
+    /// The widest a badge gets (metres): an emblem, not a share of the reach, so a wide ring's
+    /// badges stay as small as a narrow one's instead of growing past the one who wears them.
+    /// </summary>
+    private const float BadgeMax = 0.45f;
+    /// <summary>
+    /// Rings wider than this (metres) dim as they widen, down to <see cref="WideFloor"/> of their
+    /// light, and its runes fade faster still: a wide ring marks how far something reaches, and at
+    /// full light its runes, which widen with it, take the eye from everything inside.
+    /// </summary>
+    private const float WideFrom = 2.5f;
+    private const float WideFloor = 0.35f;
     /// <summary>Where the ring's outer line is, as a share of its radius (fx_sigil's ring()).</summary>
     private const float RingEdge = 0.965f;
     /// <summary>Radians a second a ring and its badges turn.</summary>
@@ -175,7 +187,10 @@ internal sealed class FxSigils(FxKit kit)
             halo.Disc.Position = (follow.Position with { Y = 0f }) + Vector3.Up * Lift;
             var size = radius * (0.85f + 0.15f * alpha);
             halo.Disc.Scale = new Vector3(size, 1f, size);
-            halo.Disc.SetInstanceShaderParameter("uAlpha", alpha);
+            var narrow = Mathf.Min(WideFrom / radius, 1f);
+            halo.Disc.SetInstanceShaderParameter("uAlpha", alpha * Mathf.Max(narrow, WideFloor));
+            // Its runes widen with it, so a wide ring keeps little more than its two lines.
+            halo.Disc.SetInstanceShaderParameter("uRunes", narrow * narrow);
             halo.Disc.SetInstanceShaderParameter("uTurn", halo.Turn);
         }
 
@@ -216,7 +231,7 @@ internal sealed class FxSigils(FxKit kit)
 
     private static void PlaceBadge(Mark mark, Halo halo)
     {
-        var badge = halo.Radius * BadgeShare;
+        var badge = Mathf.Min(halo.Radius * BadgeShare, BadgeMax);
         var reach = halo.Radius * RingEdge + badge * BadgeOut;
         // From the front, turning the same way as the ring's runes (fx_sigil turns them by uTurn).
         var angle = SlotOf(mark.Sigil) - halo.Turn;

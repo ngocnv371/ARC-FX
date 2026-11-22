@@ -1161,11 +1161,11 @@ internal sealed partial class FxSkills
             var high = 0.8f + 0.5f * (i % 3);
             var far = ring * (0.85f + 0.12f * (i % 2));
             Func<float, Vector3> at = k => Around(phase + k * Life * 2.6f) * far * Out(Mathf.Min(k * Life / 0.35f, 1f)) + Vector3.Up * (high * Out(Mathf.Min(k * Life / 0.35f, 1f)) + 0.1f * Mathf.Sin(k * Life * 4f + phase));
-            Prop(c, 0f, Life, _rock, _stone, k => new Transform3D(new Basis(axis, k * Life * 3f) * Basis.FromScale(Vector3.One * size), at(k)));
+            Prop(c, 0f, Life, Boulders[i % Boulders.Length], _stone, k => new Transform3D(new Basis(axis, k * Life * 3f) * Basis.FromScale(Vector3.One * size), at(k)));
             Trail(c, 0f, Life, Dust, at, size * 1.6f, 0.07f, gain: 0.9f);
             var last = at(1f);
             var away = FxKit.Flat(last).Normalized();
-            Prop(c, Life, 0.3f, _rock, _stone, k => new Transform3D(Basis.FromScale(Vector3.One * size), last + away * 5f * k + Vector3.Down * k * k));
+            Prop(c, Life, 0.3f, Boulders[i % Boulders.Length], _stone, k => new Transform3D(Basis.FromScale(Vector3.One * size), last + away * 5f * k + Vector3.Down * k * k));
             Line(c, Life, 0.3f, Dust, k => last + away * (5f * k - 0.5f), _ => away * 1.2f, 0.1f, k => 1f - k);
         }
         Disc(c, Life, 0.4f, Shock, Dust, Vector3.Zero, k => r * 1.2f * Out(k), k => 1f - k, band: 0.14f, gain: 1.2f);

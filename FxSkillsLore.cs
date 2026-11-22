@@ -252,7 +252,7 @@ internal sealed partial class FxSkills
             var phase = i * Mathf.Tau / 8f;
             var start = Rand(0f, Life - 1.6f);
             var size = Rand(0.14f, 0.26f);
-            Prop(c, start, 1.6f, _rock, _stone, k => new Transform3D(Basis.FromScale(Vector3.One * size * (1f - 0.5f * k)), Around(phase + k * 5f) * r * (0.85f - 0.8f * k) + Vector3.Up * (0.15f - 0.3f * k)));
+            Prop(c, start, 1.6f, Boulders[i % Boulders.Length], _stone, k => new Transform3D(Basis.FromScale(Vector3.One * size * (1f - 0.5f * k)), Around(phase + k * 5f) * r * (0.85f - 0.8f * k) + Vector3.Up * (0.15f - 0.3f * k)));
         }
         Shine(c, Vector3.Up, r * 1.2f, Dust.Main, age => 0.5f * Fade(age / Life, 0.08f, 0.15f));
     }

@@ -814,8 +814,8 @@ internal sealed partial class FxSkills(FxKit kit, FxWorld world)
     private readonly Dictionary<int, ArrayMesh> _fans = [];
     private readonly CylinderMesh _tube = new() { TopRadius = 1f, BottomRadius = 1f, Height = 1f, RadialSegments = 32, Rings = 4, CapTop = false, CapBottom = false };
     private readonly CapsuleMesh _ghost = new() { Radius = 0.32f, Height = 1.7f, RadialSegments = 16, Rings = 6 };
-    // A boulder: a sphere cut coarse enough that fx_crystal's facets read as rock.
-    private readonly SphereMesh _rock = new() { Radius = 1f, Height = 2f, RadialSegments = 7, Rings = 4 };
+    // A lump of rock for whatever is thrown, dropped or sent rolling: one of the boulder models.
+    private ArrayMesh _rock => Boulders[1];
     // Rock and earth (fx_rock): blotched, flecked and banded, and never the same twice.
     private readonly ShaderMaterial _stone = FxKit.Shader("rock");
 

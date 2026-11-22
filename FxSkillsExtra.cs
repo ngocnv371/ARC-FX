@@ -255,7 +255,7 @@ internal sealed partial class FxSkills
             var size = Rand(0.14f, 0.28f);
             var axis = FxKit.RandomDirection();
             Func<float, Vector3> at = k => mouth + v * k * Flight + Vector3.Down * 0.5f * Gravity * k * k * Flight * Flight;
-            Prop(c, start, Flight, _rock, _stone, k => new Transform3D(new Basis(axis, k * 5f) * Basis.FromScale(Vector3.One * size), at(k)));
+            Prop(c, start, Flight, Boulders[i % Boulders.Length], _stone, k => new Transform3D(new Basis(axis, k * 5f) * Basis.FromScale(Vector3.One * size), at(k)));
             Line(c, start, Flight, Dust, k => at(Mathf.Max(k - 0.08f, 0f)), k => Heading(at, k, 0.7f), 0.1f, k => 0.6f);
             Disc(c, start + Flight, 0.3f, Shock, Dust, land, k => 0.7f * Out(k), k => 1f - k, band: 0.2f);
             Flare(c, start + Flight, 0.6f, Mote, Smoke, k => land + Vector3.Up * (0.2f + 0.3f * k), k => 0.4f + 0.5f * k, k => (1f - k) * 0.5f, gain: 0.8f);

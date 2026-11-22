@@ -14,6 +14,9 @@ uniform vec3 uColor = vec3(1.0);
 uniform vec3 uHot = vec3(1.0);
 uniform vec3 uDeep = vec3(0.2);
 uniform float uGain = 1.0;
+// The share of its length, back from the head, over which it thins away to nothing: for a
+// ribbon with nothing leading it (a breath of flame), whose head would otherwise end square.
+uniform float uHead = 0.0;
 
 instance uniform float uProgress = 0.0;
 instance uniform float uAlpha = 1.0;
@@ -40,6 +43,8 @@ void fragment()
 		heat = clamp(n * 1.1 * (0.4 + 0.6 * s) + core * 0.35, 0.0, 1.0);
 	}
 	t *= smoothstep(0.0, 0.1, s);
+	if (uHead > 0.0)
+		t *= 1.0 - smoothstep(1.0 - uHead, 1.0, s);
 	vec3 col = heat < 0.5 ? mix(uDeep, uColor, heat * 2.0) : mix(uColor, uHot, (heat - 0.5) * 2.0);
 	ALBEDO = fx_out(col) * t * uAlpha * uGain;
 }

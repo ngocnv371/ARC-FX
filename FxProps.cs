@@ -233,6 +233,68 @@ internal static class FxProps
     public const int RockSpikeLooks = 4;
 
     /// <summary>
+    /// A horned mask about 1.9 tall, facing -Z: a domed face narrowing to the chin, slanted brows
+    /// over sunken eyes, a nose, a grin with fangs, and two horns sweeping up and out. A thin
+    /// shell with a back, so it is a mask from behind too.
+    /// </summary>
+    public static ArrayMesh Mask()
+    {
+        const float Front = -1f;
+        const int Rings = 10, Segs = 28;
+        static float Bump(float v, float over) => Mathf.Exp(-(v / over) * (v / over));
+        Vector3 At(int ring, int seg, float back)
+        {
+            var rr = (float)ring / Rings;
+            var a = seg * Mathf.Tau / Segs;
+            var (sx, sy) = (Mathf.Cos(a), Mathf.Sin(a));
+            var x = 0.55f * rr * sx;
+            var y = 0.72f * rr * sy;
+            if (sy < 0f)
+                x *= 1f - 0.45f * rr * rr * -sy;
+            var ax = Mathf.Abs(x);
+            var z = 0.3f * (1f - rr * rr);
+            // Brows slanting down to the middle, the sockets under them, the nose, cheeks and grin.
+            z += 0.07f * Bump(y - (0.24f + 0.5f * (ax - 0.12f)), 0.055f) * Bump(ax - 0.24f, 0.2f);
+            var (ex, ey) = ((ax - 0.23f) / 0.15f, (y - 0.1f - 0.5f * (ax - 0.23f)) / 0.07f);
+            z -= 0.13f * Mathf.Exp(-(ex * ex + ey * ey));
+            z += 0.12f * Mathf.Exp(-(x * x / 0.006f + (y + 0.08f) * (y + 0.08f) / 0.03f));
+            z += 0.05f * Bump(ax - 0.3f, 0.14f) * Bump(y + 0.15f, 0.14f);
+            z -= 0.09f * Bump(y + 0.4f - 0.5f * x * x, 0.045f) * (ax < 0.34f ? 1f : Bump(ax - 0.34f, 0.05f));
+            return new Vector3(x, y, Front * (z - back));
+        }
+        var st = Begin();
+        for (var ring = 0; ring < Rings; ring++)
+        {
+            for (var seg = 0; seg < Segs; seg++)
+            {
+                foreach (var (back, outward) in new[] { (0f, Vector3.Back * Front), (0.04f, Vector3.Forward * Front) })
+                {
+                    Vector3 a = At(ring, seg, back), b = At(ring, seg + 1, back), c = At(ring + 1, seg + 1, back), d = At(ring + 1, seg, back);
+                    if (ring > 0)
+                        Tri(st, a, b, c, outward);
+                    Tri(st, a, c, d, outward);
+                }
+            }
+        }
+        foreach (var side in new[] { 1f, -1f })
+        {
+            // A horn: three tapering lengths, each bent a little further up.
+            Vector3[] spine = [new(side * 0.33f, 0.5f, Front * 0.16f), new(side * 0.5f, 0.78f, Front * 0.14f), new(side * 0.6f, 1.02f, Front * 0.1f), new(side * 0.56f, 1.24f, Front * 0.04f)];
+            float[] girth = [0.1f, 0.075f, 0.045f, 0f];
+            for (var i = 0; i + 1 < spine.Length; i++)
+            {
+                var way = spine[i + 1] - spine[i];
+                Append(st, new CylinderMesh { BottomRadius = girth[i], TopRadius = girth[i + 1], Height = way.Length(), RadialSegments = 7, Rings = 1 }, new Transform3D(Toward(way), (spine[i] + spine[i + 1]) * 0.5f));
+            }
+            // Fangs: one down from the upper lip, one up from the lower.
+            var fang = new CylinderMesh { BottomRadius = 0.035f, TopRadius = 0f, Height = 0.15f, RadialSegments = 6, Rings = 1 };
+            Append(st, fang, new Transform3D(Toward(Vector3.Down), new Vector3(side * 0.13f, -0.44f, Front * 0.24f)));
+            Append(st, fang, new Transform3D(Toward(Vector3.Up), new Vector3(side * 0.23f, -0.4f, Front * 0.2f)));
+        }
+        return End(st);
+    }
+
+    /// <summary>
     /// A standing stone a unit tall on a foot sunk a little below 0: a rough slab, broad along X
     /// (about 0.6 across) and thinner through, narrowing to a blunt crown, each
     /// <paramref name="look"/> a different one.

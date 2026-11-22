@@ -816,7 +816,8 @@ internal sealed partial class FxSkills(FxKit kit, FxWorld world)
     private readonly CapsuleMesh _ghost = new() { Radius = 0.32f, Height = 1.7f, RadialSegments = 16, Rings = 6 };
     // A boulder: a sphere cut coarse enough that fx_crystal's facets read as rock.
     private readonly SphereMesh _rock = new() { Radius = 1f, Height = 2f, RadialSegments = 7, Rings = 4 };
-    private readonly ShaderMaterial _stone = FxKit.Crystal(new Color(0.44f, 0.38f, 0.32f), new Color(0.7f, 0.6f, 0.48f), rim: 0.25f, glow: 0f);
+    // Rock and earth (fx_rock): blotched, flecked and banded, and never the same twice.
+    private readonly ShaderMaterial _stone = FxKit.Shader("rock");
 
     public FxHandle Spawn(FxSkill skill, Vector3 at, Vector3 facing, float radius, Node3D? follow)
     {
@@ -1509,9 +1510,9 @@ internal sealed partial class FxSkills(FxKit kit, FxWorld world)
     /// narrowing to its tail, lying across the way it goes.
     /// </summary>
     private void Ribbon(Cast c, float start, float life, int style, Tone tone, Func<float, Vector3> path, Func<float, (float Tail, float Head)> span,
-        float width, Func<float, float> alpha, float gain = 1f)
+        float width, Func<float, float> alpha, float gain = 1f, float head = 0f)
     {
-        var material = Material("ribbon", style, tone, gain);
+        var material = Material("ribbon", style, tone, gain, ("uHead", head));
         var mesh = new ImmediateMesh();
         Add(c, mesh, material, start, life, (n, k, _) =>
         {
@@ -1650,6 +1651,8 @@ internal sealed partial class FxSkills(FxKit kit, FxWorld world)
             Visible = false,
             ExtraCullMargin = 4f,
         };
+        // Its own number, for the shaders that make each thing a little different (a rock's blotches).
+        node.SetInstanceShaderParameter("uSeed", Rand(0f, 1f));
         c.Root.AddChild(node);
         c.Pieces.Add(new Piece { Node = node, Pose = pose, Start = start, Life = Mathf.Max(life, 0.01f) });
     }

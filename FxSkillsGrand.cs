@@ -92,9 +92,10 @@ internal sealed partial class FxSkills
     /// A small picture (fx_glyph), <paramref name="size"/> tall and <paramref name="slim"/> of that
     /// wide. Most are square on to the camera, their top toward <paramref name="up"/> as it sees
     /// them: lights, creatures and signs, which have no back. But a flat thing that is somewhere
-    /// and faces some way (a card, a mask, a cut gem, and anything given a <paramref name="turn"/>)
-    /// lies in its own plane instead, so it looks right from wherever it is seen: by default
-    /// upright along <paramref name="up"/> and facing the way the skill does.
+    /// and faces some way (a card, a mask, and anything given a <paramref name="turn"/>) lies in
+    /// its own plane instead, so it looks right from wherever it is seen: by default upright along
+    /// <paramref name="up"/> and facing the way the skill does. A cut gem is the exception: it is
+    /// a decal, always square on to the camera, and a <paramref name="turn"/> only rolls it.
     /// <paramref name="sink"/> hides that share of it from the top down: the part buried in what it struck.
     /// </summary>
     private void Glyph(Cast c, float start, float life, int style, Tone tone, Func<float, Vector3> at, Func<float, float> size, Func<float, float> alpha,
@@ -102,11 +103,11 @@ internal sealed partial class FxSkills
     {
         var material = Material("glyph", style, tone, gain);
         var seed = Rand(0f, 1f);
-        var flat = turn != null || style is Card or Mask or Gem;
+        var flat = style != Gem && (turn != null || style is Card or Mask);
         Add(c, Kit.Quad, material, start, life, (n, k, _) =>
         {
             var s = Mathf.Max(size(k), 1e-3f);
-            var y = up?.Invoke(k) ?? Vector3.Up;
+            var y = up?.Invoke(k) ?? (flat || turn == null ? Vector3.Up : turn(k).Y);
             y = y.LengthSquared() < 1e-8f ? Vector3.Up : y.Normalized();
             n.Transform = flat
                 ? new Transform3D((turn?.Invoke(k) ?? Face(y, Vector3.Back)) * Basis.FromScale(new Vector3(s * slim, s, 1f)), at(k))
@@ -271,38 +272,6 @@ internal sealed partial class FxSkills
     }
 
     /// <summary>
-    /// Strands of smoke trailing up off something <paramref name="tall"/> (a ghost): thin
-    /// wavering threads that start round its middle, lengthen as they rise and thin away, one
-    /// after another for as long as it lasts.
-    /// </summary>
-    private void Strands(Cast c, float start, float life, Tone tone, Func<float, Vector3> centre, float tall, int count = 6)
-    {
-        const int Segments = 5;
-        const float Period = 1.2f;
-        for (var i = 0; i < count; i++)
-        {
-            var off = new Vector3(Rand(-0.24f, 0.24f) * tall, Rand(-0.3f, 0.3f) * tall, Rand(-0.08f, 0.08f));
-            var lean = new Vector3(Rand(-0.3f, 0.3f) + Mathf.Sign(off.X) * 0.25f, 1f, Rand(-0.1f, 0.1f));
-            var phase = Rand(0f, 1f);
-            var wave = Rand(0f, Mathf.Tau);
-            var length = tall * Rand(0.45f, 0.75f);
-            float Cycle(float k) => (k * life / Period + phase) % 1f;
-            Vector3 At1(float s, float k)
-            {
-                var t = k * life;
-                var sway = new Vector3(Mathf.Sin(s * 5f + t * 3f + wave), 0f, Mathf.Cos(s * 4f + t * 2.3f + wave)) * 0.07f * tall * s;
-                return centre(k) + off + lean * s * length * (0.25f + 0.75f * Cycle(k)) + sway;
-            }
-            for (var j = 0; j < Segments; j++)
-            {
-                var (s0, s1) = ((float)j / Segments, (j + 1f) / Segments);
-                Line(c, start, life, tone, k => (At1(s0, k) + At1(s1, k)) * 0.5f, k => (At1(s1, k) - At1(s0, k)) * 1.25f, 0.075f * tall * (1f - 0.6f * s0),
-                    k => Fade(k, 0.1f, 0.15f) * Mathf.Sin(Cycle(k) * Mathf.Pi) * (1f - 0.7f * s0));
-            }
-        }
-    }
-
-    /// <summary>
     /// A crown, the one every crowned skill wears: a band of light <paramref name="radius"/> round
     /// at <paramref name="at"/> with eight pointed leaves standing on it, tall and short by turns
     /// and leaning a little outward, a jewel on each tall one. It is built in the round, so it is
@@ -335,13 +304,56 @@ internal sealed partial class FxSkills
         Glyph(c, start, life, Skull, tone, at, k => size * Out(Mathf.Min(k * life / 0.12f, 1f)), k => Fade(k, 0f, 0.05f), k => Vector3.Up + Heading(at, k, 0.6f), gain: 1.7f);
     }
 
-    /// <summary>A ghost standing on <paramref name="feet"/>, <paramref name="tall"/> high, rising out of the ground as it comes, a glow under it.</summary>
+    /// <summary>
+    /// A ghost standing on <paramref name="feet"/>, <paramref name="tall"/> high, rising out of the
+    /// ground as it comes, a glow under it. It burns with ghost fire: long tongues of flame that
+    /// trail off above it and behind it. And from the waist down it streams out behind, whichever
+    /// way it is going.
+    /// </summary>
     private void Ghost(Cast c, float start, float life, Tone tone, Func<float, Vector3> feet, float tall, float gain = 1.6f)
     {
         Func<float, float> grown = k => tall * Out(Mathf.Min(k * life / 0.3f, 1f));
-        Glyph(c, start, life, Wraith, tone, k => feet(k) + Vector3.Up * (grown(k) * 0.5f + 0.1f), grown, k => Fade(k, 0.04f, 0.12f),
-            k => Vector3.Up * 2f + Heading(feet, k, 0.5f), gain, slim: 0.75f);
-        Strands(c, start, life, tone, k => feet(k) + Vector3.Up * grown(k) * 0.5f, tall);
+        // How fast it is going, in metres a second, in the skill's own space.
+        Vector3 Speed(float k) => (feet(Mathf.Min(k + 0.02f, 1f)) - feet(Mathf.Max(k - 0.02f, 0f))) / (0.04f * life);
+        var material = Material("glyph", Wraith, tone, gain);
+        var seed = Rand(0f, 1f);
+        Add(c, Kit.Quad, material, start, life, (n, k, _) =>
+        {
+            var s = Mathf.Max(grown(k), 1e-3f);
+            n.Transform = new Transform3D(Along(Vector3.Up * s, s * 0.75f, 1e-3f), feet(k) + Vector3.Up * (s * 0.5f + 0.1f));
+            Look(n, Fade(k, 0.04f, 0.12f), k);
+            n.SetInstanceShaderParameter("uSeed", seed);
+            n.SetInstanceShaderParameter("uSink", 0f);
+            n.SetInstanceShaderParameter("uFlat", 0f);
+            // The picture faces the camera, so "behind" is worked out across the screen.
+            var swept = 0f;
+            if (n.GetViewport()?.GetCamera3D() is { } camera)
+                swept = Mathf.Clamp(-(c.Root.GlobalBasis * Speed(k)).Dot(camera.GlobalBasis.X) * 0.13f, -0.55f, 0.55f);
+            n.SetInstanceShaderParameter("uTrail", swept);
+        });
+        for (var i = 0; i < 4; i++)
+        {
+            var high = 0.9f - 0.2f * i;
+            var side = (i % 2 == 0 ? -1f : 1f) * (0.05f + 0.06f * i) * tall;
+            var wave = Rand(0f, Mathf.Tau);
+            var length = tall * Rand(0.7f, 1.1f);
+            // A ribbon's path knows only how far along it is, so the moment is noted as it is drawn.
+            var now = 0f;
+            Func<float, Vector3> tongue = s =>
+            {
+                var back = 1f - s;
+                var t = now * life;
+                // Mostly upward, bent back by how fast it is going (up to a point: flames, not streaks).
+                var away = Vector3.Up * 0.8f - Speed(now).LimitLength(5f) * 0.13f;
+                var lick = new Vector3(Mathf.Sin(back * 5f + t * 4f + wave), 0f, Mathf.Cos(back * 4f + t * 3f + wave)) * 0.1f * tall * back;
+                return feet(now) + new Vector3(side, grown(now) * high, 0f) + away * back * length + lick;
+            };
+            Ribbon(c, start, life, 1, tone, tongue, k =>
+            {
+                now = k;
+                return (0f, 1f);
+            }, 0.3f * tall, k => Fade(k, 0.1f, 0.15f) * 0.85f, gain: 1.4f);
+        }
         Disc(c, start, life, Glow, tone, k => Lay(FxKit.Flat(feet(k)), tall * 0.45f), k => Fade(k, 0.1f, 0.15f) * 0.6f);
     }
 

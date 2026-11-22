@@ -855,7 +855,6 @@ internal sealed partial class FxSkills
             // Turned to the camera with the figure, so the wings sit on its back from any side.
             FacingMark(c, start, life, Wings, Pearl, k => at(k) + Vector3.Up * 0.3f, _ => 1.15f, k => Fade(k, 0.04f, 0.12f),
                 k => Out(Mathf.Min(k * life / 0.4f, 1f)) * (0.95f + 0.05f * Mathf.Sin(k * life * 6f + bob)), count: 6f, gain: 1.7f);
-            Strands(c, start, life, Gold, at, 1.5f, 4);
             Disc(c, start + 0.2f, life - 0.2f, Band, Gold, k => Lay(at(k) + Vector3.Up * 0.75f, 0.2f), k => Fade(k, 0.05f, 0.12f), band: 0.2f, gain: 1.9f);
             Tube(c, start, life, Light, Gold, k => (at(k), FxKit.Flat(at(k))), _ => 0.3f, k => Fade(k, 0.1f, 0.2f) * 0.3f, speed: -1f);
             for (var n = 0; n < 6; n++)

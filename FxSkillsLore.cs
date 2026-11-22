@@ -451,11 +451,10 @@ internal sealed partial class FxSkills
     private void FlameMask(Cast c, float r)
     {
         const float Loom = 0.35f, Breath = 1.1f;
-        var reach = r * 1.6f;
+        var reach = r * 1.25f;
         var face = new Vector3(0f, 1.9f, 0.5f);
-        Glyph(c, 0f, Loom + Breath, Mask, Flame, k => face + Vector3.Up * 0.06f * Mathf.Sin(k * 30f), k => 3.2f * Overshoot(Mathf.Min(k * (Loom + Breath) / Loom, 1f)), k => Fade(k, 0.03f, 0.2f), gain: 2f);
-        Glyph(c, 0f, Loom + Breath, Mask, Ember, _ => face + Vector3.Forward * 0.1f, k => 3.9f * Out(Mathf.Min(k * (Loom + Breath) / Loom, 1f)), k => Fade(k, 0.03f, 0.2f) * 0.45f, gain: 1.3f);
-        var mouth = face + new Vector3(0f, -0.8f, 0.3f);
+        Mask3(c, 0f, Loom + Breath, Flame, k => face + Vector3.Up * 0.06f * Mathf.Sin(k * 30f), k => 3.2f * Overshoot(Mathf.Min(k * (Loom + Breath) / Loom, 1f)), k => Fade(k, 0.03f, 0.2f));
+        var mouth = face + new Vector3(0f, -0.75f, 0.55f);
         for (var i = 0; i < 5; i++)
         {
             var angle = (i - 2) * 0.18f;
@@ -463,7 +462,7 @@ internal sealed partial class FxSkills
             var phase = i * 1.3f;
             Func<float, Vector3> path = s => mouth.Lerp(end, s) + new Vector3(0.25f * Mathf.Sin(s * 12f + phase), 0.2f * Mathf.Sin(s * 9f + phase), 0f) * s;
             for (var t = 0f; t < Breath - 0.35f; t += 0.22f)
-                Ribbon(c, Loom + t + i * 0.03f, 0.45f, 1, i % 2 == 0 ? Flame : Ember, path, k => (Mathf.Max(0f, k * 1.4f - 0.5f), Mathf.Min(k * 1.4f, 1f)), 1.1f, k => Fade(k, 0.05f, 0.3f), gain: 1.6f);
+                Ribbon(c, Loom + t + i * 0.03f, 0.45f, 1, i % 2 == 0 ? Flame : Ember, path, k => (Mathf.Max(0f, k * 1.4f - 0.5f), Mathf.Min(k * 1.4f, 1f)), 1.1f, k => Fade(k, 0.05f, 0.3f), gain: 1.6f, head: 0.45f);
         }
         for (var i = 0; i < 30; i++)
         {

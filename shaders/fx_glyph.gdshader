@@ -54,6 +54,9 @@ instance uniform float uSeed = 0.0;
 instance uniform float uSink = 0.0;
 // Above a half, the picture keeps the node's own orientation instead of turning to the camera.
 instance uniform float uFlat = 0.0;
+// A wraith's lower body is swept this far across the picture (in its own units, to either
+// side): behind it, whichever way it is going.
+instance uniform float uTrail = 0.0;
 
 // A soft union of two distances, rounded over k.
 float fx_smin(float a, float b, float k)
@@ -136,7 +139,9 @@ void fragment()
 		// its edges brightest, motes of light hanging round it.
 		float t = TIME + uSeed * 30.0;
 		vec2 flow = vec2(fx_fbm(p * 2.6 + vec2(uSeed * 9.0, -t * 0.5)), fx_fbm(p * 2.6 + vec2(4.7 - t * 0.35, uSeed * 5.0))) - 0.5;
-		vec2 q = p + flow * (0.1 + 0.22 * smoothstep(0.3, -1.0, p.y));
+		// From the waist down it streams out behind: further the lower it is.
+		float swept = uTrail * pow(smoothstep(0.3, -1.0, p.y), 1.5);
+		vec2 q = vec2(p.x - swept, p.y) + flow * (0.1 + 0.22 * smoothstep(0.3, -1.0, p.y));
 		float sway = 0.1 * sin(q.y * 4.5 + t * 2.6) * smoothstep(0.0, -1.0, q.y);
 		float head = length(q - vec2(0.0, 0.6)) - 0.19;
 		float chest = fx_box(q - vec2(0.0, 0.2), vec2(0.33, 0.19), 0.16);

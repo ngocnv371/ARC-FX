@@ -44,6 +44,39 @@ internal sealed partial class FxSkills
         });
     }
 
+    private ArrayMesh? _maskMesh;
+    private readonly Dictionary<Tone, ShaderMaterial> _maskSolid = [];
+
+    private ArrayMesh MaskMesh => _maskMesh ??= FxProps.Mask();
+
+    /// <summary>
+    /// A great horned mask: the model, solid in the tone's colour inside a shell of its light,
+    /// its eyes burning, its face turned the way the skill goes. <paramref name="size"/> is about
+    /// its height, horns and all, and <paramref name="at"/> the middle of its face.
+    /// </summary>
+    private void Mask3(Cast c, float start, float life, Tone tone, Func<float, Vector3> at, Func<float, float> size, Func<float, float> alpha)
+    {
+        if (!_maskSolid.TryGetValue(tone, out var solid))
+            _maskSolid[tone] = solid = FxKit.Crystal(tone.Deep.Lerp(tone.Main, 0.6f), tone.Hot, rim: 0.7f, glow: 0.3f);
+        // The model faces -Z and is about 2 tall. It is tipped back, face half to the sky, so it shows
+        // to a camera looking down as well as to whoever stands before it.
+        Transform3D Place(float k, float grow) => new(new Basis(Vector3.Up, Mathf.Pi) * new Basis(Vector3.Right, 0.5f) * Basis.FromScale(Vector3.One * Mathf.Max(size(k), 0.01f) / 2f * grow), at(k));
+        Add(c, MaskMesh, solid, start, life, (n, k, _) =>
+        {
+            n.Transform = Place(k, 1f);
+            n.SetInstanceShaderParameter("uFade", Mathf.Clamp(alpha(k) * 2f, 0f, 1f));
+        });
+        Add(c, MaskMesh, SpectralOf(tone), start, life, (n, k, _) =>
+        {
+            n.Transform = Place(k, 1.06f);
+            n.SetInstanceShaderParameter("uAlpha", Mathf.Clamp(alpha(k), 0f, 1f) * 0.5f);
+            n.SetInstanceShaderParameter("uImpact", 0f);
+            n.SetInstanceShaderParameter("uDissolve", 0f);
+        });
+        foreach (var side in new[] { -1f, 1f })
+            Flare(c, start, life, Star, tone with { Main = tone.Hot }, k => Place(k, 1f) * new Vector3(side * 0.23f, 0.11f, -0.26f), k => size(k) * 0.2f * (1f + 0.15f * Mathf.Sin(k * life * 23f + side)), alpha, gain: 1.6f);
+    }
+
     private void Legend(FxSkill skill, Cast c, float r, float range)
     {
         switch (skill)
@@ -396,11 +429,10 @@ internal sealed partial class FxSkills
     private void MaskOfDread(Cast c, float r)
     {
         const float Loom = 0.4f, Stare = 1.2f;
-        var reach = r * 1.6f;
+        var reach = r * 1.25f;
         var face = new Vector3(0f, 2f, 0.7f);
         Mark(c, 0f, Loom + Stare, Links, Hex, Vector3.Zero, _ => r * 0.5f, k => Fade(k, 0.05f, 0.2f), count: 6f, spin: 3f, gain: 1.2f);
-        Glyph(c, 0f, Loom + Stare, Mask, Hex, k => face + Vector3.Up * 0.1f * Mathf.Sin(k * 20f), k => 3.6f * Overshoot(Mathf.Min(k * (Loom + Stare) / Loom, 1f)), k => Fade(k, 0.03f, 0.2f), gain: 2f);
-        Glyph(c, 0f, Loom + Stare, Mask, Shadow, k => face + Vector3.Forward * 0.1f, k => 4.4f * Out(Mathf.Min(k * (Loom + Stare) / Loom, 1f)) * (1f + 0.05f * Mathf.Sin(k * 40f)), k => Fade(k, 0.03f, 0.2f) * 0.4f, gain: 1.3f);
+        Mask3(c, 0f, Loom + Stare, Hex, k => face + Vector3.Up * 0.1f * Mathf.Sin(k * 20f), k => 3.6f * Overshoot(Mathf.Min(k * (Loom + Stare) / Loom, 1f)), k => Fade(k, 0.03f, 0.2f));
         for (var i = 0; i < 30; i++)
         {
             var way = Around(Rand(-0.55f, 0.55f));

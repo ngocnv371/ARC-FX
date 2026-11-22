@@ -640,7 +640,15 @@ internal sealed partial class FxSkills
         var spot = new Vector3(0f, 0f, r * 0.3f);
         Mark(c, 0f, Warn + Bite + After, Deathmark, Doom, spot, _ => r * 0.75f, k => Fade(k, 0.03f, 0.3f), k => Mathf.Min(k * (Warn + Bite + After) / Warn, 1f), gain: 1.3f);
         Disc(c, 0f, Warn + Bite, Glow, Doom, spot, _ => r * 0.75f, k => 0.25f + 0.5f * k);
-        Wisps(c, 14, 0f, Warn, Doom, spot, r * 0.7f, 1f);
+        // Small green fires catch round the mark while it draws.
+        for (var i = 0; i < 12; i++)
+        {
+            var foot = Within(spot, r * 0.7f);
+            var tall = Rand(0.7f, 1.2f);
+            var when = Rand(0f, Warn - 0.15f);
+            Column(c, when, 0.7f, Fire, i % 3 == 0 ? Soul : Doom, foot, k => new Vector2(0.2f, tall * Out(Mathf.Min(k * 5f, 1f))), k => Fade(k, 0.1f, 0.5f), gain: 1.4f, speed: 2.2f);
+            Disc(c, when, 0.9f, Glow, Doom, foot, _ => 0.45f, k => Fade(k, 0.1f, 0.5f) * 0.8f);
+        }
         // The skull heaves up out of the mark, hangs, and drops as its jaws shut.
         Glyph(c, Warn, Bite + 0.25f, Skull, Soul, k =>
         {

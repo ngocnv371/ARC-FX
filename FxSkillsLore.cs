@@ -494,7 +494,7 @@ internal sealed partial class FxSkills
             Spark(c, k0 * Roll, Rand(0.3f, 0.5f), i % 2 == 0 ? Flame : Sun, rim, new Vector3(Rand(-1f, 1f), Mathf.Sin(a0) * 4f + 2f, -Mathf.Cos(a0) * 4f - 2f), Gravity * 0.7f, 0.06f, 0.04f);
         }
         Func<float, Vector3> track = s => new Vector3(0f, 0.08f, 0.6f + (reach - 0.6f) * s);
-        Ribbon(c, 0f, Roll + 0.8f, 1, Flame, track, k => (Mathf.Max(0f, k * (Roll + 0.8f) / Roll - 0.6f), Mathf.Min(k * (Roll + 0.8f) / Roll, 1f)), 0.9f, k => Fade(k, 0f, 0.3f), gain: 1.5f);
+        Ribbon(c, 0f, Roll + 0.8f, 1, Flame, track, k => (Mathf.Max(0f, k * (Roll + 0.8f) / Roll - 0.6f), Mathf.Min(k * (Roll + 0.8f) / Roll, 1f)), 0.9f, k => Fade(k, 0f, 0.3f), gain: 1.5f, head: 0.3f);
         for (var i = 0; i < 6; i++)
         {
             var s = (i + 0.5f) / 6f;

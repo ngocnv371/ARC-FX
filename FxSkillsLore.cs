@@ -1166,7 +1166,7 @@ internal sealed partial class FxSkills
             var wave = Rand(0f, Mathf.Tau);
             Func<float, Vector3> path = s => new Vector3(x * (0.4f + 0.6f * s) + 0.3f * Mathf.Sin(s * 9f + wave), 0.1f, 0.6f + (reach - 0.6f) * s);
             for (var t = 0f; t < Life - 0.55f; t += 0.3f)
-                Ribbon(c, t + i * 0.04f, 0.6f, 0, i % 2 == 0 ? Sea : Foam, s => path(1f - s), k => (Mathf.Max(0f, k * 1.4f - 0.45f), Mathf.Min(k * 1.4f, 1f)), 0.55f, k => Fade(k, 0.1f, 0.3f), gain: 1.5f);
+                Ribbon(c, t + i * 0.04f, 0.6f, 0, i % 2 == 0 ? Sea : Foam, s => path(1f - s), k => (Mathf.Max(0f, k * 1.4f - 0.45f), Mathf.Min(k * 1.4f, 1f)), 0.55f, k => Fade(k, 0.1f, 0.3f), gain: 1.5f, head: 0.4f);
         }
         for (var i = 0; i < 40; i++)
         {

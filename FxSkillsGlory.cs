@@ -934,7 +934,7 @@ internal sealed partial class FxSkills
             Func<float, Vector3> arc = s => top.Lerp(land, s) + Vector3.Up * (1.2f * Mathf.Sin(s * Mathf.Pi) - 0f) * (1f - s * 0.3f);
             const float Flow = 0.5f;
             for (var t = 0.25f; t < Life - Flow - 0.1f; t += 0.22f)
-                Ribbon(c, t + i * 0.02f, Flow, 0, i % 2 == 0 ? Sea : Foam, arc, k => (Mathf.Max(0f, k * 1.3f - 0.5f), Mathf.Min(k * 1.3f, 1f)), 0.3f, k => Fade(k, 0.1f, 0.2f), gain: 1.4f);
+                Ribbon(c, t + i * 0.02f, Flow, 0, i % 2 == 0 ? Sea : Foam, arc, k => (Mathf.Max(0f, k * 1.3f - 0.5f), Mathf.Min(k * 1.3f, 1f)), 0.3f, k => Fade(k, 0.1f, 0.2f), gain: 1.4f, head: 0.3f);
             Mark(c, 0.6f, Life - 0.8f, Ripples, Foam, land, _ => 0.8f, k => Fade(k, 0.1f, 0.2f), count: 2.5f, spin: 2.5f, gain: 1.2f);
             for (var j = 0; j < 8; j++)
                 Spark(c, Rand(0.7f, Life - 0.5f), 0.35f, Foam, land + Vector3.Up * 0.1f, FxKit.Jitter(1.2f) + Vector3.Up * 2.5f, Gravity, 0.05f, 0.03f);

@@ -10,6 +10,12 @@ namespace Arc.Fx;
 internal sealed partial class FxSkills
 {
     private ShaderMaterial? _amethystBlock, _jadeBlock, _amberBlock;
+    private ArrayMesh[]? _boulders;
+    private ArrayMesh? _geodeHalf;
+
+    /// <summary>Lumps of rock: the first is the one a geode splits from.</summary>
+    private ArrayMesh[] Boulders => _boulders ??= [FxProps.Boulder(0), FxProps.Boulder(1), FxProps.Boulder(2)];
+    private ArrayMesh GeodeHalf => _geodeHalf ??= FxProps.Boulder(0, half: true);
 
     private ShaderMaterial AmethystBlock => _amethystBlock ??= FxKit.Crystal(new Color(0.55f, 0.3f, 0.9f), new Color(0.95f, 0.8f, 1f), rim: 0.8f, glow: 0.2f);
     private ShaderMaterial JadeBlock => _jadeBlock ??= FxKit.Crystal(new Color(0.15f, 0.7f, 0.5f), new Color(0.8f, 1f, 0.9f), rim: 0.7f, glow: 0.15f);
@@ -70,7 +76,8 @@ internal sealed partial class FxSkills
             case FxSkill.NebulaBurst: NebulaBurst(c, r); break;
             case FxSkill.UmbralEclipse: UmbralEclipse(c, r); break;
             case FxSkill.TimeShatter: TimeShatter(c, r); break;
-            default: WishingStars(c, r); break;
+            case FxSkill.WishingStars: WishingStars(c, r); break;
+            default: Legend(skill, c, r, range); break;
         }
     }
 
@@ -936,17 +943,17 @@ internal sealed partial class FxSkills
 
     // ---- Earth.
 
-    /// <summary>A crystal growing out of the ground at <paramref name="foot"/>, leaning, then sinking back at the end.</summary>
+    /// <summary>A crystal growing out of the ground at <paramref name="foot"/>, leaning, and fading away at the end.</summary>
     private void Crystal(Cast c, float start, float life, Material material, Vector3 foot, Vector3 lean, float tall, float wide)
     {
         var turn = Along(lean, 1f, 1f);
         var way = lean.Normalized();
-        Prop(c, start, life, ShardMesh, material, k =>
+        Add(c, ShardMesh, material, start, life, (n, k, t) =>
         {
-            var t = k * life;
-            var grown = Overshoot(Mathf.Min(t / 0.18f, 1f)) * (1f - Mathf.Clamp((t - (life - 0.3f)) / 0.3f, 0f, 1f));
+            var grown = Overshoot(Mathf.Min(t / 0.18f, 1f));
             // The shard is 0.41 tall and 0.22 across.
-            return new Transform3D(turn * Basis.FromScale(new Vector3(wide / 0.22f, tall * Mathf.Max(grown, 0.01f) / 0.41f, wide / 0.22f)), foot + way * tall * 0.46f * grown);
+            n.Transform = new Transform3D(turn * Basis.FromScale(new Vector3(wide / 0.22f, tall * Mathf.Max(grown, 0.01f) / 0.41f, wide / 0.22f)), foot + way * tall * 0.46f * grown);
+            n.SetInstanceShaderParameter("uFade", 1f - Mathf.Clamp((t - (life - 0.45f)) / 0.45f, 0f, 1f));
         });
     }
 
@@ -977,22 +984,52 @@ internal sealed partial class FxSkills
 
     private void GeodeBurst(Cast c, float r)
     {
-        const float Shake = 0.7f, After = 1f;
-        var at = new Vector3(0f, 0.9f, r * 0.2f);
+        const float Shake = 0.7f, After = 1.1f;
+        const float Size = 1.05f;
+        var at = new Vector3(0f, 0.95f, r * 0.2f);
         var ground = FxKit.Flat(at);
         Disc(c, 0f, Shake, Telegraph, Amethyst, ground, _ => r * 0.7f, _ => 0.6f, k => k);
+        // A boulder heaves up and shakes harder and harder.
         var axis = new Vector3(0.3f, 1f, 0.2f).Normalized();
-        Prop(c, 0f, Shake, _rock, _stone, k => new Transform3D(new Basis(axis, 0.3f * Mathf.Sin(k * k * 60f)) * Basis.FromScale(Vector3.One * 0.9f * Overshoot(Mathf.Min(k * 5f, 1f))), at + FxKit.Jitter(0.04f * k)));
-        // Light breaks through the cracks before it splits.
+        Prop(c, 0f, Shake, Boulders[0], _stone, k => new Transform3D(new Basis(axis, 0.22f * Mathf.Sin(k * k * 60f)) * Basis.FromScale(Vector3.One * Size * Overshoot(Mathf.Min(k * 5f, 1f))), at + FxKit.Jitter(0.04f * k)));
+        Disc(c, 0f, 0.4f, Shock, Dust, ground, k => 1.8f * Out(k), k => 1f - k, band: 0.12f);
+        Disc(c, 0f, Shake + After, Cracks, Rubble, ground, _ => 1.5f, k => Fade(k, 0.03f, 0.3f), k => k * 0.6f);
+        // Light shows along the seam where it will part, and breaks out in rays.
+        Disc(c, Shake * 0.3f, Shake * 0.7f, Band, Amethyst, k => new Transform3D(Stand(Vector3.Right) * Basis.FromScale(Vector3.One * Size * 1.2f), at), k => k, band: 0.1f, gain: 1.9f);
         for (var i = 0; i < 9; i++)
         {
-            var way = FxKit.RandomDirection();
+            var angle = Rand(0f, Mathf.Tau);
+            var way = new Vector3(Rand(-0.25f, 0.25f), Mathf.Cos(angle), Mathf.Sin(angle)).Normalized();
             var start = Shake * (0.3f + 0.07f * i);
             Line(c, start, Shake - start, Amethyst, k => at + way * (0.9f + 0.8f * k), k => way * (0.5f + 1.6f * k), 0.1f, _ => 1f);
         }
         Flare(c, 0f, Shake, Star, Amethyst, _ => at, k => 0.5f + 2.4f * k * k, k => k);
         Hit(c, Shake, Amethyst, at, r * 0.9f);
-        Cue(c, Shake, () => Stage.Explosion(At(c, at), r * 0.6f, Amethyst.Main, FxBurst.Dome));
+        Cue(c, Shake, () => Stage.Explosion(At(c, at), r * 0.5f, Amethyst.Main, FxBurst.Dome));
+        // It splits: the two halves fall open, each lined with crystal.
+        foreach (var side in new[] { 1f, -1f })
+        {
+            var turn = side > 0f ? Basis.Identity : new Basis(Vector3.Up, Mathf.Pi);
+            Func<float, Transform3D> half = k =>
+            {
+                var open = Out(Mathf.Min(k * 2.5f, 1f));
+                var gone = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp((k - 0.75f) / 0.25f, 0f, 1f));
+                // Tipped outward onto its back, so the cut face and its crystals turn up to the sky.
+                var tip = new Basis(Vector3.Back, -1.15f * open);
+                return new Transform3D(turn * tip * Basis.FromScale(Vector3.One * Size * gone), at + Vector3.Right * side * (0.2f + 1.05f * open) + Vector3.Down * 0.4f * open);
+            };
+            Prop(c, Shake, After, GeodeHalf, _stone, half);
+            for (var i = 0; i < 7; i++)
+            {
+                var spot = i == 0 ? Vector2.Zero : new Vector2(Mathf.Cos(i * Mathf.Tau / 6f), Mathf.Sin(i * Mathf.Tau / 6f)) * 0.48f;
+                var tall = i == 0 ? 0.75f : Rand(0.35f, 0.6f);
+                var lean = (Vector3.Left + new Vector3(0f, spot.X, spot.Y) * 0.5f).Normalized();
+                var shard = new Transform3D(Along(lean, 1f, 1f) * Basis.FromScale(new Vector3(1.3f, tall / 0.41f, 1.3f)), new Vector3(-tall * 0.3f, spot.X * 0.8f, spot.Y));
+                Prop(c, Shake, After, ShardMesh, AmethystBlock, k => half(k) * shard);
+            }
+            Flare(c, Shake, After, Mote, Amethyst, k => half(k) * new Vector3(-0.3f, 0f, 0f), _ => 2.2f, k => Fade(k, 0.02f, 0.3f) * 0.7f, gain: 1.1f);
+            Glyph(c, Shake + 0.35f, After - 0.5f, Glint, Pearl, k => half((0.35f + k * (After - 0.5f)) / After) * new Vector3(-0.6f, 0.1f, 0f), k => 1.2f + 0.3f * Mathf.Sin(k * 30f), k => Fade(k, 0.2f, 0.3f), gain: 1.8f);
+        }
         for (var i = 0; i < 26; i++)
         {
             var v = FxKit.RandomDirection() * Rand(2.5f, 6f) + Vector3.Up * Rand(1f, 4f);
@@ -1005,8 +1042,9 @@ internal sealed partial class FxSkills
         {
             var v = Around(Rand(0f, Mathf.Tau)) * Rand(2f, 5f) + Vector3.Up * Rand(3f, 7f);
             var spin = FxKit.RandomDirection();
-            var size = Rand(0.15f, 0.3f);
-            Prop(c, Shake, 0.8f, _rock, _stone, k => new Transform3D(new Basis(spin, k * 7f) * Basis.FromScale(Vector3.One * size), at + v * k * 0.8f + Vector3.Down * 0.5f * Gravity * k * k * 0.64f));
+            var size = Rand(0.12f, 0.26f);
+            var chunk = Boulders[1 + i % 2];
+            Prop(c, Shake, 0.8f, chunk, _stone, k => new Transform3D(new Basis(spin, k * 7f) * Basis.FromScale(Vector3.One * size), at + v * k * 0.8f + Vector3.Down * 0.5f * Gravity * k * k * 0.64f));
         }
         Mark(c, Shake, After, Pentacle, Amethyst, ground, _ => r * 0.7f, k => Fade(k, 0.02f, 0.6f), _ => 1f, count: 7f, gain: 1.3f);
         Twinkle(c, 24, Shake, Shake + After - 0.3f, Pearl, () => at + FxKit.RandomDirection() * Rand(0.5f, 2.6f), 0.7f);
@@ -1050,8 +1088,17 @@ internal sealed partial class FxSkills
         const float Run = 0.5f, Hold = 1.2f;
         var reach = r * 1.7f;
         Func<float, Vector3> path = s => new Vector3(0.35f * Mathf.Sin(s * 11f), 0.06f, 0.4f + (reach - 0.4f) * s);
-        Ribbon(c, 0f, Run + Hold, 0, Gold, path, k => (0f, Mathf.Min(k * (Run + Hold) / Run, 1f)), 0.7f, k => Fade(k, 0f, 0.3f), gain: 1.7f);
-        Ribbon(c, 0f, Run + Hold, 0, Pearl, path, k => (0f, Mathf.Min(k * (Run + Hold) / Run, 1f)), 0.18f, k => Fade(k, 0f, 0.3f), gain: 1.5f);
+        // The seam is widest in its middle and runs out to a point at either end: two ribbons
+        // laid head to head (a ribbon is fullest at its head and thins to nothing at its tail).
+        const float Mid = 0.55f;
+        Func<float, Vector3> near = s => path(s * Mid);
+        Func<float, Vector3> far = s => path(1f - s * (1f - Mid));
+        Func<float, float> run = k => Mathf.Min(k * (Run + Hold) / Run, 1f);
+        foreach (var (tone, wide, gain) in new[] { (Gold, 0.7f, 1.7f), (Pearl, 0.18f, 1.5f) })
+        {
+            Ribbon(c, 0f, Run + Hold, 0, tone, near, k => (0f, Mathf.Min(run(k) / Mid, 1f)), wide, k => Fade(k, 0f, 0.3f), gain);
+            Ribbon(c, Run * Mid, Run + Hold - Run * Mid, 0, tone, far, k => (1f - Mathf.Min(k * (Run + Hold - Run * Mid) / (Run * (1f - Mid)), 1f), 1f), wide, k => Fade(k, 0f, 0.3f), gain);
+        }
         for (var i = 0; i < 9; i++)
         {
             var s = (i + 0.5f) / 9f;
@@ -1081,10 +1128,11 @@ internal sealed partial class FxSkills
         var reach = r * 1.8f;
         var half = r * 0.75f;
         Func<float, float> front = k => 0.5f + (reach - 0.5f) * Mathf.SmoothStep(0f, 1f, k);
-        Func<float, float> tall = k => 3f * Fade(k, 0.15f, 0.25f);
-        Wall(c, 0f, Life, 1, Dust, k => (new Vector3(-half, 0f, front(k)), new Vector3(half, 0f, front(k))), tall, k => Fade(k, 0.05f, 0.1f), speed: 2.5f, gain: 2.2f);
-        Wall(c, 0f, Life, 0, Dust, k => (new Vector3(-half, 0f, front(k) + 0.05f), new Vector3(half, 0f, front(k) + 0.05f)), k => tall(k) * 0.9f, k => Fade(k, 0.05f, 0.1f) * 0.5f, gain: 1.2f);
-        Wall(c, 0f, Life, 1, Rubble, k => (new Vector3(-half * 0.9f, 0f, front(k) - 0.45f), new Vector3(half * 0.9f, 0f, front(k) - 0.45f)), k => tall(k) * 0.6f, k => Fade(k, 0.05f, 0.1f) * 0.8f, speed: 2f, gain: 1.2f);
+        // It rises as it sets off and then keeps its height: at the end it thins away, not sinks.
+        Func<float, float> tall = k => 3f * Out(Mathf.Min(k / 0.15f, 1f));
+        Wall(c, 0f, Life, 1, Dust, k => (new Vector3(-half, 0f, front(k)), new Vector3(half, 0f, front(k))), tall, k => Fade(k, 0.05f, 0.35f), speed: 2.5f, gain: 2.2f);
+        Wall(c, 0f, Life, 0, Dust, k => (new Vector3(-half, 0f, front(k) + 0.05f), new Vector3(half, 0f, front(k) + 0.05f)), k => tall(k) * 0.9f, k => Fade(k, 0.05f, 0.35f) * 0.5f, gain: 1.2f);
+        Wall(c, 0f, Life, 1, Rubble, k => (new Vector3(-half * 0.9f, 0f, front(k) - 0.45f), new Vector3(half * 0.9f, 0f, front(k) - 0.45f)), k => tall(k) * 0.6f, k => Fade(k, 0.05f, 0.35f) * 0.8f, speed: 2f, gain: 1.2f);
         Drift(c, 34, 0f, Life - 0.5f, 0.9f, Puff, [Dust, Smoke], () => new Vector3(Rand(-half, half), Rand(0.2f, 1.2f), front(Rand(0f, 0.85f)) - 0.5f), () => new Vector3(0f, 0.7f, -0.6f), 1.5f, tumble: false, gain: 0.7f);
         for (var i = 0; i < 40; i++)
         {

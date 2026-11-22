@@ -10,6 +10,9 @@ uniform vec3 uBase = vec3(1.0);
 uniform vec3 uAccent = vec3(1.0);
 uniform float uRim = 0.6;
 uniform float uGlow = 0.1;
+// Below 1 it thins away through a fine screen of holes: a fade for a solid thing, with no
+// blending, so it still hides what is behind the part of it that is left.
+instance uniform float uFade = 1.0;
 varying vec3 vWorld;
 
 void vertex()
@@ -19,6 +22,8 @@ void vertex()
 
 void fragment()
 {
+	if (uFade < 1.0 && fract(52.9829189 * fract(dot(FRAGCOORD.xy, vec2(0.06711056, 0.00583715)))) >= uFade)
+		discard;
 	vec3 N = fx_world_normal(NORMAL, INV_VIEW_MATRIX);
 	vec3 V = normalize((INV_VIEW_MATRIX * vec4(VIEW, 0.0)).xyz);
 	vec3 L = normalize(vec3(-0.45, 0.8, 0.4));

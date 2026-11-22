@@ -75,9 +75,15 @@ float rune(vec2 c, float pick)
 void fragment()
 {
 	vec2 p = (UV - 0.5) * 2.0;
+	// A rune circle and a telegraph have a line at the rim: they are drawn a little inside the
+	// plane, so its own edge never cuts that line off and leaves it hard and stepped.
+	float inset = uStyle == 1 || uStyle == 5 ? 1.05 : 1.0;
+	p *= inset;
 	float r = length(p);
-	if (r > 1.0)
-		discard;
+	// Faded out at the rim rather than discarded there: a discard leaves the screen derivatives
+	// undefined in the pixels beside it, and the thin lines, which are kept smooth by those
+	// derivatives, break up into a dashed hairline.
+	float rim_fade = 1.0 - smoothstep(inset - 0.02, inset, r);
 	float a = atan(p.y, p.x);
 	float u = uProgress;
 	vec2 seed = NODE_POSITION_WORLD.xz * 0.31;
@@ -102,8 +108,8 @@ void fragment()
 		// is a bright ring that fades once it reaches the rim.
 		float front = u * 1.1;
 		float reveal = smoothstep(0.0, 0.03, front - r);
-		float edge = exp(-pow((r - front) / 0.035, 2.0)) * (1.0 - smoothstep(0.9, 1.1, front)) * step(r, 1.0);
-		float rings = line(r - 0.97, 0.009) + line(r - 0.9, 0.004) + line(r - 0.6, 0.006) + line(r - 0.55, 0.003);
+		float edge = exp(-pow((r - front) / 0.035, 2.0)) * (1.0 - smoothstep(0.9, 1.1, front)) * smoothstep(1.03, 0.97, r);
+		float rings = line(r - 0.97, 0.0045) + line(r - 0.9, 0.004) + line(r - 0.6, 0.006) + line(r - 0.55, 0.003);
 		float a1 = a + TIME * 0.35;
 		float tick = line((fract(a1 / 6.2831853 * 48.0) - 0.5) / 48.0 * 6.2831853 * r, 0.006)
 			* step(0.905, r) * step(r, 0.965) * step(0.5, fract(a1 / 6.2831853 * 12.0) + 0.6);
@@ -173,5 +179,5 @@ void fragment()
 	}
 
 	vec3 col = heat < 0.5 ? mix(uDeep, uColor, heat * 2.0) : mix(uColor, uHot, (heat - 0.5) * 2.0);
-	ALBEDO = fx_out(col) * t * uAlpha * uGain;
+	ALBEDO = fx_out(col) * t * rim_fade * uAlpha * uGain;
 }

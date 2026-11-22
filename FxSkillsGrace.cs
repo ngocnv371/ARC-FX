@@ -160,12 +160,12 @@ internal sealed partial class FxSkills
             var start = Mathf.Abs(i - (Feathers - 1) * 0.5f) * 0.015f;
             var way = (to - hand).Normalized();
             Func<float, Vector3> at = k => hand.Lerp(to, k);
-            Glyph(c, start, Flight, Plume, i % 2 == 0 ? Gold : Pearl, at, _ => 1.5f, k => Fade(k, 0.05f, 0.05f), _ => way, gain: 1.8f, slim: 0.36f);
+            Glyph(c, start, Flight, Plume, i % 2 == 0 ? Gold : Pearl, at, k => 0.6f + 0.5f * Mathf.Min(k * 4f, 1f), k => Fade(k, 0.2f, 0.12f), _ => way, gain: 1.8f, slim: 0.38f);
             Line(c, start, Flight, Gold, k => at(Mathf.Max(k - 0.12f, 0f)), _ => way * 1.8f, 0.08f, _ => 0.8f);
             Glyph(c, start + Flight, 0.3f, Glint, Gold, to, 1.4f, 1.7f);
-            Disc(c, start + Flight, 0.3f, Shock, Gold, FxKit.Flat(to), k => 0.8f * Out(k), k => 1f - k, band: 0.1f);
-            // It stays stuck in the ground a moment.
-            Glyph(c, start + Flight, 0.6f, Plume, Gold, _ => FxKit.Flat(to) + Vector3.Up * 0.45f - way * 0.2f, _ => 1.1f, k => 1f - k * k, _ => -way + Vector3.Up * 0.8f, gain: 1.4f, slim: 0.36f);
+            Mark(c, start + Flight, 0.35f, Rays, Gold, FxKit.Flat(to), _ => 0.9f, k => (1f - k) * (1f - k), k => Out(Mathf.Min(k * 2.5f, 1f)), count: 10f, gain: 1.2f);
+            // Where it lands it breaks into a few small feathers that drift down.
+            Drift(c, 3, start + Flight - 0.04f, start + Flight + 0.04f, 1f, Plume, [Gold, Pearl], () => to + FxKit.Jitter(0.2f), () => FxKit.Jitter(0.7f) + Vector3.Up * Rand(0.4f, 1.2f), 0.42f, gravity: 2f, sway: 0.35f, slim: 0.42f);
         }
         Drift(c, 14, Flight, Flight + 0.2f, 0.9f, Plume, [Gold, Pearl], () => Around(Rand(-0.6f, 0.6f)) * reach * Rand(0.8f, 1f) + Vector3.Up * Rand(0.6f, 1.6f), () => new Vector3(0f, -0.8f, 0f), 0.45f, slim: 0.4f);
         Shine(c, new Vector3(0f, 1f, reach * 0.6f), reach, Gold.Main, age => 1.5f * Bump(age, 0f, 0.8f));

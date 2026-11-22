@@ -230,6 +230,126 @@ internal static class FxProps
     public const int RockSpikeLooks = 4;
 
     /// <summary>
+    /// A standing stone a unit tall on a foot sunk a little below 0: a rough slab, broad along X
+    /// (about 0.6 across) and thinner through, narrowing to a blunt crown, each
+    /// <paramref name="look"/> a different one.
+    /// </summary>
+    public static ArrayMesh Menhir(int look) => Stone(look * 31 + 3, 7, 0.52f, 0.62f, 0.3f, null);
+
+    /// <summary>
+    /// A rough-hewn block for a dry-stone wall, a unit tall on a foot sunk a little below 0: about
+    /// 0.7 along X and 0.32 through, barely narrowing, each <paramref name="look"/> a different one.
+    /// </summary>
+    public static ArrayMesh Block(int look) => Stone(look * 53 + 11, 4, 0.9f, 0.45f, 0.5f, Mathf.Pi * 0.25f);
+
+    private static ArrayMesh Stone(int seed, int sides, float crown, float depth, float half, float? spin)
+    {
+        var rng = new Random(seed);
+        float R() => (float)rng.NextDouble();
+        // Heights and how wide each ring is, as a share of the foot: nearly straight sides, then a
+        // bevel in to the crown.
+        (float Y, float Width)[] profile = [(-0.12f, 1.05f), (0.2f, 1f), (0.5f, Mathf.Lerp(1f, crown, 0.4f)), (0.78f, Mathf.Lerp(1f, crown, 0.8f)), (0.94f, crown), (1f, crown * 0.6f)];
+        var turn = spin ?? R() * Mathf.Tau;
+        var angles = new float[sides];
+        for (var i = 0; i < sides; i++)
+            angles[i] = turn + Mathf.Tau * (i + (spin == null ? 0.4f : 0.08f) * (R() - 0.5f)) / sides;
+        var rings = new Vector3[profile.Length][];
+        var centres = new Vector3[profile.Length];
+        var drift = Vector3.Zero;
+        for (var j = 0; j < profile.Length; j++)
+        {
+            // The stone leans and wanders a little as it rises.
+            drift += new Vector3(R() - 0.5f, 0f, R() - 0.5f) * 0.05f;
+            centres[j] = drift + Vector3.Up * profile[j].Y;
+            rings[j] = new Vector3[sides];
+            for (var i = 0; i < sides; i++)
+            {
+                var reach = half * profile[j].Width * (0.9f + 0.2f * R());
+                rings[j][i] = centres[j] + new Vector3(Mathf.Cos(angles[i]) * reach, (R() - 0.5f) * 0.04f, Mathf.Sin(angles[i]) * reach * depth);
+            }
+        }
+        var st = Begin();
+        for (var j = 0; j + 1 < profile.Length; j++)
+        {
+            for (var i = 0; i < sides; i++)
+            {
+                var n = (i + 1) % sides;
+                var (a, b, c, d) = (rings[j][i], rings[j][n], rings[j + 1][n], rings[j + 1][i]);
+                var outward = (a + b + c + d) * 0.25f - (centres[j] + centres[j + 1]) * 0.5f;
+                // Split the other way on every second face, so the facets do not all slant alike.
+                if ((i + j) % 2 == 0)
+                {
+                    Tri(st, a, b, c, outward);
+                    Tri(st, a, c, d, outward);
+                }
+                else
+                {
+                    Tri(st, a, b, d, outward);
+                    Tri(st, b, c, d, outward);
+                }
+            }
+        }
+        var last = profile.Length - 1;
+        var top = centres[last] + Vector3.Up * 0.03f;
+        for (var i = 0; i < sides; i++)
+            Tri(st, rings[last][i], rings[last][(i + 1) % sides], top, Vector3.Up);
+        return End(st);
+    }
+
+    /// <summary>
+    /// A boulder about a metre in radius: a lumpy, faceted lump of rock, a little squat, each
+    /// <paramref name="look"/> a different one. <paramref name="half"/> cuts it down the middle and
+    /// keeps the +X side, its cut face flat at x = 0 (two of them, one turned round, make the whole).
+    /// </summary>
+    public static ArrayMesh Boulder(int look, bool half = false)
+    {
+        var rng = new Random(look * 6151 + 5);
+        float R() => (float)rng.NextDouble();
+        // Three waves of random bearing and phase push the surface in and out; every vertex is
+        // moved by where it points alone, so neighbouring faces still meet.
+        var waves = new (Vector3 Way, float Rate, float Phase, float Depth)[]
+        {
+            (RandomAxis(R), 2.1f, R() * Mathf.Tau, 0.2f), (RandomAxis(R), 3.7f, R() * Mathf.Tau, 0.13f), (RandomAxis(R), 6.3f, R() * Mathf.Tau, 0.07f),
+        };
+        Vector3 Shape(Vector3 dir)
+        {
+            dir = dir.Normalized();
+            var reach = 1f;
+            foreach (var (way, rate, phase, depth) in waves)
+                reach += depth * Mathf.Sin(dir.Dot(way) * rate + phase);
+            var v = dir * reach;
+            v.Y *= 0.82f;
+            if (half)
+                v.X = Mathf.Max(v.X, 0f);
+            return v;
+        }
+        // An icosahedron, each face split in four.
+        const float T = 1.618034f;
+        Vector3[] corners =
+        [
+            new(-1f, T, 0f), new(1f, T, 0f), new(-1f, -T, 0f), new(1f, -T, 0f), new(0f, -1f, T), new(0f, 1f, T),
+            new(0f, -1f, -T), new(0f, 1f, -T), new(T, 0f, -1f), new(T, 0f, 1f), new(-T, 0f, -1f), new(-T, 0f, 1f),
+        ];
+        int[] faces =
+        [
+            0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11, 1, 5, 9, 5, 11, 4, 11, 10, 2, 10, 7, 6, 7, 1, 8,
+            3, 9, 4, 3, 4, 2, 3, 2, 6, 3, 6, 8, 3, 8, 9, 4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6, 7, 9, 8, 1,
+        ];
+        var st = Begin();
+        void Face(Vector3 a, Vector3 b, Vector3 c) => Tri(st, Shape(a), Shape(b), Shape(c), a + b + c);
+        for (var f = 0; f < faces.Length; f += 3)
+        {
+            var (a, b, c) = (corners[faces[f]].Normalized(), corners[faces[f + 1]].Normalized(), corners[faces[f + 2]].Normalized());
+            var (ab, bc, ca) = ((a + b).Normalized(), (b + c).Normalized(), (c + a).Normalized());
+            Face(a, ab, ca);
+            Face(b, bc, ab);
+            Face(c, ca, bc);
+            Face(ab, bc, ca);
+        }
+        return End(st);
+    }
+
+    /// <summary>
     /// A jagged spike of rock a metre tall, its foot on the origin and its point up, in one of
     /// <see cref="RockSpikeLooks"/> looks (<paramref name="look"/>): a crooked, faceted column whose
     /// sides bulge and pinch unevenly and break into a ledge or two on the way up, smaller shards

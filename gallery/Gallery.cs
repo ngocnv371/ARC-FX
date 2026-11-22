@@ -12,7 +12,8 @@ namespace Arc.Fx.Gallery;
 /// or description, best matches first; <c>#word</c> must be a tag and <c>-word</c> leaves out what
 /// matches it. Enter or Esc leaves it. Under it, <see cref="Presets"/> put common filters a click
 /// away. The selected entry's card along the bottom shows its name, description, tags (click one
-/// to filter by it) and call.
+/// to filter by it) and call. Dragging on the stage turns the camera round what it looks at, the
+/// wheel moves it in and out, and a double click (or V) puts it back.
 /// Options: <c>--effect=name</c> starts on one; <c>--filter=words</c> starts with the list narrowed; <c>--view=close</c>; <c>--speed=0.25</c>;
 /// <c>--shot=dir</c> plays each in turn and saves dir/name.png as it peaks, then quits
 /// (<c>--only=a,b</c> limits that to a few).
@@ -68,6 +69,10 @@ public partial class Gallery : Node3D
     private List<Entry> _entries = [];
     private int _selected;
     private int _view;
+    // How far the camera has been dragged round from the view it started on: turned about the
+    // upright, tipped up or down, and moved in or out.
+    private float _orbitYaw, _orbitPitch, _orbitZoom = 1f;
+    private bool _orbiting;
     private int _floorIndex;
     private int _speed;
     private bool _paused;
@@ -138,6 +143,33 @@ public partial class Gallery : Node3D
 
     public override void _UnhandledInput(InputEvent e)
     {
+        // Drag on the stage to turn the camera round what it looks at; the wheel moves it in and
+        // out; a double click (or V) puts it back. Clicks on the list and the card never get here.
+        if (e is InputEventMouseButton button)
+        {
+            if (button.ButtonIndex is MouseButton.Left or MouseButton.Right)
+            {
+                _orbiting = button.Pressed;
+                if (button.Pressed && button.DoubleClick)
+                    ResetOrbit();
+            }
+            else if (button.Pressed && button.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown)
+            {
+                _orbitZoom = Mathf.Clamp(_orbitZoom * (button.ButtonIndex == MouseButton.WheelUp ? 0.9f : 1.1f), 0.25f, 3f);
+                ApplyView();
+            }
+            return;
+        }
+        if (e is InputEventMouseMotion motion)
+        {
+            if (_orbiting)
+            {
+                _orbitYaw -= motion.Relative.X * 0.008f;
+                _orbitPitch += motion.Relative.Y * 0.006f;
+                ApplyView();
+            }
+            return;
+        }
         if (e is not InputEventKey { Pressed: true, Echo: false } key)
             return;
         switch (key.Keycode)
@@ -162,7 +194,7 @@ public partial class Gallery : Node3D
                 break;
             case Key.V:
                 _view = (_view + 1) % Views.Length;
-                ApplyView();
+                ResetOrbit();
                 break;
             case Key.F:
                 _floorIndex = (_floorIndex + 1) % Floors.Length;
@@ -221,8 +253,8 @@ public partial class Gallery : Node3D
             if (Score(_entries[i], words) is { } score)
                 ranked.Add((i, score));
         }
-        // Stable: equal scores keep the list's own order.
-        foreach (var (i, _) in ranked.OrderByDescending(r => r.Score).ThenBy(r => r.Index))
+        // Always by group, then name, whatever the filter: a match is in the same place in the list every time.
+        foreach (var (i, _) in ranked.OrderBy(r => _entries[r.Index].Group, StringComparer.OrdinalIgnoreCase).ThenBy(r => _entries[r.Index].Name, StringComparer.OrdinalIgnoreCase).ThenBy(r => r.Index))
         {
             var entry = _entries[i];
             _shown.Add(i);
@@ -397,9 +429,23 @@ public partial class Gallery : Node3D
     private void ApplyView()
     {
         var (_, eye, target) = Views[_view];
-        _camera.Position = eye;
+        // The view's own eye, swung round its target by however far it has been dragged. It
+        // stops short of straight down and of the floor.
+        var arm = eye - target;
+        var reach = arm.Length();
+        var pitch = Mathf.Asin(arm.Y / reach);
+        _orbitPitch = Mathf.Clamp(pitch + _orbitPitch, Mathf.DegToRad(4f), Mathf.DegToRad(88f)) - pitch;
+        var yaw = Mathf.Atan2(arm.X, arm.Z) + _orbitYaw;
+        var tip = pitch + _orbitPitch;
+        _camera.Position = target + new Vector3(Mathf.Sin(yaw) * Mathf.Cos(tip), Mathf.Sin(tip), Mathf.Cos(yaw) * Mathf.Cos(tip)) * reach * _orbitZoom;
         _camera.LookAt(target, Vector3.Up);
         UpdateHint();
+    }
+
+    private void ResetOrbit()
+    {
+        (_orbitYaw, _orbitPitch, _orbitZoom) = (0f, 0f, 1f);
+        ApplyView();
     }
 
     private void ApplyFloor()
@@ -416,7 +462,7 @@ public partial class Gallery : Node3D
 
     private void UpdateHint() =>
         _hint.Text = $"↑↓ effect   / filter   Space replay   V view: {Views[_view].Name}   F floor: {Floors[_floorIndex].Name}   " +
-            $"−/+ speed: {Speeds[_speed]:0.##}×{(_paused ? " (paused)" : "")}   P pause   Esc quit";
+            $"−/+ speed: {Speeds[_speed]:0.##}×{(_paused ? " (paused)" : "")}   P pause   drag turn   wheel zoom   Esc quit";
 
     private void BuildUi()
     {
@@ -509,7 +555,7 @@ public partial class Gallery : Node3D
             ("Holy", "#holy"), ("Arcane", "#arcane"), ("Shadow", "#shadow"), ("Physical", "#physical")]),
         ("Kind", [("Melee", "#melee"), ("Projectile", "#projectile"), ("Area", "#aoe"), ("Ground", "#ground"),
             ("From the sky", "#sky"), ("Buff", "#buff"), ("Defense", "#defense"), ("Movement", "#movement"), ("Summon", "#summon")]),
-        ("Source", [("Skills", "skill"), ("Case study", "#study"), ("Not skills", "-skill"), ("Shrines", "#shrine"), ("Sigils", "#sigil")]),
+        ("Source", [("Skills", "skill"), ("Case study", "#study"), ("Not skills", "-skill"), ("Shrines", "#shrine"), ("Sigils", "#sigil"), ("New", "#new")]),
     ];
 
     private HFlowContainer PresetRow(int row)
@@ -967,7 +1013,7 @@ public partial class Gallery : Node3D
             FxSkill.StarlitCrescent => ("blade", 1.4f, 0.2f, Cast.Front),
             FxSkill.ButterflyWaltz => ("blade", 1.8f, 0.6f, Cast.Follow),
             FxSkill.TwinMoons => ("blade", 1.5f, 0.3f, Cast.Front),
-            FxSkill.FeatherFan => ("blade", 1.6f, 0.35f, Cast.Away),
+            FxSkill.FeatherFan => ("blade", 1.6f, 0.5f, Cast.Away),
             FxSkill.IaidoBloom => ("blade", 1.8f, 0.55f, Cast.Front),
             FxSkill.RibbonDance => ("blade", 3.0f, 1.2f, Cast.Follow),
             FxSkill.PrismaticEdge => ("blade", 1.5f, 0.3f, Cast.Front),
@@ -1029,9 +1075,9 @@ public partial class Gallery : Node3D
             FxSkill.BubbleStream => ("water", 2.2f, 0.8f, Cast.Away),
             FxSkill.FountainOfLife => ("water", 3.6f, 1.5f, Cast.Front),
             FxSkill.CrystalGarden => ("earth", 3.2f, 1.3f, Cast.Front),
-            FxSkill.GeodeBurst => ("earth", 2.4f, 0.85f, Cast.Front),
+            FxSkill.GeodeBurst => ("earth", 2.4f, 1.0f, Cast.Front),
             FxSkill.JadePillars => ("earth", 3.2f, 1.2f, Cast.Front),
-            FxSkill.GoldenFissure => ("earth", 2.4f, 0.6f, Cast.Side),
+            FxSkill.GoldenFissure => ("earth", 2.4f, 1.0f, Cast.Side),
             FxSkill.DuneRoller => ("earth", 2.2f, 0.7f, Cast.Away),
             FxSkill.PebbleOrbit => ("earth", 3.6f, 1.4f, Cast.Follow),
             FxSkill.AmberTomb => ("earth", 3.2f, 1.2f, Cast.Front),
@@ -1047,6 +1093,106 @@ public partial class Gallery : Node3D
             FxSkill.TimeShatter => ("arcane", 2.8f, 1.4f, Cast.Front),
             FxSkill.WishingStars => ("arcane", 3.4f, 2.1f, Cast.Front),
             FxSkill.WingsOfDawn => ("holy", 3.6f, 1.2f, Cast.Follow),
+            FxSkill.TigerClaws => ("blade", 1.5f, 0.24f, Cast.Front),
+            FxSkill.SwordSaint => ("blade", 2.2f, 0.75f, Cast.Front),
+            FxSkill.FlickerCuts => ("blade", 2.0f, 0.85f, Cast.Front),
+            FxSkill.CrescentKick => ("blade", 1.4f, 0.2f, Cast.Front),
+            FxSkill.YinYangPalm => ("blade", 2.2f, 0.7f, Cast.Away),
+            FxSkill.ArrowStorm => ("blade", 2.2f, 0.4f, Cast.Away),
+            FxSkill.PiercingArrow => ("blade", 1.8f, 0.5f, Cast.Line),
+            FxSkill.BladeLotus => ("blade", 2.4f, 0.8f, Cast.Front),
+            FxSkill.ShieldBash => ("blade", 1.8f, 0.3f, Cast.Side),
+            FxSkill.ChakramReturn => ("blade", 2.2f, 0.8f, Cast.Away),
+            FxSkill.SwordHalo => ("blade", 3.6f, 1.4f, Cast.Follow),
+            FxSkill.MaskOfDread => ("shadow", 2.4f, 0.7f, Cast.Away),
+            FxSkill.SpecterKnights => ("shadow", 2.2f, 0.9f, Cast.Away),
+            FxSkill.SoulChains => ("shadow", 2.8f, 1.2f, Cast.Front),
+            FxSkill.Wraithstorm => ("shadow", 3.8f, 1.6f, Cast.Front),
+            FxSkill.SkullPyre => ("shadow", 3.2f, 1.3f, Cast.Front),
+            FxSkill.PhantomArchers => ("shadow", 2.6f, 1.0f, Cast.Away),
+            FxSkill.SpiritPack => ("shadow", 2.0f, 0.6f, Cast.Away),
+            FxSkill.DarkCrown => ("buff", 3.8f, 1.4f, Cast.Follow),
+            FxSkill.NightmareEyes => ("shadow", 3.0f, 1.5f, Cast.Front),
+            FxSkill.BoneWhorl => ("shadow", 3.0f, 1.0f, Cast.Front),
+            FxSkill.DeathKnell => ("shadow", 2.8f, 1.4f, Cast.Front),
+            FxSkill.ShadowPuppets => ("shadow", 2.8f, 1.0f, Cast.Front),
+            FxSkill.LichForm => ("buff", 4.0f, 1.6f, Cast.Follow),
+            FxSkill.CrownOfVictory => ("buff", 3.6f, 1.3f, Cast.Follow),
+            FxSkill.BattleHymn => ("buff", 3.6f, 1.4f, Cast.Follow),
+            FxSkill.LuckyStar => ("buff", 3.4f, 1.4f, Cast.Follow),
+            FxSkill.AegisOath => ("buff", 3.6f, 1.3f, Cast.Follow),
+            FxSkill.TimeSlip => ("buff", 3.6f, 1.3f, Cast.Follow),
+            FxSkill.StoneCircle => ("earth", 3.4f, 1.3f, Cast.Front),
+            FxSkill.StoneMaze => ("earth", 3.4f, 1.4f, Cast.Front),
+            FxSkill.SandClock => ("earth", 3.2f, 1.3f, Cast.Front),
+            FxSkill.RubyRain => ("earth", 2.8f, 1.0f, Cast.Front),
+            FxSkill.EmeraldSpire => ("earth", 3.0f, 1.2f, Cast.Front),
+            FxSkill.Quicksand => ("earth", 3.6f, 1.5f, Cast.Front),
+            FxSkill.ObsidianShards => ("earth", 2.0f, 0.6f, Cast.Away),
+            FxSkill.FlameCrown => ("fire", 3.6f, 1.3f, Cast.Follow),
+            FxSkill.EmberGarden => ("fire", 2.8f, 1.0f, Cast.Front),
+            FxSkill.PhoenixFeathers => ("fire", 1.8f, 0.4f, Cast.Away),
+            FxSkill.SearingBrand => ("fire", 2.4f, 1.0f, Cast.Front),
+            FxSkill.MoltenChains => ("fire", 2.8f, 0.9f, Cast.Front),
+            FxSkill.PyreStar => ("fire", 2.6f, 1.1f, Cast.Front),
+            FxSkill.FlameMask => ("fire", 2.2f, 0.8f, Cast.Away),
+            FxSkill.SunWheel => ("fire", 2.0f, 0.6f, Cast.Side),
+            FxSkill.IceCrown => ("frost", 3.6f, 1.3f, Cast.Follow),
+            FxSkill.FrozenRose => ("frost", 2.8f, 1.2f, Cast.Front),
+            FxSkill.SnowOwlDive => ("frost", 2.0f, 0.65f, Cast.Front),
+            FxSkill.FrostBars => ("frost", 2.8f, 1.0f, Cast.Front),
+            FxSkill.FrostCompass => ("frost", 2.4f, 0.8f, Cast.Front),
+            FxSkill.CrystalRain => ("frost", 2.8f, 1.0f, Cast.Front),
+            FxSkill.Avalanche => ("frost", 2.2f, 0.8f, Cast.Away),
+            FxSkill.FrostWindow => ("frost", 2.6f, 1.1f, Cast.Front),
+            FxSkill.GearStorm => ("storm", 3.6f, 1.4f, Cast.Front),
+            FxSkill.StormCompass => ("storm", 3.0f, 0.6f, Cast.Front),
+            FxSkill.VoltChains => ("storm", 3.4f, 1.3f, Cast.Front),
+            FxSkill.SkyArrows => ("storm", 2.4f, 0.8f, Cast.Front),
+            FxSkill.TeslaGate => ("storm", 3.6f, 1.4f, Cast.Front),
+            FxSkill.CycloneWhorl => ("storm", 3.6f, 1.5f, Cast.Front),
+            FxSkill.ShockTiles => ("storm", 3.6f, 1.4f, Cast.Front),
+            FxSkill.ScaleShield => ("water", 3.6f, 1.3f, Cast.Follow),
+            FxSkill.TidalWhorl => ("water", 2.8f, 1.75f, Cast.Front),
+            FxSkill.SilverShoal => ("water", 3.8f, 1.5f, Cast.Follow),
+            FxSkill.RainbowMist => ("water", 3.6f, 1.6f, Cast.Front),
+            FxSkill.SongOfTheDeep => ("water", 4.0f, 1.7f, Cast.Front),
+            FxSkill.TearDrop => ("water", 2.6f, 0.95f, Cast.Front),
+            FxSkill.WaterMirror => ("water", 4.0f, 1.7f, Cast.Front),
+            FxSkill.Riptide => ("water", 2.2f, 0.9f, Cast.Away),
+            FxSkill.DaisyChain => ("nature", 3.6f, 1.4f, Cast.Front),
+            FxSkill.PawPrints => ("nature", 2.0f, 0.7f, Cast.Away),
+            FxSkill.OwlWatch => ("nature", 3.6f, 1.4f, Cast.Front),
+            FxSkill.ThornMaze => ("nature", 3.6f, 1.4f, Cast.Front),
+            FxSkill.MapleGust => ("nature", 2.2f, 0.8f, Cast.Away),
+            FxSkill.SporeCloud => ("nature", 3.8f, 1.3f, Cast.Front),
+            FxSkill.WidowsWeb => ("nature", 3.2f, 1.8f, Cast.Front),
+            FxSkill.BeeSwarm => ("nature", 2.4f, 1.0f, Cast.Away),
+            FxSkill.FernUnfurl => ("nature", 3.8f, 1.5f, Cast.Front),
+            FxSkill.CardTrick => ("arcane", 1.8f, 0.4f, Cast.Away),
+            FxSkill.RoyalFlush => ("arcane", 3.0f, 1.0f, Cast.Front),
+            FxSkill.HourglassTurn => ("arcane", 4.0f, 1.7f, Cast.Front),
+            FxSkill.Crescendo => ("arcane", 3.2f, 2.1f, Cast.Follow),
+            FxSkill.Lullaby => ("arcane", 4.2f, 1.8f, Cast.Front),
+            FxSkill.PowerChord => ("arcane", 1.8f, 0.5f, Cast.Away),
+            FxSkill.ChessGambit => ("arcane", 3.0f, 1.55f, Cast.Front),
+            FxSkill.MaskedRevel => ("arcane", 3.8f, 1.5f, Cast.Follow),
+            FxSkill.CompassRose => ("arcane", 2.2f, 0.75f, Cast.Front),
+            FxSkill.Labyrinth => ("arcane", 3.6f, 1.6f, Cast.Front),
+            FxSkill.StainedGlass => ("arcane", 3.8f, 1.5f, Cast.Front),
+            FxSkill.Triquetra => ("arcane", 2.6f, 1.55f, Cast.Front),
+            FxSkill.ArcaneWhorl => ("arcane", 3.0f, 1.0f, Cast.Front),
+            FxSkill.StarCrown => ("arcane", 3.8f, 1.4f, Cast.Follow),
+            FxSkill.FortuneWheel => ("arcane", 3.2f, 1.9f, Cast.Front),
+            FxSkill.HolyCross => ("holy", 2.4f, 0.8f, Cast.Front),
+            FxSkill.CrownOfLight => ("holy", 3.6f, 1.3f, Cast.Follow),
+            FxSkill.RoseWindow => ("holy", 3.8f, 1.5f, Cast.Front),
+            FxSkill.AngelChoir => ("holy", 4.0f, 1.6f, Cast.Front),
+            FxSkill.SacredShield => ("holy", 3.6f, 1.3f, Cast.Front),
+            FxSkill.PilgrimStar => ("holy", 3.8f, 1.6f, Cast.Front),
+            FxSkill.BlessedRain => ("holy", 3.8f, 1.6f, Cast.Front),
+            FxSkill.Aureole => ("holy", 3.8f, 1.4f, Cast.Follow),
+            FxSkill.HallowedCross => ("holy", 3.8f, 1.3f, Cast.Front),
         _ => ("shadow", 2f, 0.5f, Cast.Front),
     };
 

@@ -540,6 +540,206 @@ public enum FxSkill
     WishingStars,
     /// <summary>Great wings of light unfurling behind the caster under a halo, feathers falling (follows them).</summary>
     WingsOfDawn,
+    /// <summary>Two raking swipes of three claws crossing in front, tearing the ground.</summary>
+    TigerClaws,
+    /// <summary>Eight swords of light drawn in a ring round the caster, then all thrust outward at once.</summary>
+    SwordSaint,
+    /// <summary>Thirty hairline cuts through one spot faster than they can be seen, a pause, then all of them opening.</summary>
+    FlickerCuts,
+    /// <summary>A low sweeping crescent round the caster over a spinning yin and yang.</summary>
+    CrescentKick,
+    /// <summary>Light and dark circling between the hands, then thrown as one ball that bursts in a yin and yang.</summary>
+    YinYangPalm,
+    /// <summary>A volley of arrows arcing up and coming down across a marked circle, sticking where they land.</summary>
+    ArrowStorm,
+    /// <summary>One great arrow drawn inside a reticle and loosed down the line through everything, rings opening behind it.</summary>
+    PiercingArrow,
+    /// <summary>Two rings of swords laid out like petals, opening, then spinning and flying apart.</summary>
+    BladeLotus,
+    /// <summary>A great shield driven forward into what is ahead, stars wheeling over whoever it strikes.</summary>
+    ShieldBash,
+    /// <summary>A spinning ring thrown out in a loop and back to the hand, cutting as it goes.</summary>
+    ChakramReturn,
+    /// <summary>Six swords circling the caster point outward, flung away at the end (follows them).</summary>
+    SwordHalo,
+    /// <summary>A huge horned mask looming over the caster and staring down a cone, an eye opening over each one caught.</summary>
+    MaskOfDread,
+    /// <summary>Three ghostly knights rising with swords upright, levelling them and charging.</summary>
+    SpecterKnights,
+    /// <summary>Five ghosts chained to a heart of green fire and hauled in to it.</summary>
+    SoulChains,
+    /// <summary>A whirlwind of wraiths and skulls spiralling up over a turning whorl.</summary>
+    Wraithstorm,
+    /// <summary>A pyramid of skulls dropped into place and set burning green, then blown apart.</summary>
+    SkullPyre,
+    /// <summary>Four ghostly archers standing in a rank and loosing three volleys.</summary>
+    PhantomArchers,
+    /// <summary>Four spectral beasts bounding forward low and fast, each ending in a rake of claws.</summary>
+    SpiritPack,
+    /// <summary>A crown of shadow lowering onto the caster, skulls circling them (follows them).</summary>
+    DarkCrown,
+    /// <summary>Eyes opening all through a patch of darkness, each fixing on the middle, then the dark bursting.</summary>
+    NightmareEyes,
+    /// <summary>A spinning whorl of bone, skulls riding it outward from the middle.</summary>
+    BoneWhorl,
+    /// <summary>A bell tolling three times overhead, each toll a wider ring and a larger skull.</summary>
+    DeathKnell,
+    /// <summary>Three masked puppets dancing on strings over a chequerboard, then cut down.</summary>
+    ShadowPuppets,
+    /// <summary>The caster as a lich: a towering shade behind them, a crowned skull above, three gems circling (follows them).</summary>
+    LichForm,
+    /// <summary>A golden crown descending onto the caster in rays, stars rising round them (follows them).</summary>
+    CrownOfVictory,
+    /// <summary>Notes winding up round the caster on a stave of light, rings beating out (follows them).</summary>
+    BattleHymn,
+    /// <summary>A turning star over the caster showering coins that bounce (follows them).</summary>
+    LuckyStar,
+    /// <summary>A great shield held before the caster inside a dome, blows glancing off it (follows them).</summary>
+    AegisOath,
+    /// <summary>An hourglass turning over above the caster, afterimages streaming off to either side (follows them).</summary>
+    TimeSlip,
+    /// <summary>Eight standing stones thrust up in a ring, a rune lighting on each.</summary>
+    StoneCircle,
+    /// <summary>A maze drawn on the ground, low walls rising along its rings, a light wandering its paths.</summary>
+    StoneMaze,
+    /// <summary>A great hourglass running out onto the ground, then turning over.</summary>
+    SandClock,
+    /// <summary>Rubies falling one after another and standing in the ground.</summary>
+    RubyRain,
+    /// <summary>One great spire of green crystal thrust up among smaller ones, a beam rising from its tip.</summary>
+    EmeraldSpire,
+    /// <summary>A slow whorl of sinking sand, stones dragged round and under.</summary>
+    Quicksand,
+    /// <summary>A widening fan of black glass shards erupting ahead, row after row.</summary>
+    ObsidianShards,
+    /// <summary>A crown of fire on the caster's head, tongues of flame circling it (follows them).</summary>
+    FlameCrown,
+    /// <summary>Stems of fire climbing and opening in flowers of flame, then each seeding a burst.</summary>
+    EmberGarden,
+    /// <summary>Nine burning feathers thrown in a fan, each lighting a fire where it lands.</summary>
+    PhoenixFeathers,
+    /// <summary>A triangle traced on the ground by a point of white heat, then erupting at its corners.</summary>
+    SearingBrand,
+    /// <summary>Four chains of molten links lashing in from the ground to bind one spot.</summary>
+    MoltenChains,
+    /// <summary>A five-pointed star drawn in fire, a pillar lit at each point in turn, then the middle going up.</summary>
+    PyreStar,
+    /// <summary>A horned mask of fire looming over the caster and breathing flame down a cone.</summary>
+    FlameMask,
+    /// <summary>A burning cogwheel rolling ahead, throwing fire off its rim and leaving a burning track.</summary>
+    SunWheel,
+    /// <summary>A crown of ice over the caster, gems circling it and snow falling (follows them).</summary>
+    IceCrown,
+    /// <summary>A rose of ice opening in three rings of petals round a crystal, then shattering.</summary>
+    FrozenRose,
+    /// <summary>A white owl swooping down across a spot and away, raking it with its talons.</summary>
+    SnowOwlDive,
+    /// <summary>A cage of ice bars rising round a spot under two rings, then breaking apart.</summary>
+    FrostBars,
+    /// <summary>A compass rose of frost, ice running out along its eight points.</summary>
+    FrostCompass,
+    /// <summary>Shards of ice falling one after another and standing where they land.</summary>
+    CrystalRain,
+    /// <summary>A tumbling front of powder snow rolling ahead, blocks of ice turning over in it.</summary>
+    Avalanche,
+    /// <summary>A window of frost tracery standing in the air, then breaking outward in panes.</summary>
+    FrostWindow,
+    /// <summary>Three cogwheels of light turning against each other, sparks at their teeth and arcs off their rims.</summary>
+    GearStorm,
+    /// <summary>A needle swinging round a compass rose and settling three times, a bolt landing where it points.</summary>
+    StormCompass,
+    /// <summary>Five posts in a ring, current running round them post to post.</summary>
+    VoltChains,
+    /// <summary>Arrows of lightning falling straight onto reticles, each earthing itself.</summary>
+    SkyArrows,
+    /// <summary>Two pylons with a wall of lightning standing between them.</summary>
+    TeslaGate,
+    /// <summary>A tall funnel of wind over a racing whorl, ribbons and leaves wound up it.</summary>
+    CycloneWhorl,
+    /// <summary>A chequerboard of light, squares discharging at random.</summary>
+    ShockTiles,
+    /// <summary>Plates of shining scale turning round the caster inside a dome (follows them).</summary>
+    ScaleShield,
+    /// <summary>Water winding in to the middle of a whorl and going up in a spout.</summary>
+    TidalWhorl,
+    /// <summary>A shoal of silver fish turning together round the caster (follows them).</summary>
+    SilverShoal,
+    /// <summary>A rainbow drawn across from one side, its feet standing in mist.</summary>
+    RainbowMist,
+    /// <summary>Slow rings swelling up out of the water and notes rising through them.</summary>
+    SongOfTheDeep,
+    /// <summary>One great drop swelling, falling, and splashing in a crown of droplets and widening rings.</summary>
+    TearDrop,
+    /// <summary>A still round pool, a moon and stars hanging over it and their doubles lying in it.</summary>
+    WaterMirror,
+    /// <summary>Currents running back toward the caster from ahead, dragging everything with them.</summary>
+    Riptide,
+    /// <summary>A ring of daisies opening one after another, each tied to the next, turning slowly.</summary>
+    DaisyChain,
+    /// <summary>Glowing paw prints running ahead of something unseen, ending in a rake of claws.</summary>
+    PawPrints,
+    /// <summary>Two great eyes opening in the dark overhead, their gaze sweeping the ground.</summary>
+    OwlWatch,
+    /// <summary>A maze of briars standing up along its rings, roses opening here and there.</summary>
+    ThornMaze,
+    /// <summary>A gust carrying autumn leaves ahead in a stream.</summary>
+    MapleGust,
+    /// <summary>Puffballs going off round a ring, each throwing up a cloud of spores.</summary>
+    SporeCloud,
+    /// <summary>A web spun across the ground, a spider letting herself down into it and striking.</summary>
+    WidowsWeb,
+    /// <summary>A swarm pouring out of a hive of light and circling what it finds, stinging.</summary>
+    BeeSwarm,
+    /// <summary>Fiddleheads uncoiling on the ground, each sending up a spiral of green.</summary>
+    FernUnfurl,
+    /// <summary>Seven cards thrown in a fan, spinning, each sticking where it lands.</summary>
+    CardTrick,
+    /// <summary>Five cards dealt in a fan overhead, then brought down one after another, coins flying.</summary>
+    RoyalFlush,
+    /// <summary>A dome where time has all but stopped: grains of sand hanging in the air under an hourglass.</summary>
+    HourglassTurn,
+    /// <summary>Notes climbing round the caster, each larger and higher, ending in one great chord (follows them).</summary>
+    Crescendo,
+    /// <summary>Notes rocking down like feathers under a swaying moon, soft mist where they settle.</summary>
+    Lullaby,
+    /// <summary>Three walls of sound blasted ahead one behind another, notes and jagged bolts thrown with them.</summary>
+    PowerChord,
+    /// <summary>Pieces of light standing on a chequerboard, one leaping the knight's move to take the dark king.</summary>
+    ChessGambit,
+    /// <summary>Five masks of different colours circling the caster in a shower of confetti (follows them).</summary>
+    MaskedRevel,
+    /// <summary>A compass rose of light, a lance fired down each of its long points and then each short one.</summary>
+    CompassRose,
+    /// <summary>A maze drawn on the ground and a thread of light finding its way to the middle.</summary>
+    Labyrinth,
+    /// <summary>A window of coloured glass standing in the air, light falling through each pane onto the ground.</summary>
+    StainedGlass,
+    /// <summary>Three orbs winding in from the corners of a triangle to the middle, then a beam.</summary>
+    Triquetra,
+    /// <summary>Bolts thrown off a heart of light riding a spiral outward and coming down on its rim.</summary>
+    ArcaneWhorl,
+    /// <summary>Seven stars flying up to circle the caster's head in a tilted ring (follows them).</summary>
+    StarCrown,
+    /// <summary>A great wheel spinning and slowing to a stop, then paying out in coins.</summary>
+    FortuneWheel,
+    /// <summary>A great cross coming down out of the sky and throwing its shape across the ground in light.</summary>
+    HolyCross,
+    /// <summary>A band of light over the caster's head with long and short rays standing on it (follows them).</summary>
+    CrownOfLight,
+    /// <summary>A rose window drawn in gold on the ground, light standing up out of each pane in turn.</summary>
+    RoseWindow,
+    /// <summary>Four small winged figures of light circling overhead, singing.</summary>
+    AngelChoir,
+    /// <summary>A great golden shield bearing a cross standing before the caster on a wall of light.</summary>
+    SacredShield,
+    /// <summary>A star climbing to hang over a place, lights lit one after another along the way to it.</summary>
+    PilgrimStar,
+    /// <summary>Drops of light falling straight and slow, here and there one a small cross.</summary>
+    BlessedRain,
+    /// <summary>A sun of light standing behind the caster's head, its rays turning (follows them).</summary>
+    Aureole,
+    /// <summary>Two bars of holy ground drawn out from the middle into a cross, a small cross standing at each end.</summary>
+    HallowedCross,
 }
 
 /// <summary>

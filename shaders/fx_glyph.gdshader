@@ -16,7 +16,19 @@
 //   12 an eye with a slit pupil;
 //   13 a bird in flight, wings beating;
 //   14 a wisp: a small flame licking upward;
-//   15 a coin, flipping.
+//   15 a coin, flipping;
+//   16 a note of music;
+//   17 a five-pointed star;
+//   18 a cross;
+//   19 a claw mark: three raking cuts;
+//   20 a playing card;
+//   21 an hourglass, its sand running;
+//   22 a horned mask with burning eyes and a grin;
+//   23 a sword, point up;
+//   24 an arrow, point up;
+//   25 a shield;
+//   26 a crown with jewels on its points;
+//   27 a daisy, slowly turning.
 // uSeed sets each one's own rhythm. Faded with the instance uniform uAlpha. Additive.
 shader_type spatial;
 render_mode unshaded, fog_disabled, shadows_disabled, blend_add, cull_disabled, depth_draw_never;
@@ -57,6 +69,8 @@ void fragment()
 	float ty = p.y * 0.5 + 0.5;
 	float glow = 0.0;
 	float core = 0.0;
+	// For a halo round a shape: gone well before the quad's edge, so the quad never shows.
+	float soft = 1.0 - smoothstep(0.55, 0.96, max(abs(p.x), abs(p.y)));
 
 	if (uStyle == 0)
 	{
@@ -125,7 +139,7 @@ void fragment()
 		float beat = 1.0 + 0.06 * sin(TIME * 8.0 + uSeed * 20.0);
 		float h = fx_heart(vec2(p.x * 0.62, p.y * 0.62 + 0.52) * beat);
 		float body = 1.0 - smoothstep(-0.02, 0.0, h);
-		glow = body * (0.22 + 0.6 * smoothstep(-0.14, 0.0, h)) + exp(-max(h, 0.0) * 14.0) * 0.3 * step(0.0, h);
+		glow = body * (0.22 + 0.6 * smoothstep(-0.14, 0.0, h)) + exp(-max(h, 0.0) * 14.0) * 0.3 * step(0.0, h) * soft;
 		vec2 s = p - vec2(-0.3, 0.35);
 		core = exp(-h * h * 2500.0) * 0.8 + exp(-dot(s, s) * 30.0) * 0.5 * body;
 	}
@@ -154,7 +168,7 @@ void fragment()
 		float d1 = d - 0.8;
 		float d2 = length(p - vec2(0.38, 0.12)) - 0.7;
 		float m = (1.0 - smoothstep(-0.02, 0.0, d1)) * smoothstep(0.0, 0.02, d2);
-		glow = m * 0.8 + exp(-max(d1, 0.0) * 8.0) * 0.2 * step(0.0, d1);
+		glow = m * 0.8 + exp(-max(d1, 0.0) * 8.0) * 0.2 * step(0.0, d1) * (1.0 - smoothstep(0.84, 0.99, d));
 		core = m * exp(-abs(d1) * 14.0) * 0.8;
 	}
 	else if (uStyle == 10)
@@ -204,7 +218,7 @@ void fragment()
 		glow = body * 0.8;
 		core = body * (1.0 - smoothstep(0.0, 0.5, x)) * (1.0 - ty) * 0.9;
 	}
-	else
+	else if (uStyle == 15)
 	{
 		float sq = max(abs(cos(TIME * 7.0 + uSeed * 30.0)), 0.12);
 		vec2 q = vec2(p.x / sq, p.y);
@@ -213,6 +227,145 @@ void fragment()
 		float rim = exp(-pow((dq - 0.8) / 0.06, 2.0));
 		glow = body * 0.5 + rim * 0.6;
 		core = rim * 0.4 + exp(-pow(q.x - 0.2, 2.0) * 30.0) * body * 0.3;
+	}
+	else if (uStyle == 16)
+	{
+		vec2 h = p - vec2(-0.22, -0.6);
+		float c = cos(0.4), s = sin(0.4);
+		h = vec2(c * h.x + s * h.y, -s * h.x + c * h.y);
+		float dn = (length(h / vec2(0.3, 0.21)) - 1.0) * 0.21;
+		dn = min(dn, fx_seg(p, vec2(0.05, -0.55), vec2(0.05, 0.8)) - 0.04);
+		dn = min(dn, fx_seg(p, vec2(0.05, 0.8), vec2(0.45, 0.35)) - 0.06);
+		float body = 1.0 - smoothstep(0.0, 0.04, dn);
+		glow = body * 0.8 + exp(-max(dn, 0.0) * 12.0) * 0.25 * step(0.0, dn) * soft;
+		core = body * 0.35;
+	}
+	else if (uStyle == 17)
+	{
+		float an = 0.6283185;
+		float b = mod(atan(p.x, p.y) + an, 2.0 * an) - an;
+		vec2 q = d * vec2(cos(b), abs(sin(b)));
+		vec2 tip = vec2(0.95, 0.0);
+		vec2 notch = vec2(0.38 * cos(an), 0.38 * sin(an));
+		vec2 e = notch - tip;
+		vec2 w = q - tip;
+		float ds = fx_seg(q, tip, notch);
+		float body = step(0.0, e.x * w.y - e.y * w.x);
+		glow = body * (0.3 + 0.55 * (1.0 - smoothstep(0.0, 0.14, ds))) + (1.0 - body) * exp(-ds * 14.0) * 0.3 * soft;
+		core = body * exp(-d * d * 6.0) * 0.5 + exp(-ds * ds * 2000.0) * 0.5;
+	}
+	else if (uStyle == 18)
+	{
+		float dc = min(fx_box(p, vec2(0.13, 0.9), 0.03), fx_box(p - vec2(0.0, 0.3), vec2(0.55, 0.13), 0.03));
+		float body = 1.0 - smoothstep(0.0, 0.03, dc);
+		glow = body * 0.75 + exp(-max(dc, 0.0) * 9.0) * 0.35 * step(0.0, dc) * soft;
+		core = body * (0.3 + 0.5 * exp(-dc * dc * 400.0));
+	}
+	else if (uStyle == 19)
+	{
+		float cl = 0.0;
+		for (int i = -1; i <= 1; i++)
+		{
+			float x0 = float(i) * 0.42 + 0.2 * p.y * p.y - 0.1 + 0.12 * p.y;
+			float wdt = 0.13 * (1.0 - p.y * p.y) * (i == 0 ? 1.0 : 0.8);
+			cl = max(cl, 1.0 - smoothstep(wdt * 0.5, wdt, abs(p.x - x0)));
+		}
+		cl *= step(abs(p.y), 0.98);
+		glow = cl * 0.8;
+		core = cl * cl * 0.5 * (0.5 + 0.5 * ty);
+	}
+	else if (uStyle == 20)
+	{
+		float dk = fx_box(p, vec2(0.58, 0.88), 0.1);
+		float body = 1.0 - smoothstep(0.0, 0.03, dk);
+		float rimk = exp(-dk * dk * 900.0);
+		float pip = 1.0 - smoothstep(0.26, 0.3, abs(p.x) / 0.7 + abs(p.y));
+		vec2 cp = abs(p) - vec2(0.38, 0.66);
+		float cpip = 1.0 - smoothstep(0.07, 0.1, abs(cp.x) + abs(cp.y));
+		glow = body * 0.22 + rimk * 0.9 + pip * 0.8 + cpip * 0.6;
+		core = rimk * 0.4 + pip * 0.4;
+	}
+	else if (uStyle == 21)
+	{
+		float ay = abs(p.y);
+		float wall = abs(p.x) - (0.06 + 0.6 * ay / 0.85);
+		float within = step(wall, 0.0) * step(ay, 0.85);
+		float outline = exp(-wall * wall * 700.0) * step(ay, 0.85);
+		float caps = 1.0 - smoothstep(0.0, 0.03, fx_box(vec2(p.x, ay - 0.9), vec2(0.72, 0.05), 0.02));
+		float lvl = fract(TIME * 0.25 + uSeed);
+		float sand = within * (step(p.y, -0.85 + 0.55 * lvl) + step(0.0, p.y) * step(p.y, 0.6 * (1.0 - lvl)));
+		float stream = exp(-p.x * p.x * 900.0) * step(p.y, 0.0) * step(-0.85, p.y);
+		glow = outline * 0.9 + caps * 0.8 + within * 0.1 + sand * 0.6 + stream * 0.6;
+		core = sand * 0.3 + caps * 0.3;
+	}
+	else if (uStyle == 22)
+	{
+		float face = length(p / vec2(0.66, 0.82)) - 1.0;
+		float body = 1.0 - smoothstep(0.0, 0.05, face);
+		vec2 e = vec2(abs(p.x) - 0.3, p.y - 0.15 - (abs(p.x) - 0.3) * 0.7);
+		float eyes = 1.0 - smoothstep(0.8, 1.0, length(e / vec2(0.2, 0.075)));
+		float grin = (1.0 - smoothstep(0.035, 0.06, abs(p.y + 0.42 - 0.5 * p.x * p.x))) * step(abs(p.x), 0.4);
+		float dh = fx_seg(vec2(abs(p.x), p.y), vec2(0.36, 0.62), vec2(0.62, 0.98));
+		float horn = 1.0 - smoothstep(0.0, 0.1 * (1.0 - clamp((p.y - 0.62) / 0.36, 0.0, 1.0)) + 0.01, dh);
+		float rimm = exp(-face * face * 60.0) * step(face, 0.0);
+		glow = body * (0.18 + 0.5 * rimm) * (1.0 - eyes) * (1.0 - grin) + horn * 0.7;
+		core = eyes * 1.5 + grin * 0.9;
+	}
+	else if (uStyle == 23)
+	{
+		float bl = step(abs(p.x), 0.11 * clamp((0.97 - p.y) / 0.22, 0.0, 1.0)) * step(-0.36, p.y) * step(p.y, 0.97);
+		float guard = 1.0 - smoothstep(0.0, 0.02, fx_box(p - vec2(0.0, -0.4), vec2(0.34, 0.045), 0.03));
+		float grip = step(abs(p.x), 0.045) * step(-0.82, p.y) * step(p.y, -0.4);
+		float pommel = 1.0 - smoothstep(0.07, 0.1, length(p - vec2(0.0, -0.88)));
+		float fuller = exp(-p.x * p.x * 1500.0) * bl;
+		glow = bl * (0.55 + 0.3 * abs(p.x) / 0.11) + guard * 0.8 + grip * 0.5 + pommel * 0.8;
+		core = fuller * 0.8 + bl * 0.2 + guard * 0.3;
+	}
+	else if (uStyle == 24)
+	{
+		float shaft = step(abs(p.x), 0.03) * step(-0.9, p.y) * step(p.y, 0.6);
+		float head = step(abs(p.x), 0.2 * (1.0 - p.y) / 0.45) * step(0.55, p.y) * step(p.y, 1.0);
+		// Fletching: vanes swept back from the shaft, notched at the tail.
+		float fl = step(abs(p.x), 0.15 * smoothstep(-0.5, -0.66, p.y)) * step(0.15 * (-0.8 - p.y) / 0.14, abs(p.x)) * step(-0.94, p.y) * step(p.y, -0.5);
+		glow = shaft * 0.8 + head + fl * 0.6;
+		core = head * 0.6 + exp(-p.x * p.x * 2500.0) * shaft * 0.6;
+	}
+	else if (uStyle == 25)
+	{
+		float half_w = p.y > 0.0 ? 0.64 : 0.64 * sqrt(max(1.0 - (p.y / 0.92) * (p.y / 0.92), 0.0));
+		// The top edge dips a little toward its corners, so it reads as a shield and not a box.
+		float ds = max(abs(p.x) - half_w, p.y - 0.86 + 0.28 * p.x * p.x);
+		float body = 1.0 - smoothstep(0.0, 0.03, ds);
+		float rims = exp(-ds * ds * 500.0) * step(ds, 0.01);
+		float boss = exp(-pow((length(p - vec2(0.0, 0.1)) - 0.2) / 0.03, 2.0));
+		float bars = (exp(-p.x * p.x * 700.0) + exp(-(p.y - 0.1) * (p.y - 0.1) * 700.0)) * body * 0.5;
+		glow = body * 0.2 + rims + boss * 0.8 + bars;
+		core = rims * 0.4 + boss * 0.4;
+	}
+	else if (uStyle == 26)
+	{
+		float u2 = (p.x + 0.62) / 1.24 * 2.0;
+		float peak = 1.0 - abs(fract(u2 + 0.5) - 0.5) * 2.0;
+		float top = -0.2 + 0.85 * peak;
+		float span = step(abs(p.x), 0.62);
+		float body = span * step(-0.6, p.y) * step(p.y, top);
+		float band = body * step(p.y, -0.32);
+		float crest = exp(-pow(p.y - top, 2.0) * 300.0) * span * step(-0.2, p.y);
+		vec2 j = vec2(abs(p.x) > 0.31 ? abs(p.x) - 0.62 : p.x, p.y - 0.68);
+		float jewel = exp(-dot(j, j) * 160.0);
+		float gems = exp(-(pow(fract(p.x * 2.4 + 0.5) - 0.5, 2.0) * 60.0 + pow(p.y + 0.46, 2.0) * 300.0)) * step(abs(p.x), 0.6);
+		glow = body * 0.45 + band * 0.35 + crest * 0.6 + jewel;
+		core = jewel * 1.2 + gems * 0.9 + crest * 0.3;
+	}
+	else
+	{
+		float aa = atan(p.x, p.y) + TIME * 0.6 + uSeed * 6.0;
+		float th = fract(aa / 6.2831853 * 8.0) - 0.5;
+		float reach = 0.92 * pow(max(cos(th * 3.14159265), 0.0), 0.45);
+		float petal = (1.0 - smoothstep(reach - 0.08, reach, d)) * step(0.2, d);
+		float centre = 1.0 - smoothstep(0.17, 0.22, d);
+		glow = petal * (0.4 + 0.4 * d) * (0.75 + 0.25 * cos(th * 6.2831853));
+		core = centre * 1.1 + petal * exp(-th * th * 60.0) * 0.3;
 	}
 	// Nothing reaches the quad's edge at full strength.
 	float inside = 1.0 - smoothstep(0.9, 1.0, max(abs(p.x), abs(p.y)));

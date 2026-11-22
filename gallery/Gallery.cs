@@ -14,7 +14,7 @@ namespace Arc.Fx.Gallery;
 /// away. The selected entry's card along the bottom shows its name, description, tags (click one
 /// to filter by it) and call. Dragging on the stage turns the camera round what it looks at, the
 /// wheel moves it in and out, and a double click (or V) puts it back.
-/// Options: <c>--effect=name</c> starts on one; <c>--filter=words</c> starts with the list narrowed; <c>--view=close</c>; <c>--speed=0.25</c>;
+/// Options: <c>--effect=name</c> starts on one; <c>--filter=words</c> starts with the list narrowed; <c>--view=close</c>; <c>--orbit=yaw,pitch</c> (degrees) starts with the camera turned; <c>--speed=0.25</c>;
 /// <c>--shot=dir</c> plays each in turn and saves dir/name.png as it peaks, then quits
 /// (<c>--only=a,b</c> limits that to a few).
 /// </summary>
@@ -98,6 +98,12 @@ public partial class Gallery : Node3D
         BuildUi();
 
         _view = _options.GetValueOrDefault("view") == "close" ? 1 : 0;
+        // --orbit=yaw[,pitch] in degrees starts with the camera already turned (for a bake from another side).
+        if (_options.TryGetValue("orbit", out var orbit))
+        {
+            var turns = orbit.Split(',').Select(v => float.TryParse(v, System.Globalization.CultureInfo.InvariantCulture, out var d) ? Mathf.DegToRad(d) : 0f).ToArray();
+            (_orbitYaw, _orbitPitch) = (turns.ElementAtOrDefault(0), turns.ElementAtOrDefault(1));
+        }
         ApplyView();
         ApplyFloor();
         if (_options.TryGetValue("speed", out var speed) && float.TryParse(speed, System.Globalization.CultureInfo.InvariantCulture, out var wanted))
@@ -1090,7 +1096,7 @@ public partial class Gallery : Node3D
             FxSkill.RuneCascade => ("arcane", 2.8f, 1.2f, Cast.Front),
             FxSkill.NebulaBurst => ("arcane", 2.8f, 1.45f, Cast.Front),
             FxSkill.UmbralEclipse => ("arcane", 3.2f, 1.9f, Cast.Front),
-            FxSkill.TimeShatter => ("arcane", 2.8f, 1.4f, Cast.Front),
+            FxSkill.TimeShatter => ("arcane", 2.8f, 1.6f, Cast.Front),
             FxSkill.WishingStars => ("arcane", 3.4f, 2.1f, Cast.Front),
             FxSkill.WingsOfDawn => ("holy", 3.6f, 1.2f, Cast.Follow),
             FxSkill.TigerClaws => ("blade", 1.5f, 0.24f, Cast.Front),
@@ -1098,7 +1104,7 @@ public partial class Gallery : Node3D
             FxSkill.FlickerCuts => ("blade", 2.0f, 0.85f, Cast.Front),
             FxSkill.CrescentKick => ("blade", 1.4f, 0.2f, Cast.Front),
             FxSkill.YinYangPalm => ("blade", 2.2f, 0.7f, Cast.Away),
-            FxSkill.ArrowStorm => ("blade", 2.2f, 0.4f, Cast.Away),
+            FxSkill.ArrowStorm => ("blade", 2.2f, 0.85f, Cast.Away),
             FxSkill.PiercingArrow => ("blade", 1.8f, 0.5f, Cast.Line),
             FxSkill.BladeLotus => ("blade", 2.4f, 0.8f, Cast.Front),
             FxSkill.ShieldBash => ("blade", 1.8f, 0.3f, Cast.Side),
@@ -1148,7 +1154,7 @@ public partial class Gallery : Node3D
             FxSkill.GearStorm => ("storm", 3.6f, 1.4f, Cast.Front),
             FxSkill.StormCompass => ("storm", 3.0f, 0.6f, Cast.Front),
             FxSkill.VoltChains => ("storm", 3.4f, 1.3f, Cast.Front),
-            FxSkill.SkyArrows => ("storm", 2.4f, 0.8f, Cast.Front),
+            FxSkill.SkyArrows => ("storm", 2.4f, 1.0f, Cast.Front),
             FxSkill.TeslaGate => ("storm", 3.6f, 1.4f, Cast.Front),
             FxSkill.CycloneWhorl => ("storm", 3.6f, 1.5f, Cast.Front),
             FxSkill.ShockTiles => ("storm", 3.6f, 1.4f, Cast.Front),
@@ -1169,7 +1175,7 @@ public partial class Gallery : Node3D
             FxSkill.WidowsWeb => ("nature", 3.2f, 1.8f, Cast.Front),
             FxSkill.BeeSwarm => ("nature", 2.4f, 1.0f, Cast.Away),
             FxSkill.FernUnfurl => ("nature", 3.8f, 1.5f, Cast.Front),
-            FxSkill.CardTrick => ("arcane", 1.8f, 0.4f, Cast.Away),
+            FxSkill.CardTrick => ("arcane", 1.8f, 0.3f, Cast.Away),
             FxSkill.RoyalFlush => ("arcane", 3.0f, 1.0f, Cast.Front),
             FxSkill.HourglassTurn => ("arcane", 4.0f, 1.7f, Cast.Front),
             FxSkill.Crescendo => ("arcane", 3.2f, 2.1f, Cast.Follow),

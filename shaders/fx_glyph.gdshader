@@ -1,11 +1,14 @@
-// A skill's small picture, on a 1x1 quad square on to the camera: the node's Y axis, as the
-// camera sees it, is the picture's up (so a petal points the way it flies and a skull leans
+// A skill's small picture, on a 1x1 quad. With the instance uniform uFlat set it lies in the
+// node's own plane, turned however the node is (a card, a shard of glass, a petal: flat things
+// that are somewhere and face some way). Otherwise it is square on to the camera: the node's Y
+// axis, as the camera sees it, is the picture's up (so a petal points the way it flies and a skull leans
 // into its charge), its length the picture's height and the X scale its width. uStyle picks it:
 //    0 a glint: a thin four-pointed sparkle, twinkling;
 //    1 a petal (or a leaf): pointed at both ends, a pale rib down it;
 //    2 a ring: a bubble's outline with a highlight;
 //    3 a skull, its sockets burning and its jaw chattering;
-//    4 a wraith: a hooded ghost with slanted eyes, its ragged tail swaying;
+//    4 a wraith: a figure of luminous smoke (head, shoulders, a trailing robe), its edges
+//      brightest and torn by drifting noise, motes of light round it;
 //    5 a feather: a shaft and combed vanes;
 //    6 a heart;
 //    7 a puff of smoke or mist;
@@ -46,9 +49,28 @@ uniform float uGain = 1.0;
 instance uniform float uProgress = 0.0;
 instance uniform float uAlpha = 1.0;
 instance uniform float uSeed = 0.0;
+// The share of the picture, from its top down, that is hidden: sunk into what it has struck
+// (an arrow in the ground shows only its tail end).
+instance uniform float uSink = 0.0;
+// Above a half, the picture keeps the node's own orientation instead of turning to the camera.
+instance uniform float uFlat = 0.0;
+
+// A soft union of two distances, rounded over k.
+float fx_smin(float a, float b, float k)
+{
+	float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+	return mix(b, a, h) - k * h * (1.0 - h);
+}
 
 void vertex()
 {
+	if (uFlat > 0.5)
+	{
+		VERTEX = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		MODELVIEW_MATRIX = VIEW_MATRIX;
+	}
+	else
+	{
 	vec3 centre = MODEL_MATRIX[3].xyz;
 	vec3 axis = MODEL_MATRIX[1].xyz;
 	float tall = length(axis);
@@ -59,6 +81,7 @@ void vertex()
 	vec3 side = normalize(cross(up, view));
 	VERTEX = centre + side * VERTEX.x * wide + up * VERTEX.y * tall;
 	MODELVIEW_MATRIX = VIEW_MATRIX;
+	}
 }
 
 void fragment()
@@ -108,21 +131,38 @@ void fragment()
 	}
 	else if (uStyle == 4)
 	{
-		float y = p.y;
-		float sway = 0.14 * sin(y * 5.0 + TIME * 5.0 + uSeed * 30.0) * smoothstep(0.1, -1.0, y);
-		float x = p.x - sway;
-		float w = mix(0.26, 0.5, smoothstep(0.55, -0.15, y)) * smoothstep(-1.0, -0.2, y);
-		if (y > 0.55)
-			w = sqrt(max(0.073 - (y - 0.55) * (y - 0.55), 0.0));
-		float n = fx_fbm(vec2(x * 3.0 + uSeed * 9.0, y * 2.5 + TIME * 1.8));
-		float rag = smoothstep(0.0, 0.25, n + (y + 0.75) * 1.3);
-		float ax = abs(x) / max(w, 0.001);
-		float body = (1.0 - smoothstep(0.8, 1.0, ax)) * rag;
-		float rimf = smoothstep(0.35, 0.95, ax);
-		glow = body * (0.3 + 0.6 * rimf) * (0.6 + 0.4 * n) * (0.55 + 0.45 * smoothstep(-1.0, 0.4, y));
-		vec2 e = vec2(abs(x) - 0.1, y - 0.5 - (abs(x) - 0.1) * 0.6);
-		float eyes = exp(-(e.x * e.x * 500.0 + e.y * e.y * 1800.0));
-		core = eyes * 1.6 + body * rimf * 0.2;
+		// A figure of luminous smoke: head, shoulders, arms and a robe trailing away to nothing,
+		// its outline torn by drifting noise, its inside streaked with smoke climbing through it,
+		// its edges brightest, motes of light hanging round it.
+		float t = TIME + uSeed * 30.0;
+		vec2 flow = vec2(fx_fbm(p * 2.6 + vec2(uSeed * 9.0, -t * 0.5)), fx_fbm(p * 2.6 + vec2(4.7 - t * 0.35, uSeed * 5.0))) - 0.5;
+		vec2 q = p + flow * (0.1 + 0.22 * smoothstep(0.3, -1.0, p.y));
+		float sway = 0.1 * sin(q.y * 4.5 + t * 2.6) * smoothstep(0.0, -1.0, q.y);
+		float head = length(q - vec2(0.0, 0.6)) - 0.19;
+		float chest = fx_box(q - vec2(0.0, 0.2), vec2(0.33, 0.19), 0.16);
+		float arm = fx_seg(vec2(abs(q.x), q.y), vec2(0.33, 0.28), vec2(0.43, -0.16)) - 0.07;
+		float width = mix(0.27, 0.015, smoothstep(0.05, -0.95, q.y));
+		float robe = max(abs(q.x - sway) - width, max(q.y - 0.1, -0.97 - q.y));
+		float body = fx_smin(fx_smin(head, chest, 0.09), fx_smin(arm, robe, 0.08), 0.08);
+		// Smoke climbing through it: thin bright ridges.
+		float n = fx_fbm(q * vec2(3.2, 2.2) + vec2(uSeed * 3.0, -t * 0.9));
+		float ridges = pow(1.0 - abs(2.0 * n - 1.0), 2.5);
+		float torn = body + (n - 0.5) * 0.16 * (1.0 + 2.0 * smoothstep(0.0, -1.0, p.y));
+		float figure = 1.0 - smoothstep(-0.05, 0.05, torn);
+		float thin = smoothstep(-1.0, -0.25, p.y);
+		float rim = exp(-pow(torn / 0.045, 2.0));
+		float halo = exp(-max(torn, 0.0) * 7.0) * step(0.0, torn) * (0.35 + 0.65 * n) * soft;
+		glow = figure * (0.2 + 0.55 * ridges) * (0.45 + 0.55 * thin) + rim * 0.55 * (0.4 + 0.6 * thin) + halo * 0.3;
+		vec2 e = vec2(abs(q.x) - 0.075, q.y - 0.62 - (abs(q.x) - 0.075) * 0.5);
+		float eyes = exp(-(e.x * e.x * 1500.0 + e.y * e.y * 4500.0));
+		// Motes: a few to a cell, each blinking in its own time, thick near the figure.
+		vec2 g = p * 7.0 + vec2(0.0, -t * 0.25);
+		vec2 cell = floor(g);
+		vec2 spot = fx_hash2(cell + uSeed * 17.0);
+		float blink = pow(0.5 + 0.5 * sin(t * (2.0 + 4.0 * spot.x) + spot.y * 40.0), 4.0);
+		vec2 off = fract(g) - 0.2 - 0.6 * spot;
+		float motes = exp(-dot(off, off) * 260.0) * blink * exp(-max(torn, 0.0) * 5.0) * soft;
+		core = eyes * 1.5 + rim * ridges * 0.55 * thin + figure * pow(ridges, 3.0) * 0.3 + motes * 1.2;
 	}
 	else if (uStyle == 5)
 	{
@@ -369,5 +409,6 @@ void fragment()
 	}
 	// Nothing reaches the quad's edge at full strength.
 	float inside = 1.0 - smoothstep(0.9, 1.0, max(abs(p.x), abs(p.y)));
+	inside *= 1.0 - smoothstep(1.0 - uSink - 0.015, 1.0 - uSink, ty) * step(0.001, uSink);
 	ALBEDO = (fx_out(uColor) * glow + fx_out(uHot) * core) * inside * uAlpha * uGain;
 }

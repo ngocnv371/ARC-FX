@@ -172,7 +172,6 @@ internal sealed partial class FxSkills
         var reach = r * 1.8f;
         var half = r * 0.7f;
         Tone[] autumn = [Ember, Gold, Crimson, Honey, Sun];
-        Disc(c, 0f, Life, Cone, Honey, k => Lay(Vector3.Zero, reach), k => Fade(k, 0.05f, 0.5f) * 0.45f, k => Out(Mathf.Min(k * 2f, 1f)), cone: 0.4f);
         for (var i = 0; i < 70; i++)
         {
             var x = Rand(-half, half);
@@ -334,10 +333,14 @@ internal sealed partial class FxSkills
             var spin = Rand(0f, Mathf.Tau);
             var tone = i % 2 == 0 ? Pearl : Crimson;
             Func<float, Vector3> at = k => hand.Lerp(to, k) + Vector3.Up * 0.3f * Mathf.Sin(k * Mathf.Pi);
-            Glyph(c, start, Flight, Card, tone, at, _ => 1.1f, k => Fade(k, 0.05f, 0f), k => new Vector3(Mathf.Sin(spin + k * 16f), Mathf.Cos(spin + k * 16f), 0f), gain: 1.9f, slim: 0.7f);
+            Glyph(c, start, Flight, Card, tone, at, _ => 1.1f, k => Fade(k, 0.05f, 0f), gain: 1.9f, slim: 0.7f,
+                // Thrown flat and spinning about its own middle, tipped a little toward the way it flies.
+                turn: k => new Basis(Vector3.Up, spin + k * 16f) * new Basis(Vector3.Right, -1.25f));
             Trail(c, start, Flight, tone, at, 0.25f, 0.35f, gain: 1.3f);
             var way = (to - hand).Normalized();
-            Glyph(c, start + Flight, Stuck, Card, tone, _ => to + Vector3.Down * 0.4f, _ => 1.1f, k => 1f - k * k, _ => -way * 0.6f + Vector3.Up, gain: 1.7f, slim: 0.7f);
+            Glyph(c, start + Flight, Stuck, Card, tone, _ => to + Vector3.Down * 0.4f, _ => 1.1f, k => 1f - k * k, gain: 1.7f, slim: 0.7f, sink: 0.25f,
+                // Stuck in edge first, a corner buried, its faces to either side of the way it came.
+                turn: _ => Face(-way * 0.6f + Vector3.Up, way.Cross(Vector3.Up)));
             Glyph(c, start + Flight, 0.3f, Glint, Pearl, to, 1.4f, 1.7f);
             Disc(c, start + Flight, 0.3f, Shock, tone, FxKit.Flat(to), k => 0.8f * Out(k), k => 1f - k, band: 0.1f);
             Spray(c, start + Flight, tone, to, 4, 2.5f, 2f, 0.35f);
@@ -366,7 +369,7 @@ internal sealed partial class FxSkills
                 return t < drop - start ? high + Vector3.Up * 0.06f * Mathf.Sin(t * 7f + fan * 9f) : high.Lerp(land, Mathf.Pow((t - (drop - start)) / Fall, 2f));
             }, k => 1.6f * Overshoot(Mathf.Min(k * (drop - start + Fall) / 0.18f, 1f)), _ => 1f, _ => tilt, gain: 2f, slim: 0.7f);
             Glyph(c, start, 0.3f, Glint, Pearl, high, 1.5f, 1.8f);
-            Glyph(c, start + 0.1f, drop - start - 0.1f, i == Cards / 2 ? Tiara : Starlet, Gold, _ => high + Vector3.Back * 0.05f, _ => 0.6f, k => Fade(k, 0.1f, 0.05f), _ => tilt, gain: 2f);
+            Glyph(c, start + 0.1f, drop - start - 0.1f, i == Cards / 2 ? Tiara : Starlet, Gold, _ => high + Vector3.Back * 0.05f, _ => 0.6f, k => Fade(k, 0.1f, 0.05f), gain: 2f, turn: _ => Face(tilt, Vector3.Back));
             Line(c, drop, Fall, Gold, k => high.Lerp(land, k * k) + Vector3.Up * 0.8f, _ => Vector3.Up * 1.6f, 0.2f, _ => 0.7f);
             Hit(c, drop + Fall, Gold, land, 0.9f);
             Disc(c, drop + Fall, After, Cracks, Gold, FxKit.Flat(land), _ => 0.7f, k => Fade(k, 0.02f, 0.5f), k => k);
@@ -477,11 +480,10 @@ internal sealed partial class FxSkills
 
     private void PowerChord(Cast c, float r)
     {
-        const float Strum = 0.25f, Life = 1.3f;
+        const float Strum = 0.25f;
         var reach = r * 1.7f;
         var mouth = new Vector3(0f, 1.2f, 0.6f);
         Flare(c, 0f, Strum, Star, Rage, _ => mouth, k => 0.6f + 2.4f * k, k => k);
-        Disc(c, Strum, Life - Strum, Cone, Rage, k => Lay(Vector3.Zero, reach), k => Fade(k, 0.02f, 0.5f) * 0.8f, k => Out(Mathf.Min(k * 4f, 1f)), cone: 0.5f, gain: 1.3f);
         // Three walls of sound, one behind another, with jagged edges.
         Tone[] strings = [Rage, Gold, Pearl];
         for (var i = 0; i < 3; i++)
@@ -533,7 +535,7 @@ internal sealed partial class FxSkills
         var from = square(-2, 0);
         var corner = square(0, 0);
         Func<float, Vector3> leap = k => (k < 0.6f ? from.Lerp(corner, k / 0.6f) : corner.Lerp(king, (k - 0.6f) / 0.4f)) + Vector3.Up * (0.6f + 1.6f * Mathf.Sin(k * Mathf.Pi));
-        Glyph(c, Set, Move - Set, Rapier, Gold, leap, _ => 1.6f, k => Fade(k, 0.1f, 0f), k => Heading(leap, k, 1f) + Vector3.Up * 0.5f, gain: 2f, slim: 0.6f);
+        Sword3(c, Set, Move - Set, Gold, leap, _ => 1.6f, k => Fade(k, 0.1f, 0f), k => Heading(leap, k, 1f) + Vector3.Up * 0.5f);
         Trail(c, Set, Move - Set, Gold, leap, 0.4f, 0.3f, gain: 1.5f);
         Line(c, Set, Move - Set, Gold, _ => (from + corner) * 0.5f + Vector3.Up * 0.1f, k => (corner - from) * Mathf.Min(k / 0.6f, 1f), 0.12f, k => Fade(k, 0f, 0.2f));
         Line(c, Set + (Move - Set) * 0.6f, (Move - Set) * 0.4f, Gold, _ => (corner + king) * 0.5f + Vector3.Up * 0.1f, k => (king - corner) * k, 0.12f, _ => 1f);
@@ -555,7 +557,9 @@ internal sealed partial class FxSkills
             var tone = guests[i];
             var bob = (float)i;
             Func<float, Vector3> at = k => Around(phase + k * Life * 1.5f) * ring * Out(Mathf.Min(k * Life / 0.3f, 1f)) + Vector3.Up * (1.5f + 0.3f * Mathf.Sin(k * Life * 4f + bob * 2f));
-            Glyph(c, 0f, Life, Mask, tone, at, k => 1.1f, k => Fade(k, 0.04f, 0.1f), k => new Vector3(0.3f * Mathf.Sin(k * Life * 4f + bob), 1f, 0f), gain: 1.9f);
+            Glyph(c, 0f, Life, Mask, tone, at, k => 1.1f, k => Fade(k, 0.04f, 0.1f), gain: 1.9f,
+                // Each looks outward from the ring, rocking from side to side.
+                turn: k => Face(new Vector3(0f, 1f, 0f) + FxKit.Flat(at(k)).Normalized().Cross(Vector3.Up) * 0.3f * Mathf.Sin(k * Life * 4f + bob), FxKit.Flat(at(k))));
             // A streamer trails from each.
             Trail(c, 0f, Life, tone, k => at(k) + Vector3.Down * 0.5f, 0.3f, 0.12f, gain: 1.4f);
         }
@@ -802,22 +806,9 @@ internal sealed partial class FxSkills
     private void CrownOfLight(Cast c, float r)
     {
         const float Life = 3f;
-        const int Spikes = 9;
         var head = Vector3.Up * 2.2f;
         Mark(c, 0f, Life, Filigree, Gold, Vector3.Zero, _ => r * 0.5f, k => Fade(k, 0.05f, 0.15f), count: 9f, spin: 2f, gain: 1.2f);
-        Disc(c, 0f, Life, Band, Gold, k => Lay(head, 0.5f * Overshoot(Mathf.Min(k * Life / 0.3f, 1f))), k => Fade(k, 0.04f, 0.12f), band: 0.16f, gain: 1.9f);
-        // A crown of rays: alternating long and short spikes of light standing on the band.
-        for (var i = 0; i < Spikes; i++)
-        {
-            var phase = i * Mathf.Tau / Spikes;
-            var tall = i % 2 == 0 ? 1.1f : 0.65f;
-            var start = i * 0.03f;
-            var life = Life - start;
-            Func<float, Vector3> foot = k => head + Around(phase + k * life * 0.8f) * 0.5f;
-            Func<float, float> up = k => tall * Overshoot(Mathf.Min(k * life / 0.25f, 1f)) * (1f + 0.1f * Mathf.Sin(k * life * 8f + phase));
-            Line(c, start, life, Gold, k => foot(k) + (Vector3.Up + Around(phase + k * life * 0.8f) * 0.35f) * up(k) * 0.5f, k => (Vector3.Up + Around(phase + k * life * 0.8f) * 0.35f) * up(k), 0.16f, k => Fade(k, 0.03f, 0.12f));
-            Glyph(c, start + 0.2f, life - 0.2f, Glint, Pearl, k => foot(k) + (Vector3.Up + Around(phase + k * life * 0.8f) * 0.35f) * up(k), _ => i % 2 == 0 ? 0.7f : 0.45f, k => Fade(k, 0.05f, 0.12f), gain: 1.8f);
-        }
+        Crown(c, 0f, Life, Gold, _ => head, gain: 2f);
         Column(c, 0f, Life, Light, Gold, Vector3.Zero, _ => new Vector2(0.55f, 6f), k => Fade(k, 0.08f, 0.2f) * 0.45f, gain: 1.3f, speed: -1.5f);
         Drift(c, 26, 0.2f, Life - 1.2f, 1.2f, Glint, [Gold, Pearl], () => head + new Vector3(Rand(-0.7f, 0.7f), Rand(0f, 0.8f), Rand(-0.7f, 0.7f)), () => Vector3.Down * Rand(0.8f, 1.5f), 0.4f, sway: 0.1f, tumble: false, gain: 1.7f);
         Disc(c, 0.2f, 0.5f, Shock, Gold, Vector3.Zero, k => r * 0.9f * Out(k), k => 1f - k, band: 0.12f, gain: 1.3f);
@@ -861,8 +852,10 @@ internal sealed partial class FxSkills
             Func<float, Vector3> at = k => Around(phase + k * life * 0.6f) * ring + Vector3.Up * (2.4f + 0.15f * Mathf.Sin(k * life * 2.5f + bob));
             // Each a small robed figure of light, winged and haloed, singing.
             Glyph(c, start, life, Wraith, Gold, at, k => 1.5f * Out(Mathf.Min(k * life / 0.3f, 1f)), k => Fade(k, 0.04f, 0.12f), gain: 1.8f, slim: 0.7f);
-            Mark(c, start, life, Wings, Pearl, k => new Transform3D(Stand(Vector3.Back) * Basis.FromScale(Vector3.One * 1.15f), at(k) + new Vector3(0f, 0.25f, -0.05f)), k => Fade(k, 0.04f, 0.12f),
+            // Turned to the camera with the figure, so the wings sit on its back from any side.
+            FacingMark(c, start, life, Wings, Pearl, k => at(k) + Vector3.Up * 0.3f, _ => 1.15f, k => Fade(k, 0.04f, 0.12f),
                 k => Out(Mathf.Min(k * life / 0.4f, 1f)) * (0.95f + 0.05f * Mathf.Sin(k * life * 6f + bob)), count: 6f, gain: 1.7f);
+            Strands(c, start, life, Gold, at, 1.5f, 4);
             Disc(c, start + 0.2f, life - 0.2f, Band, Gold, k => Lay(at(k) + Vector3.Up * 0.75f, 0.2f), k => Fade(k, 0.05f, 0.12f), band: 0.2f, gain: 1.9f);
             Tube(c, start, life, Light, Gold, k => (at(k), FxKit.Flat(at(k))), _ => 0.3f, k => Fade(k, 0.1f, 0.2f) * 0.3f, speed: -1f);
             for (var n = 0; n < 6; n++)
@@ -889,8 +882,7 @@ internal sealed partial class FxSkills
         var half = r * 0.8f;
         Mark(c, 0f, Life, Scales, Gold, new Vector3(0f, 0f, r * 0.35f), _ => half, k => Fade(k, 0.05f, 0.15f), count: 9f, spin: 1f, gain: 1.2f);
         Wall(c, 0.1f, Life - 0.1f, 0, Gold, new Vector3(-half, 0f, ward.Z), new Vector3(half, 0f, ward.Z), k => 3.2f * Out(Mathf.Min(k * 6f, 1f)), k => Fade(k, 0.03f, 0.12f) * 0.7f, k => Mathf.Max(0f, (k - 0.9f) / 0.1f), gain: 1.3f);
-        Glyph(c, 0f, Life, Buckler, Gold, k => ward + Vector3.Back * 0.1f + Vector3.Up * 0.04f * Mathf.Sin(k * Life * 3f), k => 3.2f * Overshoot(Mathf.Min(k * Life / 0.25f, 1f)), k => Fade(k, 0.03f, 0.1f), gain: 2f);
-        Glyph(c, 0.15f, Life - 0.15f, Rood, Pearl, _ => ward + Vector3.Back * 0.16f + Vector3.Up * 0.05f, k => 1.5f * Overshoot(Mathf.Min(k * 6f, 1f)), k => Fade(k, 0.03f, 0.1f), gain: 1.9f);
+        Shield3(c, 0f, Life, k => ward + Vector3.Back * 0.1f + Vector3.Up * 0.04f * Mathf.Sin(k * Life * 3f), k => 3.2f * Overshoot(Mathf.Min(k * Life / 0.25f, 1f)), k => Fade(k, 0.03f, 0.1f));
         Mark(c, 0.2f, Life - 0.2f, Rays, Gold, k => new Transform3D(Stand(Vector3.Back) * Basis.FromScale(Vector3.One * 2.6f), ward), k => Fade(k, 0.1f, 0.15f) * 0.5f, k => Out(Mathf.Min(k * 4f, 1f)), count: 18f, spin: 1f);
         Flare(c, 0f, 0.35f, Star, Gold, ward, 4f);
         Disc(c, 0f, 0.5f, Shock, Gold, FxKit.Flat(ward), k => r * Out(k), k => 1f - k, band: 0.12f, gain: 1.3f, stretch: new Vector3(1f, 1f, 0.5f));

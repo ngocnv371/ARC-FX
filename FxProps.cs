@@ -62,7 +62,7 @@ internal static class FxProps
         // The outline, anticlockwise seen from the front: flat across the top, straight down the
         // sides, then curving in to the point.
         var outline = new List<Vector2>();
-        const int Steps = 9;
+        const int Steps = 14;
         float SideX(float y) => y > 0.1f ? 0.5f : 0.5f * Mathf.Sqrt(Mathf.Max(0f, 1f - Mathf.Pow((0.1f - y) / 0.78f, 2f)));
         for (var k = 0; k <= Steps; k++)
         {
@@ -71,6 +71,9 @@ internal static class FxProps
         }
         for (var k = Steps - 1; k >= 0; k--)
             outline.Add(new Vector2(-outline[k].X, outline[k].Y));
+        // The top edge rises a little to its middle rather than running dead flat.
+        foreach (var x in new[] { -0.34f, -0.17f, 0f, 0.17f, 0.34f })
+            outline.Add(new Vector2(x, 0.62f + 0.07f * (1f - x * x / 0.25f)));
         // Its face bends back toward the edges.
         Vector3 At(Vector2 p, float scale, float depth)
         {

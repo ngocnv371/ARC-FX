@@ -463,7 +463,7 @@ internal sealed partial class FxSkills
                 var sway = (float)i;
                 Func<float, float> open = k => Overshoot(Mathf.Min(k * life / Open, 1f));
                 Glyph(c, delay, life, Leaflet, layer == 0 ? Rose : Petal, k => heart + way * long1 * 0.55f * open(k) + Vector3.Up * (layer * 0.25f + 0.1f * Mathf.Sin(k * life * 2f + sway)),
-                    k => long1 * open(k), k => Fade(k, 0.03f, 0.2f), _ => way + Vector3.Up * (layer * 0.4f), gain: 1.5f, slim: 0.55f);
+                    k => long1 * open(k), k => Fade(k, 0.03f, 0.2f), gain: 1.5f, slim: 0.55f, turn: _ => Face(way + Vector3.Up * (0.12f + layer * 0.4f), Vector3.Up));
             }
         }
         Globe(c, "energy", Orb, 0f, Life, Honey, _ => heart + Vector3.Up * 0.2f, k => r * 0.13f * Overshoot(Mathf.Min(k * Life / Open, 1f)), k => Fade(k, 0.03f, 0.15f), gain: 1.6f);
@@ -505,9 +505,20 @@ internal sealed partial class FxSkills
 
     // ---- Heaven.
 
-    /// <summary>A pair of wings of light standing behind a point, unfurling.</summary>
-    private void WingPair(Cast c, float start, float life, Tone tone, Vector3 at, float size, float gain = 1.6f)
+    /// <summary>
+    /// A pair of wings of light standing behind a point, unfolding. <paramref name="facing"/>
+    /// turns them to the camera, for the back of a ghost that is itself a picture facing it.
+    /// </summary>
+    private void WingPair(Cast c, float start, float life, Tone tone, Vector3 at, float size, float gain = 1.6f, bool facing = false)
     {
+        if (facing)
+        {
+            FacingMark(c, start, life, Wings, tone, _ => at, k => size * (1f + 0.03f * Mathf.Sin(k * life * 4f)), k => Fade(k, 0.02f, 0.15f),
+                k => Overshoot(Mathf.Min(k * life / 0.45f, 1f)) * (0.96f + 0.04f * Mathf.Sin(k * life * 4f)), count: 9f, gain: gain, behind: 0.1f);
+            FacingMark(c, start, life, Wings, tone with { Main = tone.Hot }, _ => at, _ => size * 0.72f, k => Fade(k, 0.02f, 0.15f) * 0.6f,
+                k => Out(Mathf.Min(k * life / 0.6f, 1f)), count: 6f, gain: gain * 0.8f, behind: 0.05f);
+            return;
+        }
         var face = Stand(Vector3.Back);
         Mark(c, start, life, Wings, tone, k => new Transform3D(face * Basis.FromScale(Vector3.One * size * (1f + 0.03f * Mathf.Sin(k * life * 4f))), at), k => Fade(k, 0.02f, 0.15f),
             k => Overshoot(Mathf.Min(k * life / 0.45f, 1f)) * (0.96f + 0.04f * Mathf.Sin(k * life * 4f)), count: 9f, gain: gain);
@@ -691,7 +702,7 @@ internal sealed partial class FxSkills
         const float Life = 3f;
         var behind = new Vector3(0f, 0f, -0.7f);
         Mark(c, 0f, Life, Filigree, Gold, Vector3.Zero, _ => r * 0.5f, k => Fade(k, 0.05f, 0.15f), count: 8f, spin: 2f, gain: 1.2f);
-        WingPair(c, 0.15f, Life - 0.15f, Gold, behind + Vector3.Up * 2.6f, 2.6f, 1.4f);
+        WingPair(c, 0.15f, Life - 0.15f, Gold, behind + Vector3.Up * 2.3f, 2.6f, 1.4f, facing: true);
         Ghost(c, 0f, Life, Gold, _ => behind, 3.3f, gain: 1.7f);
         Disc(c, 0.3f, Life - 0.3f, Band, Gold, k => Lay(behind + Vector3.Up * 3.5f, 0.38f), k => Fade(k, 0.05f, 0.15f), band: 0.1f, gain: 1.9f);
         Globe(c, "energy", Hexes, 0.2f, Life - 0.2f, Gold, _ => Vector3.Up * 1f, k => 1.25f * Overshoot(Mathf.Min(k * Life / 0.3f, 1f)), k => Fade(k, 0.03f, 0.1f) * 0.7f, gain: 1.2f);

@@ -50,7 +50,9 @@ instance uniform float uAlpha = 1.0;
 // A line along the zero of v, w wide, kept at least a pixel or so by the screen.
 float line(float v, float w)
 {
-	float px = fwidth(v) * 1.2;
+	// Capped: where v wraps round (a fract, the seam of an angle) its derivative spikes for a
+	// pixel, which would otherwise light that pixel and leave a dotted line along the wrap.
+	float px = min(fwidth(v) * 1.2, 0.03);
 	return 1.0 - smoothstep(w, w + px, abs(v));
 }
 

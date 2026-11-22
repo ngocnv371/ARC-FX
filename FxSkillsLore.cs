@@ -261,7 +261,6 @@ internal sealed partial class FxSkills
     {
         const float Stand1 = 1.4f;
         var reach = r * 1.7f;
-        Disc(c, 0f, 0.9f, Cone, Amethyst, k => Lay(Vector3.Zero, reach), k => Fade(k, 0.02f, 0.5f) * 0.6f, k => Out(Mathf.Min(k * 2.5f, 1f)), cone: 0.45f);
         for (var row = 0; row < 5; row++)
         {
             var far = 0.9f + (reach - 0.9f) * row / 4f;
@@ -292,8 +291,7 @@ internal sealed partial class FxSkills
         const int Tongues = 8;
         var head = Vector3.Up * 2.35f;
         Mark(c, 0f, Life, Sunburst, Flame, Vector3.Zero, _ => r * 0.55f, k => Fade(k, 0.05f, 0.15f), count: 12f, spin: 3f, gain: 1.3f);
-        Glyph(c, 0f, Life, Tiara, Flame, k => head + Vector3.Up * 0.05f * Mathf.Sin(k * Life * 5f), k => 1.35f * Overshoot(Mathf.Min(k * Life / 0.3f, 1f)), k => Fade(k, 0.04f, 0.12f), gain: 2f);
-        Disc(c, 0f, Life, Band, Flame, k => Lay(head + Vector3.Down * 0.3f, 0.5f * Out(Mathf.Min(k * Life / 0.3f, 1f))), k => Fade(k, 0.04f, 0.12f), band: 0.16f, gain: 1.8f);
+        Crown(c, 0f, Life, Flame, k => head + Vector3.Down * 0.3f + Vector3.Up * 0.05f * Mathf.Sin(k * Life * 5f), gain: 2f);
         for (var i = 0; i < Tongues; i++)
         {
             var phase = i * Mathf.Tau / Tongues;
@@ -457,7 +455,6 @@ internal sealed partial class FxSkills
         var face = new Vector3(0f, 1.9f, 0.5f);
         Glyph(c, 0f, Loom + Breath, Mask, Flame, k => face + Vector3.Up * 0.06f * Mathf.Sin(k * 30f), k => 3.2f * Overshoot(Mathf.Min(k * (Loom + Breath) / Loom, 1f)), k => Fade(k, 0.03f, 0.2f), gain: 2f);
         Glyph(c, 0f, Loom + Breath, Mask, Ember, _ => face + Vector3.Forward * 0.1f, k => 3.9f * Out(Mathf.Min(k * (Loom + Breath) / Loom, 1f)), k => Fade(k, 0.03f, 0.2f) * 0.45f, gain: 1.3f);
-        Disc(c, Loom, Breath, Cone, Flame, k => Lay(Vector3.Zero, reach), k => Fade(k, 0.02f, 0.4f), k => Out(Mathf.Min(k * 3f, 1f)), cone: 0.42f, gain: 1.4f);
         var mouth = face + new Vector3(0f, -0.8f, 0.3f);
         for (var i = 0; i < 5; i++)
         {
@@ -518,8 +515,7 @@ internal sealed partial class FxSkills
         const float Life = 3f;
         var head = Vector3.Up * 2.35f;
         Mark(c, 0f, Life, Frostflake, Ice, Vector3.Zero, _ => r * 0.55f, k => Fade(k, 0.05f, 0.15f), spin: 3f, gain: 1.3f);
-        Glyph(c, 0f, Life, Tiara, Ice, k => head + Vector3.Up * 0.05f * Mathf.Sin(k * Life * 4f), k => 1.35f * Overshoot(Mathf.Min(k * Life / 0.3f, 1f)), k => Fade(k, 0.04f, 0.12f), gain: 2f);
-        Disc(c, 0f, Life, Band, Ice, k => Lay(head + Vector3.Down * 0.3f, 0.5f * Out(Mathf.Min(k * Life / 0.3f, 1f))), k => Fade(k, 0.04f, 0.12f), band: 0.14f, gain: 1.6f);
+        Crown(c, 0f, Life, Ice, k => head + Vector3.Down * 0.3f + Vector3.Up * 0.05f * Mathf.Sin(k * Life * 4f), gain: 2f);
         for (var i = 0; i < 6; i++)
         {
             var phase = i * Mathf.Tau / 6f;
@@ -553,7 +549,7 @@ internal sealed partial class FxSkills
                 var mine = life - delay;
                 var lift = layer * 0.45f;
                 Func<float, float> open = k => Overshoot(Mathf.Min(k * mine / Open, 1f));
-                Glyph(c, delay, mine, Leaflet, layer == 1 ? Pearl : Ice, k => heart + way * long1 * 0.5f * open(k) + Vector3.Up * lift, k => long1 * open(k), k => Fade(k, 0.03f, 0.02f), _ => way + Vector3.Up * (0.3f + 0.7f * layer), gain: 1.6f, slim: 0.62f);
+                Glyph(c, delay, mine, Leaflet, layer == 1 ? Pearl : Ice, k => heart + way * long1 * 0.5f * open(k) + Vector3.Up * lift, k => long1 * open(k), k => Fade(k, 0.03f, 0.02f), gain: 1.6f, slim: 0.62f, turn: _ => Face(way + Vector3.Up * (0.3f + 0.7f * layer), Vector3.Up));
             }
         }
         Crystal(c, Open * 0.5f, life - Open * 0.5f, IceBlock, ground, Vector3.Up, 1.7f, 0.5f);
@@ -618,7 +614,7 @@ internal sealed partial class FxSkills
                 var from = foot + Vector3.Up * Rand(0.3f, Tall);
                 var v = (foot - spot).Normalized() * Rand(2f, 5f) + Vector3.Up * Rand(0f, 3f);
                 var spin = Rand(0f, Mathf.Tau);
-                Glyph(c, Life, 0.5f, Gem, Ice, k => from + v * k * 0.5f + Vector3.Down * 0.5f * Gravity * k * k * 0.25f, k => 0.5f * (1f - 0.5f * k), k => 1f - k, k => new Vector3(Mathf.Sin(spin + k * 9f), Mathf.Cos(spin + k * 9f), 0f), gain: 1.7f);
+                Glyph(c, Life, 0.5f, Gem, Ice, k => from + v * k * 0.5f + Vector3.Down * 0.5f * Gravity * k * k * 0.25f, k => 0.5f * (1f - 0.5f * k), k => 1f - k, turn: k => Tumble(spin + k * 9f, spin), gain: 1.7f);
             }
         }
         foreach (var high in new[] { Tall, Tall * 0.5f })
@@ -755,7 +751,7 @@ internal sealed partial class FxSkills
             var size = Rand(0.4f, 0.9f);
             var spin = Rand(0f, Mathf.Tau);
             var turn = Rand(-10f, 10f);
-            Glyph(c, Life, Rand(0.5f, 0.8f), Gem, i % 3 == 0 ? Pearl : Ice, k => from + v * k * 0.6f + Vector3.Down * 0.5f * Gravity * k * k * 0.3f, k => size * (1f - 0.4f * k), k => 1f - k * k, k => new Vector3(Mathf.Sin(spin + k * turn), Mathf.Cos(spin + k * turn), 0f), gain: 1.8f, slim: 0.7f);
+            Glyph(c, Life, Rand(0.5f, 0.8f), Gem, i % 3 == 0 ? Pearl : Ice, k => from + v * k * 0.6f + Vector3.Down * 0.5f * Gravity * k * k * 0.3f, k => size * (1f - 0.4f * k), k => 1f - k * k, turn: k => Tumble(spin + k * turn, spin), gain: 1.8f, slim: 0.7f);
         }
         Cue(c, Life, () => Stage.Patch(At(c, FxKit.Flat(at) + Vector3.Back * 1.6f), r * 0.6f, 2f, FrostColor, FxGround.Frost));
         Shine(c, at, r * 1.5f, Ice.Main, age => age < Life ? 0.8f : 2.2f * Mathf.Max(0f, 1f - (age - Life) / 0.5f));
@@ -872,7 +868,8 @@ internal sealed partial class FxSkills
             Mark(c, start, Fall + 0.1f, Reticle, Cyan, spot, _ => 0.6f, _ => 0.8f, count: 4f, spin: 8f);
             Glyph(c, start, Fall, Shaft, Pearl, at, _ => 2.4f, _ => 1f, _ => way, gain: 2f, slim: 0.5f);
             Line(c, start, Fall, Storm, k => at(k) - way * 2f, _ => way * 3.5f, 0.14f, _ => 0.9f);
-            Glyph(c, start + Fall, Stuck, Shaft, Storm, _ => spot + Vector3.Up * 0.9f, _ => 2.4f, k => 1f - k * k, _ => way, gain: 1.6f, slim: 0.5f);
+            var sunk = Rand(0.25f, 0.45f);
+            Glyph(c, start + Fall, Stuck, Shaft, Storm, _ => spot - way * 2.4f * (0.5f - sunk), _ => 2.4f, k => 1f - k * k, _ => way, gain: 1.6f, slim: 0.5f, sink: sunk);
             Hit(c, start + Fall, Storm, spot + Vector3.Up * 0.2f, 0.8f);
             // The charge it carried earths itself.
             var next = spot + Around(Rand(0f, Mathf.Tau)) * 1.3f;

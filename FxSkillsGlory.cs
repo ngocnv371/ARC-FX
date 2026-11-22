@@ -228,7 +228,7 @@ internal sealed partial class FxSkills
             var way = Around(i * Mathf.Tau / Petals);
             var life = Erupt + After - i * 0.03f;
             Func<float, float> open = k => Overshoot(Mathf.Min(k * life / Open, 1f));
-            Glyph(c, i * 0.03f, life, Leaflet, i % 2 == 0 ? Magma : Flame, k => way * r * 0.42f * open(k) + Vector3.Up * 0.35f, k => r * 0.72f * open(k), k => Fade(k, 0.03f, 0.25f), _ => way, gain: 1.6f, slim: 0.55f);
+            Glyph(c, i * 0.03f, life, Leaflet, i % 2 == 0 ? Magma : Flame, k => way * r * 0.42f * open(k) + Vector3.Up * 0.35f, k => r * 0.72f * open(k), k => Fade(k, 0.03f, 0.25f), gain: 1.6f, slim: 0.55f, turn: _ => Face(way + Vector3.Up * 0.15f, Vector3.Up));
             var tip = way * r * 0.82f;
             Column(c, Erupt + i * 0.03f, After, Fire, Flame, tip, k => new Vector2(0.36f, 3f * Out(Mathf.Min(k * 5f, 1f))), k => 1f - k * k, gain: 1.6f, speed: 2.4f);
             Disc(c, Erupt + i * 0.03f, 0.35f, Shock, Flame, tip, k => 1f * Out(k), k => 1f - k, band: 0.1f);
@@ -309,7 +309,10 @@ internal sealed partial class FxSkills
         {
             var spot = Within(Vector3.Zero, r * 0.9f);
             var when = Rand(0.5f, Life - 0.6f);
-            Glyph(c, when, 0.5f, Wisp, Flame, _ => spot + Vector3.Up * 0.3f, k => 0.7f * (1f - 0.4f * k), k => Fade(k, 0.2f, 0.5f), gain: 1.6f);
+            // Where a cinder lands a small column of fire catches and burns out.
+            var tall = Rand(0.7f, 1.2f);
+            Column(c, when, 0.7f, Fire, i % 3 == 0 ? Ember : Flame, spot, k => new Vector2(0.2f, tall * Out(Mathf.Min(k * 5f, 1f))), k => Fade(k, 0.1f, 0.5f), gain: 1.4f, speed: 2.2f);
+            Disc(c, when, 0.9f, Glow, Ember, spot, _ => 0.45f, k => Fade(k, 0.1f, 0.5f) * 0.8f);
             Disc(c, when, 0.35f, Shock, Ember, spot, k => 0.5f * Out(k), k => 1f - k, band: 0.1f);
         }
         Shine(c, Vector3.Up, r * 1.4f, Ember.Main, age => 0.9f * Fade(age / Life, 0.1f, 0.2f));
@@ -444,7 +447,7 @@ internal sealed partial class FxSkills
             var at = places[i];
             var start = i * 0.06f;
             var life = Fire1 + After - start;
-            Glyph(c, start, life, Gem, i % 2 == 0 ? Ice : Pearl, k => at + Vector3.Up * 0.1f * Mathf.Sin(k * life * 4f + start * 30f), k => 1.5f * Overshoot(Mathf.Min(k * life / 0.25f, 1f)), k => Fade(k, 0.02f, 0.15f), gain: 1.8f);
+            Glyph(c, start, life, Gem, i % 2 == 0 ? Ice : Pearl, k => at + Vector3.Up * 0.1f * Mathf.Sin(k * life * 4f + start * 30f), k => 1.5f * Overshoot(Mathf.Min(k * life / 0.25f, 1f)), k => Fade(k, 0.02f, 0.15f), gain: 1.8f, turn: _ => Face(Vector3.Up, heart - at));
             Glyph(c, start, 0.3f, Glint, Pearl, at, 1.4f, 1.7f);
             // Light thrown from each mirror to the one opposite, through the middle.
             var other = places[(i + Mirrors / 2) % Mirrors];
@@ -911,7 +914,6 @@ internal sealed partial class FxSkills
             for (var j = 0; j < 2; j++)
                 Spark(c, start + life, 0.3f, Foam, to, FxKit.Jitter(1.5f), Gravity * 0.6f, 0.04f, 0.03f);
         }
-        Disc(c, 0f, Life, Cone, Sea, k => Lay(Vector3.Zero, reach), k => Fade(k, 0.05f, 0.4f) * 0.5f, k => Out(Mathf.Min(k * 2f, 1f)), cone: 0.35f);
         Mark(c, 0.3f, Life - 0.3f, Caustics, Sea, new Vector3(0f, 0f, reach * 0.8f), _ => r * 0.6f, k => Fade(k, 0.1f, 0.4f), count: 6f, spin: 2f);
         Shine(c, new Vector3(0f, 1f, reach * 0.6f), reach, Sea.Main, age => 0.9f * Fade(age / Life, 0.1f, 0.3f));
     }
@@ -1036,7 +1038,7 @@ internal sealed partial class FxSkills
             var size = Rand(0.45f, 1f);
             var spin = Rand(0f, Mathf.Tau);
             Func<float, Vector3> gem = k => at + v * k * 0.7f + Vector3.Down * 0.5f * Gravity * k * k * 0.3f;
-            Glyph(c, Shake, 0.75f, Gem, i % 3 == 0 ? Pearl : i % 3 == 1 ? Amethyst : Fey, gem, k => size * (1f - 0.3f * k), k => 1f - k * k, k => new Vector3(Mathf.Sin(spin + k * 8f), Mathf.Cos(spin + k * 8f), 0f), gain: 1.8f);
+            Glyph(c, Shake, 0.75f, Gem, i % 3 == 0 ? Pearl : i % 3 == 1 ? Amethyst : Fey, gem, k => size * (1f - 0.3f * k), k => 1f - k * k, turn: k => Tumble(spin + k * 8f, spin), gain: 1.8f);
         }
         for (var i = 0; i < 12; i++)
         {
@@ -1496,7 +1498,7 @@ internal sealed partial class FxSkills
             var spin = Rand(0f, Mathf.Tau);
             var turn = Rand(-9f, 9f);
             Func<float, Vector3> at = k => heart + way * 1.3f + v * k * 0.7f + Vector3.Down * 0.5f * Gravity * k * k * 0.3f;
-            Glyph(c, crack, Rand(0.6f, 0.9f), Gem, i % 3 == 0 ? Gold : i % 3 == 1 ? Chrono : Pearl, at, k => size * (1f - 0.4f * k), k => 1f - k * k, k => new Vector3(Mathf.Sin(spin + k * turn), Mathf.Cos(spin + k * turn), 0f), gain: 1.8f, slim: 0.7f);
+            Glyph(c, crack, Rand(0.6f, 0.9f), Gem, i % 3 == 0 ? Gold : i % 3 == 1 ? Chrono : Pearl, at, k => size * (1f - 0.4f * k), k => 1f - k * k, turn: k => Tumble(spin + k * turn, spin), gain: 1.8f, slim: 0.7f);
         }
         Twinkle(c, 20, crack, crack + 0.5f, Pearl, () => heart + FxKit.RandomDirection() * Rand(0.5f, 3f), 0.7f);
         Shine(c, heart, r * 1.7f, Chrono.Main, age => age < Tick ? 0.7f : age < crack ? 1.6f : 2.6f * Mathf.Max(0f, 1f - (age - crack) / After));

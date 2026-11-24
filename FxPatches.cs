@@ -41,6 +41,9 @@ public readonly struct FxPatch
     /// <summary>Still on screen.</summary>
     public bool Alive => Live != null;
 
+    /// <summary>How long it has been showing (0 the frame it is made).</summary>
+    internal float Age => Live?.Age ?? 0f;
+
     /// <summary>Its centre on the ground (only X and Z count). Ignored while it follows a node.</summary>
     public Vector3 Position
     {

@@ -15,6 +15,8 @@ public readonly struct FxIreCast
 
     public bool Alive => _handle.Alive;
 
+    internal FxHandle Handle => _handle;
+
     /// <summary>Holds the gathering light in front of <paramref name="caster"/>, aimed along <paramref name="direction"/>.</summary>
     public void Aim(Vector3 caster, Vector3 direction)
     {

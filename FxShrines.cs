@@ -28,7 +28,13 @@ public readonly struct FxShrine
     public void Take(Node3D who, float boon = 0f)
     {
         if (Live is { Taker: null } shrine)
+        {
             FxShrines.Take(shrine, who, boon);
+            // The gem breaks, and its light reaches the taker.
+            var world = FxWorld.Of(shrine.Root);
+            world?.Later(FxSound.Glass, shrine.Root.Position, 0.7f);
+            world?.Later(FxSound.LevelUp, who.Position, 0.8f, FxTiming.ShrineReach);
+        }
     }
 
     /// <summary>Takes it away, charged or spent.</summary>

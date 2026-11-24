@@ -28,7 +28,11 @@ if not exist "%~dp0addons\arc_fx\FxWorld.cs" (
     mklink /J "%~dp0addons\arc_fx" "%~dp0.." >nul || exit /b 1
 )
 if not defined GALLERY_NOBUILD dotnet build "%~dp0ArcFxGallery.csproj" -nologo -v:q || exit /b 1
-if not exist "%~dp0.godot" "%GODOT%" --headless --path "%~dp0." --import >nul 2>&1
+rem Import on the first run, and again whenever a sound has none yet (a game run won't import it).
+set "IMPORT="
+if not exist "%~dp0.godot" set "IMPORT=1"
+for %%F in ("%~dp0..\audio\*.ogg" "%~dp0..\audio\*.wav") do if not exist "%%~F.import" set "IMPORT=1"
+if defined IMPORT "%GODOT%" --headless --path "%~dp0." --import >nul 2>&1
 
 rem GALLERY_CWD keeps a relative --shot=dir relative to where you ran this.
 set "GALLERY_CWD=%CD%"

@@ -23,7 +23,10 @@ public readonly struct FxBarrier
     public void Hit(Vector3 from)
     {
         if (Live is { } bubble)
+        {
             FxCasts.Hit(bubble, from);
+            FxWorld.Of(bubble.Shell)?.Later(FxSound.Plate, bubble.Shell.GlobalPosition, 0.6f);
+        }
     }
 
     /// <summary>Fades it away.</summary>
@@ -33,7 +36,10 @@ public readonly struct FxBarrier
     public void Break()
     {
         if (Live is { } bubble)
+        {
             bubble.Broken = true;
+            FxWorld.Of(bubble.Shell)?.Later(FxSound.Glass, bubble.Shell.GlobalPosition);
+        }
         _handle.Stop();
     }
 }

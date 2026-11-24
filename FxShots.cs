@@ -29,7 +29,21 @@ public readonly struct FxShot
     public void Place(Vector3 position, Vector3 velocity, float size = 1f, float grow = 1f, bool lit = true)
     {
         if (Live is { } shot)
+        {
+            if (shot.Launch is { } launch)
+            {
+                shot.Launch = null;
+                FxWorld.Of(shot.Node)?.Later(launch, position);
+            }
             FxShots.Place(shot, position, velocity, size, grow, lit);
+        }
+    }
+
+    /// <summary>Sounds <paramref name="sound"/> where it is first placed.</summary>
+    internal void Launch(FxSound sound)
+    {
+        if (Live is { } shot)
+            shot.Launch = sound;
     }
 
     /// <summary>Shows or hides it (a shot waiting its turn to drop is hidden).</summary>
@@ -123,6 +137,8 @@ internal sealed class FxShots(FxKit kit)
         public float Flash;
         public float Size = 1f;
         public bool Lit;
+        /// <summary>Its launch, still to sound where the game first places it.</summary>
+        public FxSound? Launch;
 
         public override void Stop()
         {
@@ -144,6 +160,7 @@ internal sealed class FxShots(FxKit kit)
         var shot = _pool.Find(s => !s.Active && s.Look == look) ?? Make(look);
         shot.Begin(float.MaxValue);
         shot.Lit = false;
+        shot.Launch = null;
         shot.NextStrike = 0.15f;
         shot.Flash = 0f;
         shot.Node.Visible = true;

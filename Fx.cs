@@ -283,6 +283,14 @@ public static class Fx
     /// <summary>Whether this look is a tornado (it stands upright on the ground and whirls, whatever way it flies).</summary>
     public static bool IsTornado(FxShotLook look) => FxShots.IsTornado(look);
 
+    /// <summary>
+    /// One of the effects' sounds at <paramref name="at"/>, after <paramref name="delay"/> seconds of
+    /// the world's clock: for a game that draws something of its own and wants it to sound like ours
+    /// (every effect here already plays its own; see <see cref="FxSounds"/>).
+    /// </summary>
+    public static void Sound(FxSound sound, Vector3 at, float volume = 1f, float delay = 0f) =>
+        World?.Sound(sound, at, volume, delay);
+
     internal static void Light(Vector3 at, float reach, Color color, float strength) =>
         Lighting?.Light(at, reach, color, strength);
 }

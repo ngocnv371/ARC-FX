@@ -7,8 +7,13 @@ Ire, slams and spikes, spectral shields, fists and hammers, rams, meteors, blade
 every projectile look and the puffs dead monsters leave. One call each, in the ARC look, so every
 game's fire is the same fire.
 
-Effects only draw. What one does to a game (who it hits, how hard, which status) is the game's:
+Effects only draw, and sound. What one does to a game (who it hits, how hard, which status) is the game's:
 it calls the effect for the look and does its own hits, timed by `FxTiming` where an effect unfolds.
+
+Every effect the game calls plays its own sound: a skill as it is cast and again as it lands, a
+meteor's rush and then its blast. Sounds are shared, not one per effect: every fire spell leaves
+the hand the same way, every blade skill swings and chops (`FxSounds.cs` says which plays which).
+What an effect spawns as part of itself stays quiet, so one call is one sound, or a cast and a hit.
 
 ```csharp
 Fx.Explosion(at, radius: 3f, FxElement.Fire);
@@ -47,6 +52,9 @@ Optional hooks, set once at startup:
 | `Fx.Lighting` (`IFxLighting`) | Pools of light the game's unlit shaders add (fire lights the grass) | Effects still look right, they just don't light the ground |
 | `FxModels.Arrow`, `.Axe`, `.Shield`, `.Hammer`, `.RockSpike` | The props a few looks are built round (the library ships no art) | Built-in props for the shield, hammer and rock spike (a heater shield, a war maul, a jagged crag), plain shapes for the rest; all read the same from the game camera |
 | `FxTheme.Colors` | Retinting an element | The ARC palette (leave it, for consistency) |
+| `FxSounds.On`, `.Bus`, `.VolumeDb` | Silencing the effects (a game with sounds of its own for them), the bus they play on, their loudness | On, on Master, at 0 dB |
+
+`Fx.Sound(FxSound.Boom, at)` plays one of the effects' sounds for something the game draws itself.
 
 `FxPuffs` (death puffs) and `FxShaft` (a standing column of light) are nodes the game owns and
 places itself.
@@ -60,7 +68,9 @@ places itself.
 | `FxTiming.cs` | When unfolding effects reach things (nova front, shield ring radius, Ire windup, an arc's leap, smite fall, meteor fall, bladefall, a shrine's light reaching its taker, rupture speed, when each skill lands) |
 | `FxElement.cs`, `FxLighting.cs`, `FxModels.cs` | Elements and their palette, the lighting and model hooks |
 | `Fx*.cs` | The effects, one family per file; `FxKit.cs` holds what they share and `FxHandle`, the handle most calls return |
+| `FxSounds.cs`, `FxSkillTheme.cs` | What each effect sounds like and the voices that play it; what each skill is made of (blade, fire, holy...), which picks its sounds |
 | `shaders/` | The `fx_*` shaders; `fx_common.gdshaderinc` and `fx_noise.gdshaderinc` are their shared pieces |
+| `audio/` | The sounds: CC0 recordings and our own synthesised ones (`audio/CREDITS.md`); `tools/gen_sfx.py` makes the `.wav`s |
 | `gallery/` | ARC FX Gallery, a Godot app that plays every effect with the call that makes it |
 | `docs/hero-case-study.md` | The case study behind 62 of the skills: twenty classic hero kits, what makes each skill read, and our version of it |
 
@@ -69,8 +79,8 @@ places itself.
 `gallery/run.cmd` opens ARC FX Gallery: every effect on a plain floor under the game camera,
 replaying every few seconds, with its call written underneath. Up and Down pick one, Space replays
 it, V switches to a close look, F changes the floor, - and + step the speed down to 0.05× and
-back (P pauses) to follow fast things like arrows. `run.cmd --shot=dir` saves a picture of each
-effect as it peaks and quits (`--only=explosion_fire,storm_nova` for a few), in a window that never
+back (P pauses) to follow fast things like arrows, M turns the sound off and on. `run.cmd --shot=dir` saves a picture of each
+effect as it peaks and quits (`--only=explosion_fire,storm_nova` for a few), silently, in a window that never
 takes focus. Every effect carries tags (what it is made of, its shape, what it is for, the weapon
 in it) and a line saying what it looks like, shown over its call; both live in
 `gallery/GalleryMeta.cs`, and the gallery warns on start about an entry without them. The box over
@@ -80,8 +90,8 @@ do plurals, `#melee` must be a tag and `-skill` leaves skills out. `run.cmd --fi
 starts that way. Under the box, premade filters are a click away: one row of elements, one of
 kinds (melee, projectile, area, buff, movement...) and one of sources (skills or not, shrines,
 sigils). One from each row combines; clicking a lit one takes it off. The selected effect's card
-along the bottom shows its name, description, tags (click one to filter by it) and call. Each skill shows its theme (blade, earth, fire, frost, storm, nature, arcane,
-holy, shadow, buff) beside its name. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
+along the bottom shows its name, description, tags (click one to filter by it) and call. Each skill shows its theme (blade, earth, fire, frost, storm, water, nature, arcane,
+holy, shadow, buff; `FxSkillThemes.Of`) beside its name. It needs a Godot 4.7 .NET editor (`GODOT`, or the newest under `D:\installed`).
 
 The gallery is its own Godot project. It sees the library at `res://addons/arc_fx` through a
 junction to this folder that `run.cmd` makes (git can't hold one); the game ignores the gallery
